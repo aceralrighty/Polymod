@@ -7,8 +7,7 @@ namespace TBD.Models;
 public class UserAddress : GenericEntity
 {
     [Required] public Guid UserId { get; set; }
-
-
+    
     [ForeignKey(nameof(UserId))] public User User { get; set; }
 
     [Required] public string? Address1 { get; set; }
