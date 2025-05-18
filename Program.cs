@@ -19,6 +19,7 @@ public class Program
         builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IStatsRepository, StatsRepository>();
+        builder.Services.AddScoped<IUserAddressRepository, UserAddressRepository>();
 
         // Add any other services you might need
         // builder.Services.AddScoped<IYourService, YourService>();
