@@ -7,12 +7,12 @@ namespace TBD.Models;
 public class UserAddress : GenericEntity
 {
     [Required] public Guid UserId { get; set; }
-    
+
     [ForeignKey(nameof(UserId))] public User User { get; set; }
 
-    [Required] public string? Address1 { get; set; }
-    public string? Address2 { get; set; }
-    [Required] public string? City { get; set; }
-    [Required] public string? State { get; set; }
-    [Required] public int? ZipCode { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? Address1 { get; set; }
+    [MaxLength(int.MaxValue)] public string? Address2 { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? City { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? State { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public int? ZipCode { get; set; }
 }
