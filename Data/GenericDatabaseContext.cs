@@ -8,10 +8,11 @@ public class GenericDatabaseContext : DbContext
     public GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : base(options)
     {
     }
-    
+
 
     public DbSet<User> Users { get; set; }
     public DbSet<Stats> Stats { get; set; }
+    public DbSet<UserAddress> UserAddresses { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -24,6 +25,7 @@ public class GenericDatabaseContext : DbContext
             .HasIndex(u => u.Username)
             .IsUnique();
         modelBuilder.Entity<Stats>().HasIndex(s => s.Id).IsUnique();
+        modelBuilder.Entity<UserAddress>().HasIndex(u => u.Id).IsUnique();
         base.OnModelCreating(modelBuilder);
     }
 
