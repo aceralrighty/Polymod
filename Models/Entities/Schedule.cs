@@ -8,10 +8,10 @@ namespace TBD.Models.Entities;
 public class Schedule : GenericEntity
 {
     // Default constructor for EF Core
-    public Schedule() 
+    public Schedule()
     {
     }
-    
+
     // Constructor with user parameter
     public Schedule(User user)
     {
@@ -25,9 +25,7 @@ public class Schedule : GenericEntity
     public Guid UserId { get; set; }
 
     // Navigation property with ForeignKey attribute referencing the property name
-    [ForeignKey("UserId")]
-    [Required]
-    public User User { get; set; }
+    [ForeignKey("UserId")] [Required] public User User { get; set; }
 
     public double? BasePay { get; set; }
 
@@ -71,16 +69,16 @@ public class Schedule : GenericEntity
     }
 
     // Storage property for serialized dictionary
-    [Column(TypeName = "nvarchar(max)")]
-    public string DaysWorkedJson { get; set; } = "{}";
+    [Column(TypeName = "nvarchar(max)")] public string DaysWorkedJson { get; set; } = "{}";
 
     // Non-mapped dictionary property with get/set for easy access
     [NotMapped]
     public Dictionary<string, int> DaysWorked
     {
-        get => (string.IsNullOrEmpty(DaysWorkedJson) 
-            ? new Dictionary<string, int>() 
-            : JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson)) ?? throw new InvalidOperationException();
+        get => (string.IsNullOrEmpty(DaysWorkedJson)
+                   ? new Dictionary<string, int>()
+                   : JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson)) ??
+               throw new InvalidOperationException();
         set => DaysWorkedJson = JsonSerializer.Serialize(value);
     }
 
