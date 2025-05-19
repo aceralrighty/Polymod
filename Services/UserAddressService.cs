@@ -6,11 +6,10 @@ using TBD.Models;
 
 namespace TBD.Services;
 
-public class UserAddressService : IUserAddressService
+public class UserAddressService(GenericDatabaseContext context) : IUserAddressService
 {
-    protected readonly GenericDatabaseContext _context;
-    protected readonly DbSet<UserAddress>? _dbSet;
-
+    protected readonly GenericDatabaseContext _context = context;
+    private readonly DbSet<UserAddress>? _dbSet = context.Set<UserAddress>();
 
     public async Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync(UserAddress userAddress)
     {
