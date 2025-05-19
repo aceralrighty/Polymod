@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Models;
+using TBD.Models.Entities;
 
-namespace TBD.Repository;
+namespace TBD.Repository.Base;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntity
 {
@@ -28,7 +28,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntit
 
     public async Task<T> GetByIdAsync(Guid id)
     {
-        return await _dbSet.Where(id => true).FirstOrDefaultAsync() ?? throw new InvalidOperationException();
+        return await _dbSet.Where(gId => gId.Id.Equals(id)).FirstOrDefaultAsync() ??
+               throw new InvalidOperationException();
     }
 
     public async Task AddAsync(T entity)
@@ -40,15 +41,18 @@ public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntit
     public async Task AddRangeAsync(IEnumerable<T> entities)
     {
         await _dbSet.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
     }
 
-    public void Update(T entity)
+    public async Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
+        await _context.SaveChangesAsync();
     }
 
-    public void Remove(T entity)
+    public async Task RemoveAsync(T entity)
     {
         _dbSet.Remove(entity);
+        await _context.SaveChangesAsync();
     }
 }

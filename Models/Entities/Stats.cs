@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TBD.Models;
+namespace TBD.Models.Entities;
 
 [Table("Stats")]
 public class Stats : GenericEntity

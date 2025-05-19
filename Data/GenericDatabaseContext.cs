@@ -1,15 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.Models;
+using TBD.Models.Entities;
 
 namespace TBD.Data;
 
-public class GenericDatabaseContext : DbContext
+public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : DbContext(options)
 {
-    public GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : base(options)
-    {
-    }
-
-
     public DbSet<User> Users { get; set; }
     public DbSet<Stats> Stats { get; set; }
     public DbSet<UserAddress> UserAddresses { get; set; }
@@ -20,12 +15,16 @@ public class GenericDatabaseContext : DbContext
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+        modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
         modelBuilder.Entity<Stats>().HasIndex(s => s.Id).IsUnique();
+        modelBuilder.Entity<Stats>().Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         modelBuilder.Entity<UserAddress>().HasIndex(u => u.Id).IsUnique();
+        modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        modelBuilder.Entity<UserAddress>().HasIndex(ua => ua.Id).IsUnique();
         base.OnModelCreating(modelBuilder);
     }
 

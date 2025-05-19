@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using TBD.Models;
+using TBD.Models.Entities;
 
-namespace TBD.Repository;
+namespace TBD.Repository.Base;
 
 public interface IGenericRepository<T> where T : GenericEntity 
 {
@@ -10,6 +10,6 @@ public interface IGenericRepository<T> where T : GenericEntity
     Task<T> GetByIdAsync(Guid id);
     Task AddAsync(T entity);
     Task AddRangeAsync(IEnumerable<T> entities);
-    void Update(T entity);
-    void Remove(T entity);
+    Task UpdateAsync(T entity);
+    Task RemoveAsync(T entity);
 }
