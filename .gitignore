@@ -2,7 +2,7 @@
 .idea/
 *.sublime-workspace
 *.sublime-project
-
+User.db
 # User-specific files
 *.suo
 *.user
