@@ -1,19 +1,24 @@
 using System.Linq.Expressions;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Interfaces.Services;
+using TBD.Models.DTOs;
 using TBD.Models.Entities;
+using TBD.Repository.UserAddress;
 
 namespace TBD.Services;
 
-public class UserAddressService(GenericDatabaseContext context) : IUserAddressService
+public class UserAddressService(GenericDatabaseContext context, IMapper mapper)
+    : IUserAddressRepository, IUserAddressService
 {
     protected readonly GenericDatabaseContext _context = context;
-    private readonly DbSet<UserAddress>? _dbSet = context.Set<UserAddress>();
+    private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync(UserAddress userAddress)
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync(UserAddress userAddress)
     {
-        return await _dbSet.GroupBy(ua => ua.State).ToListAsync();
+        return await _dbSet.GroupBy(ua => ua.State).ToListAsync() ??
+               throw new NullReferenceException(nameof(userAddress));
     }
 
     public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync(UserAddress userAddress)
@@ -21,12 +26,12 @@ public class UserAddressService(GenericDatabaseContext context) : IUserAddressSe
         return await _dbSet.GroupBy(ua => ua.ZipCode ?? 0).ToListAsync();
     }
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByCityAsync(UserAddress userAddress)
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync(UserAddress userAddress)
     {
-        return await _dbSet.GroupBy(ua => ua.City).ToListAsync();
+        return await _dbSet.GroupBy(ua => ua.City).ToListAsync() ?? throw new NullReferenceException(nameof(userAddress));
     }
 
-    public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)
+    public async Task<UserAddress?> GetByUserAddressAsync(UserAddress userAddress)
     {
         return await _dbSet.FirstOrDefaultAsync(ua =>
             ua.Address1 == userAddress.Address1 || ua.Address2 == userAddress.Address2);
@@ -42,7 +47,7 @@ public class UserAddressService(GenericDatabaseContext context) : IUserAddressSe
         return await _dbSet.Where(expression).ToListAsync();
     }
 
-    public async Task<UserAddress> GetByIdAsync(Guid id)
+    public async Task<UserAddress?> GetByIdAsync(Guid id)
     {
         return await _dbSet.FirstOrDefaultAsync(i => i.Id == id).WaitAsync(TimeSpan.FromSeconds(30));
     }
@@ -50,20 +55,42 @@ public class UserAddressService(GenericDatabaseContext context) : IUserAddressSe
     public async Task AddAsync(UserAddress entity)
     {
         await _dbSet.AddAsync(entity);
+        await _context.SaveChangesAsync();
     }
 
     public async Task AddRangeAsync(IEnumerable<UserAddress> entities)
     {
         await _dbSet.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
     }
 
     public void Update(UserAddress entity)
     {
         _dbSet.Update(entity);
+        _context.SaveChanges();
     }
 
     public void Remove(UserAddress entity)
     {
         _dbSet.Remove(entity);
+        _context.SaveChanges();
+    }
+
+    public async Task<UserAddress> UpdateUserAddress(UserAddressRequest userAddressDto)
+    {
+        if (userAddressDto == null || userAddressDto.Id == Guid.Empty)
+        {
+            throw new ArgumentNullException(nameof(userAddressDto), "User Address is null or has an empty ID");
+        }
+
+        var existingAddress = await _dbSet.FirstOrDefaultAsync(ua => ua.Id == userAddressDto.Id);
+        if (existingAddress == null)
+        {
+            throw new ArgumentNullException(nameof(existingAddress), "User Address does not exist");
+        }
+
+        mapper.Map(userAddressDto, existingAddress);
+        await _context.SaveChangesAsync();
+        return existingAddress;
     }
 }

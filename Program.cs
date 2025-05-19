@@ -24,7 +24,7 @@ public class Program
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IStatsRepository, StatsRepository>();
         builder.Services.AddScoped<IUserAddressService, UserAddressService>();
-
+        builder.Services.AddAutoMapper(typeof(Program));
         // Add any other services you might need
         // builder.Services.AddScoped<IYourService, YourService>();
 
@@ -48,7 +48,7 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-        
+
         // Map controllers if using them
         app.MapControllers();
 

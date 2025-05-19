@@ -28,7 +28,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntit
 
     public async Task<T> GetByIdAsync(Guid id)
     {
-        return await _dbSet.Where(id => true).FirstOrDefaultAsync() ?? throw new InvalidOperationException();
+        return await _dbSet.Where(gId => gId.Id.Equals(id)).FirstOrDefaultAsync() ??
+               throw new InvalidOperationException();
     }
 
     public async Task AddAsync(T entity)
