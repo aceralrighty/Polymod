@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Interfaces.Services;
 using TBD.Repository;
+using TBD.Services;
 
 namespace TBD;
 
@@ -19,7 +20,7 @@ public class Program
         builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IStatsRepository, StatsRepository>();
-        builder.Services.AddScoped<IUserAddressRepository, UserAddressRepository>();
+        builder.Services.AddScoped<IUserAddressService, UserAddressService>();
 
         // Add any other services you might need
         // builder.Services.AddScoped<IYourService, YourService>();

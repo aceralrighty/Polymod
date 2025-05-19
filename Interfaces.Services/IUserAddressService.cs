@@ -3,7 +3,7 @@ using TBD.Repository;
 
 namespace TBD.Interfaces.Services;
 
-public interface IUserAddressRepository:IGenericRepository<UserAddress>
+public interface IUserAddressService:IGenericRepository<UserAddress>
 {
     Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync(UserAddress userAddress);
     
