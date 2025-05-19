@@ -79,7 +79,7 @@ public class Schedule : GenericEntity
                    ? new Dictionary<string, int>()
                    : JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson)) ??
                throw new InvalidOperationException();
-        set => DaysWorkedJson = JsonSerializer.Serialize(value);
+        init => DaysWorkedJson = JsonSerializer.Serialize(value);
     }
 
     public void RecalculateTotalHours()

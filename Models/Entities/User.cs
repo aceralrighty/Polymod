@@ -15,5 +15,5 @@ public class User : GenericEntity
     public string? Email { get; set; }
     
     [Required]
-    public virtual Schedule? Schedule { get; set; }
+    public virtual Schedule? Schedule { get; init; }
 }
