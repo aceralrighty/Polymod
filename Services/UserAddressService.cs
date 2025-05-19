@@ -28,13 +28,15 @@ public class UserAddressService(GenericDatabaseContext context, IMapper mapper)
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync(UserAddress userAddress)
     {
-        return await _dbSet.GroupBy(ua => ua.City).ToListAsync() ?? throw new NullReferenceException(nameof(userAddress));
+        return await _dbSet.GroupBy(ua => ua.City).ToListAsync() ??
+               throw new NullReferenceException(nameof(userAddress));
     }
 
-    public async Task<UserAddress?> GetByUserAddressAsync(UserAddress userAddress)
+    public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)
     {
         return await _dbSet.FirstOrDefaultAsync(ua =>
-            ua.Address1 == userAddress.Address1 || ua.Address2 == userAddress.Address2);
+                   ua.Address1 == userAddress.Address1 || ua.Address2 == userAddress.Address2) ??
+               throw new InvalidOperationException();
     }
 
     public async Task<IEnumerable<UserAddress>> GetAllAsync()
@@ -47,9 +49,10 @@ public class UserAddressService(GenericDatabaseContext context, IMapper mapper)
         return await _dbSet.Where(expression).ToListAsync();
     }
 
-    public async Task<UserAddress?> GetByIdAsync(Guid id)
+    public async Task<UserAddress> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FirstOrDefaultAsync(i => i.Id == id).WaitAsync(TimeSpan.FromSeconds(30));
+        return await _dbSet.FirstOrDefaultAsync(i => i.Id == id).WaitAsync(TimeSpan.FromSeconds(30)) ??
+               throw new InvalidOperationException();
     }
 
     public async Task AddAsync(UserAddress entity)
@@ -64,26 +67,21 @@ public class UserAddressService(GenericDatabaseContext context, IMapper mapper)
         await _context.SaveChangesAsync();
     }
 
-    public void Update(UserAddress entity)
+    public async Task UpdateAsync(UserAddress entity)
     {
         _dbSet.Update(entity);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
-    public void Remove(UserAddress entity)
+    public async Task RemoveAsync(UserAddress entity)
     {
         _dbSet.Remove(entity);
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
     public async Task<UserAddress> UpdateUserAddress(UserAddressRequest userAddressDto)
     {
-        if (userAddressDto == null || userAddressDto.Id == Guid.Empty)
-        {
-            throw new ArgumentNullException(nameof(userAddressDto), "User Address is null or has an empty ID");
-        }
-
-        var existingAddress = await _dbSet.FirstOrDefaultAsync(ua => ua.Id == userAddressDto.Id);
+        var existingAddress = await _dbSet.FirstOrDefaultAsync(i => i.Id == userAddressDto.Id);
         if (existingAddress == null)
         {
             throw new ArgumentNullException(nameof(existingAddress), "User Address does not exist");

@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.Models;
 using TBD.Models.Entities;
 
 namespace TBD.Data;
@@ -16,12 +15,16 @@ public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> opt
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
+        modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
         modelBuilder.Entity<Stats>().HasIndex(s => s.Id).IsUnique();
+        modelBuilder.Entity<Stats>().Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         modelBuilder.Entity<UserAddress>().HasIndex(u => u.Id).IsUnique();
+        modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        modelBuilder.Entity<UserAddress>().HasIndex(ua => ua.Id).IsUnique();
         base.OnModelCreating(modelBuilder);
     }
 

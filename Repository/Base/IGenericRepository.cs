@@ -7,9 +7,9 @@ public interface IGenericRepository<T> where T : GenericEntity
 {
     Task<IEnumerable<T>> GetAllAsync();
     Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> expression);
-    Task<Models.Entities.UserAddress?> GetByIdAsync(Guid id);
+    Task<T> GetByIdAsync(Guid id);
     Task AddAsync(T entity);
     Task AddRangeAsync(IEnumerable<T> entities);
-    void Update(T entity);
-    void Remove(T entity);
+    Task UpdateAsync(T entity);
+    Task RemoveAsync(T entity);
 }

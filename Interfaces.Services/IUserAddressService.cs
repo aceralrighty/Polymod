@@ -9,6 +9,6 @@ public interface IUserAddressService:IGenericRepository<UserAddress>
     
     Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync(UserAddress userAddress);
     Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync(UserAddress userAddress);
-    Task<UserAddress?> GetByUserAddressAsync(UserAddress userAddress);
+    Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress);
     
 }

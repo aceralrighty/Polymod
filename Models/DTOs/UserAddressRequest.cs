@@ -1,13 +1,27 @@
-using TBD.Models.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace TBD.Models.DTOs;
 
-public class UserAddressRequest(Guid id,string address1, string address2, string city, string state, int zipCode)
+public class UserAddressRequest
 {
     public Guid Id { get; set; }
-    public string? Address1 { get; set; }
-    public string? Address2 { get; set; }
-    public string? City { get; set; }
-    public string? State { get; set; }
-    public int? ZipCode { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? Address1 { get; set; }
+    [MaxLength(int.MaxValue)] public string? Address2 { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? City { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? State { get; set; }
+    [Required] public int? ZipCode { get; set; }
+
+    public UserAddressRequest()
+    {
+    }
+
+    public UserAddressRequest(Guid id, string? address1, string? address2, string? city, string? state, int? zipCode)
+    {
+        Id = id;
+        Address1 = address1;
+        Address2 = address2;
+        City = city;
+        State = state;
+        ZipCode = zipCode;
+    }
 }

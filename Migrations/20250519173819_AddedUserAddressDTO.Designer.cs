@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TBD.Data;
 
@@ -11,9 +12,11 @@ using TBD.Data;
 namespace TBD.Migrations
 {
     [DbContext(typeof(GenericDatabaseContext))]
-    partial class GenericDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20250519173819_AddedUserAddressDTO")]
+    partial class AddedUserAddressDTO
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,8 +38,7 @@ namespace TBD.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<double>("Run")
                         .HasColumnType("float")
@@ -46,7 +48,7 @@ namespace TBD.Migrations
                         .HasColumnType("int")
                         .HasColumnName("TotalUsers");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasPrecision(3)
                         .HasColumnType("datetime2(3)");
 
@@ -71,14 +73,13 @@ namespace TBD.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasPrecision(3)
                         .HasColumnType("datetime2(3)");
 
@@ -120,15 +121,14 @@ namespace TBD.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("State")
                         .IsRequired()
                         .HasMaxLength(2147483647)
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasPrecision(3)
                         .HasColumnType("datetime2(3)");
 
@@ -136,6 +136,7 @@ namespace TBD.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("ZipCode")
+                        .HasMaxLength(2147483647)
                         .HasColumnType("int");
 
                     b.HasKey("Id");

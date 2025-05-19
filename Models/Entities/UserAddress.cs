@@ -4,23 +4,29 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TBD.Models.Entities;
 
 [Table("Address")]
-public class UserAddress(
-    Guid userId,
-    User user,
-    string? address1,
-    string? address2,
-    string? city,
-    string? state,
-    int? zipCode)
+public class UserAddress
     : GenericEntity
 {
-    [Required] public Guid UserId { get; set; } = userId;
+    [Required] public Guid UserId { get; set; }
 
-    [ForeignKey(nameof(UserId))] public User User { get; set; } = user;
+    [ForeignKey(nameof(UserId))] public User User { get; set; }
 
-    [Required] [MaxLength(int.MaxValue)] public string? Address1 { get; set; } = address1;
-    [MaxLength(int.MaxValue)] public string? Address2 { get; set; } = address2;
-    [Required] [MaxLength(int.MaxValue)] public string? City { get; set; } = city;
-    [Required] [MaxLength(int.MaxValue)] public string? State { get; set; } = state;
-    [Required] [MaxLength(int.MaxValue)] public int? ZipCode { get; set; } = zipCode;
+    [Required] [MaxLength(int.MaxValue)] public string? Address1 { get; set; }
+    [MaxLength(int.MaxValue)] public string? Address2 { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? City { get; set; }
+    [Required] [MaxLength(int.MaxValue)] public string? State { get; set; }
+    [Required] public int? ZipCode { get; set; }
+    
+    public UserAddress(Guid userId, User user, string? address1, string? address2, string? city, string? state, int? zipCode)
+    {
+        UserId = userId;
+        User = user;
+        Address1 = address1;
+        Address2 = address2;
+        City = city;
+        State = state;
+        ZipCode = zipCode;
+    }
+
+    public UserAddress() { }
 }
