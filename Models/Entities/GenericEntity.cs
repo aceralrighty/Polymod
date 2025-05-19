@@ -9,6 +9,6 @@ public class GenericEntity
     public Guid Id { get; set; }
     [Timestamp]
     public DateTime CreatedAt { get; set; }
-    [Precision(3)]
+    [Precision(1)]
     public DateTime? UpdatedAt { get; set; }
 }

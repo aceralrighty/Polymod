@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Interfaces.Services;
 using TBD.Repository.Base;
 
 namespace TBD.Repository.User;

@@ -8,7 +8,7 @@ public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> opt
     public DbSet<User> Users { get; set; }
     public DbSet<Stats> Stats { get; set; }
     public DbSet<UserAddress> UserAddresses { get; set; }
-
+    public DbSet<Schedule> Schedules { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,11 +20,18 @@ public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> opt
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
+
+        modelBuilder.Entity<User>().HasOne(u => u.Schedule).WithOne(s => s.User).HasForeignKey<Schedule>(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<Stats>().HasIndex(s => s.Id).IsUnique();
         modelBuilder.Entity<Stats>().Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         modelBuilder.Entity<UserAddress>().HasIndex(u => u.Id).IsUnique();
         modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         modelBuilder.Entity<UserAddress>().HasIndex(ua => ua.Id).IsUnique();
+        
+        modelBuilder.Entity<Schedule>().HasIndex(s => s.Id).IsUnique();
+        modelBuilder.Entity<Schedule>().Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         base.OnModelCreating(modelBuilder);
     }
 
