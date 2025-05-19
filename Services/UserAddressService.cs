@@ -3,11 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Interfaces.Services;
 using TBD.Models;
-using TBD.Repository;
 
 namespace TBD.Services;
 
-public class UserAddressService : IGenericRepository<UserAddress>, IUserAddressService
+public class UserAddressService : IUserAddressService
 {
     protected readonly GenericDatabaseContext _context;
     protected readonly DbSet<UserAddress>? _dbSet;
