@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace TBD.Models;
+namespace TBD.Models.Entities;
 
 public class GenericEntity
 {

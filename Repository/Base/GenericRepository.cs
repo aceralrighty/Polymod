@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Models;
+using TBD.Models.Entities;
 
-namespace TBD.Repository;
+namespace TBD.Repository.Base;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntity
 {

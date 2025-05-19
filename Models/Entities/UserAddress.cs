@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TBD.Models;
+namespace TBD.Models.Entities;
 
 [Table("Address")]
 public class UserAddress : GenericEntity

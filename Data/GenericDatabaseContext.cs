@@ -1,15 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Models;
+using TBD.Models.Entities;
 
 namespace TBD.Data;
 
-public class GenericDatabaseContext : DbContext
+public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : DbContext(options)
 {
-    public GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : base(options)
-    {
-    }
-
-
     public DbSet<User> Users { get; set; }
     public DbSet<Stats> Stats { get; set; }
     public DbSet<UserAddress> UserAddresses { get; set; }

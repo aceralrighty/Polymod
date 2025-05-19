@@ -1,26 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Interfaces.Services;
-using TBD.Models;
+using TBD.Repository.Base;
 
-namespace TBD.Repository;
+namespace TBD.Repository.Stats;
 
-public class StatsRepository: GenericRepository<Stats>, IStatsRepository
+public class StatsRepository(GenericDatabaseContext context)
+    : GenericRepository<Models.Entities.Stats>(context), IStatsRepository
 {
-    public StatsRepository(GenericDatabaseContext context) : base(context)
-    {
-    }
-
-    public List<Stats> GetByUserIdAsync(Guid userId)
+    public List<Models.Entities.Stats> GetByUserIdAsync(Guid userId)
     {
         return  _dbSet.Where(s => s.Id == userId).ToList();
     }
 
-    public async Task<Stats> GroupByWorkoutTypeAsync(Stats workoutType)
+    public async Task<Models.Entities.Stats> GroupByWorkoutTypeAsync(Models.Entities.Stats workoutType)
     {
         var groupedStats = await _dbSet
             .GroupBy(s => s.Id) 
-            .Select(g => new Stats
+            .Select(g => new Models.Entities.Stats
             {
                 Id = g.Key,
                 TotalUsers = g.Sum(s => s.TotalUsers),
@@ -30,6 +26,6 @@ public class StatsRepository: GenericRepository<Stats>, IStatsRepository
             })
             .FirstOrDefaultAsync(s => s.Id == workoutType.Id);
             
-        return groupedStats ?? new Stats { Id = workoutType.Id };
+        return groupedStats ?? new Models.Entities.Stats { Id = workoutType.Id };
     }
 }

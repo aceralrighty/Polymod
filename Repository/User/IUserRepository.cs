@@ -1,10 +1,9 @@
-using TBD.Models;
-using TBD.Repository;
+using TBD.Repository.Base;
 
-namespace TBD.Interfaces.Services;
+namespace TBD.Repository.User;
 
-public interface IUserRepository: IGenericRepository<User>
+public interface IUserRepository: IGenericRepository<Models.Entities.User>
 {
-    Task<User> GetByEmailAsync(string email);
-    Task<User> GetByUsernameAsync(string username);
+    Task<Models.Entities.User> GetByEmailAsync(string email);
+    Task<Models.Entities.User> GetByUsernameAsync(string username);
 }

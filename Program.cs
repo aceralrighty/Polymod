@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Interfaces.Services;
 using TBD.Repository;
+using TBD.Repository.Base;
+using TBD.Repository.Stats;
+using TBD.Repository.User;
 using TBD.Services;
 
 namespace TBD;

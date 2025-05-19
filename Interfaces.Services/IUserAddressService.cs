@@ -1,5 +1,7 @@
 using TBD.Models;
+using TBD.Models.Entities;
 using TBD.Repository;
+using TBD.Repository.Base;
 
 namespace TBD.Interfaces.Services;
 

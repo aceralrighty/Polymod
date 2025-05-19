@@ -1,10 +1,9 @@
-using TBD.Models;
-using TBD.Repository;
+using TBD.Repository.Base;
 
-namespace TBD.Interfaces.Services;
+namespace TBD.Repository.Stats;
 
-public interface IStatsRepository: IGenericRepository<Stats>
+public interface IStatsRepository: IGenericRepository<Models.Entities.Stats>
 {
-    List<Stats> GetByUserIdAsync(Guid userId);
-    Task<Stats> GroupByWorkoutTypeAsync(Stats workoutType);
+    List<Models.Entities.Stats> GetByUserIdAsync(Guid userId);
+    Task<Models.Entities.Stats> GroupByWorkoutTypeAsync(Models.Entities.Stats workoutType);
 }

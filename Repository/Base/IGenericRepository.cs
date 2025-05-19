@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using TBD.Models;
+using TBD.Models.Entities;
 
-namespace TBD.Repository;
+namespace TBD.Repository.Base;
 
 public interface IGenericRepository<T> where T : GenericEntity 
 {

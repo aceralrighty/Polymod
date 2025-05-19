@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Interfaces.Services;
 using TBD.Models;
+using TBD.Models.Entities;
 
 namespace TBD.Services;
 
