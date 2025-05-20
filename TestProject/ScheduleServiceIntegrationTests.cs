@@ -22,6 +22,10 @@ public class ScheduleServiceIntegrationTests
             .Options;
     }
 
+    private ScheduleService CreateService(GenericDatabaseContext context)
+    {
+        return new ScheduleService(context);
+    }
     [SetUp]
     public async Task Setup()
     {
@@ -30,7 +34,7 @@ public class ScheduleServiceIntegrationTests
         await _context.Database.EnsureDeletedAsync(); // Start with a clean database
         await _context.Database.EnsureCreatedAsync();
 
-        _scheduleService = new ScheduleService(_context);
+        _scheduleService = CreateService(_context);
 
         // Create a test user
         _testUser = new User

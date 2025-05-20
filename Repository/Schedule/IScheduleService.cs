@@ -10,4 +10,5 @@ public interface IScheduleService:IGenericRepository<Models.Entities.Schedule>
     Task<Models.Entities.Schedule> FindByWorkDayAsync(Models.Entities.Schedule schedule);
 
     IQueryable<Models.Entities.Schedule> GetQueryable();
+    
 }

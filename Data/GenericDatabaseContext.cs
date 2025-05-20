@@ -3,17 +3,17 @@ using TBD.Models.Entities;
 
 namespace TBD.Data;
 
-public class GenericDatabaseContext : DbContext
+public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : DbContext(options)
 {
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<Stats> Stats { get; set; }
     public virtual DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<Schedule> Schedules { get; set; }
 
-    public GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : base(options)
-    {
-    }
-
+    /// Configures the context options for the database. This method is automatically called by the framework
+    /// when the database context is being used. Implementors can override this method to configure additional
+    /// database-specific options such as connection string, logging, or caching behaviors.
+    /// <param name="optionsBuilder">An instance of DbContextOptionsBuilder used to configure the database context's options.</param>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
