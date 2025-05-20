@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Repository.Base;
+using TBD.Repository.Services.Base;
+using TBD.Repository.Services.Stats;
 
-namespace TBD.Repository.Stats;
+namespace TBD.Services.Stats;
 
 public class StatsRepository(GenericDatabaseContext context)
     : GenericRepository<Models.Entities.Stats>(context), IStatsRepository

@@ -13,4 +13,7 @@ public class User : GenericEntity
     [Column(TypeName = "varchar(255)")]
     [Required]
     public string? Email { get; set; }
+    
+    [Required]
+    public virtual Schedule? Schedule { get; init; }
 }

@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Interfaces.Services;
-using TBD.Repository.Base;
+using TBD.Repository.Services.Base;
+using TBD.Repository.Services.User;
 
-namespace TBD.Repository.User;
+namespace TBD.Services.User;
 
 public class UserRepository(GenericDatabaseContext context) : GenericRepository<Models.Entities.User>(context), IUserRepository
 {

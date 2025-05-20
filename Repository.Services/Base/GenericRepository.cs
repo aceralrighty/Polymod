@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Models.Entities;
 
-namespace TBD.Repository.Base;
+namespace TBD.Repository.Services.Base;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntity
 {

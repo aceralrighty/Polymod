@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Data.Seeding;
-using TBD.Interfaces.Services;
-using TBD.Repository.Base;
-using TBD.Repository.Stats;
-using TBD.Repository.User;
-using TBD.Repository.UserAddress;
+using TBD.Repository.Services.Base;
+using TBD.Repository.Services.Schedule;
+using TBD.Repository.Services.Stats;
+using TBD.Repository.Services.User;
+using TBD.Repository.Services.UserAddress;
 using TBD.Services;
+using TBD.Services.Stats;
+using TBD.Services.User;
+using TBD.Services.UserAddress;
 
 namespace TBD;
 
@@ -25,6 +28,7 @@ public class Program
         builder.Services.AddScoped<IStatsRepository, StatsRepository>();
         builder.Services.AddScoped<IUserAddressRepository, UserAddressService>();
         builder.Services.AddScoped<IUserAddressService, UserAddressService>();
+        builder.Services.AddScoped<IScheduleService, ScheduleService>();
         builder.Services.AddAutoMapper(typeof(Program));
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
