@@ -6,9 +6,10 @@ using TBD.Repository.Services.Schedule;
 using TBD.Repository.Services.Stats;
 using TBD.Repository.Services.User;
 using TBD.Repository.Services.UserAddress;
-using TBD.Repository.Stats;
-using TBD.Repository.User;
 using TBD.Services;
+using TBD.Services.Stats;
+using TBD.Services.User;
+using TBD.Services.UserAddress;
 
 namespace TBD;
 
