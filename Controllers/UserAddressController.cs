@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using TBD.Data.Seeding;
-using TBD.Interfaces.Services;
 using TBD.Models.DTOs;
 using TBD.Models.Entities;
-using TBD.Repository.UserAddress;
+using TBD.Repository.Services.UserAddress;
 
 namespace TBD.Controllers;
 

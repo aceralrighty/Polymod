@@ -1,6 +1,6 @@
-using TBD.Repository.Base;
+using TBD.Repository.Services.Base;
 
-namespace TBD.Repository.User;
+namespace TBD.Repository.Services.User;
 
 public interface IUserRepository: IGenericRepository<Models.Entities.User>
 {

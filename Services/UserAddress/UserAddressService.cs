@@ -2,10 +2,9 @@ using System.Linq.Expressions;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Interfaces.Services;
 using TBD.Models.DTOs;
 using TBD.Models.Entities;
-using TBD.Repository.UserAddress;
+using TBD.Repository.Services.UserAddress;
 
 namespace TBD.Services;
 

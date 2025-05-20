@@ -7,12 +7,11 @@ namespace TBD.Models.Entities;
 [Table("Schedule")]
 public class Schedule : GenericEntity
 {
-    // Default constructor for EF Core
     public Schedule()
     {
     }
 
-    // Constructor with user parameter
+
     public Schedule(User user)
     {
         User = user;
@@ -21,7 +20,7 @@ public class Schedule : GenericEntity
 
     public double? TotalHoursWorked { get; set; }
 
-    // The actual foreign key property
+
     public Guid UserId { get; set; }
 
     // Navigation property with ForeignKey attribute referencing the property name
@@ -68,10 +67,21 @@ public class Schedule : GenericEntity
         }
     }
 
-    // Storage property for serialized dictionary
+    
     [Column(TypeName = "nvarchar(max)")] public string DaysWorkedJson { get; set; } = "{}";
 
-    // Non-mapped dictionary property with get/set for easy access
+    /// <summary>
+    /// Represents a dictionary containing the days of work and corresponding hours worked for each day.
+    /// Maps to a serialized JSON string in the database.
+    /// </summary>
+    /// <remarks>
+    /// The property is not mapped to a database column directly. Instead, it uses the
+    /// <see cref="DaysWorkedJson"/> property to store its data as a serialized JSON string.
+    /// This provides a way to work with structured data while persisting it in a single column.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when deserialization of the JSON string into a dictionary fails.
+    /// </exception>
     [NotMapped]
     public Dictionary<string, int> DaysWorked
     {

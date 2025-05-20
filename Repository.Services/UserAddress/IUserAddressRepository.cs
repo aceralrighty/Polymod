@@ -1,7 +1,7 @@
 using TBD.Models.DTOs;
-using TBD.Repository.Base;
+using TBD.Repository.Services.Base;
 
-namespace TBD.Repository.UserAddress;
+namespace TBD.Repository.Services.UserAddress;
 
 public interface IUserAddressRepository:IGenericRepository<Models.Entities.UserAddress>
 {
