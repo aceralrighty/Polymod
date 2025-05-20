@@ -5,16 +5,10 @@ using TBD.Models.Entities;
 
 namespace TBD.Repository.Services.Base;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntity
+public class GenericRepository<T>(GenericDatabaseContext context) : IGenericRepository<T>
+    where T : GenericEntity
 {
-    private readonly GenericDatabaseContext _context;
-    protected readonly DbSet<T>? _dbSet;
-
-    protected GenericRepository(GenericDatabaseContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<T>();
-    }
+    protected readonly DbSet<T>? _dbSet = context.Set<T>();
 
     public async Task<IEnumerable<T>> GetAllAsync()
     {
@@ -35,24 +29,24 @@ public class GenericRepository<T> : IGenericRepository<T> where T : GenericEntit
     public async Task AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task AddRangeAsync(IEnumerable<T> entities)
     {
         await _dbSet.AddRangeAsync(entities);
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task RemoveAsync(T entity)
     {
         _dbSet.Remove(entity);
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 }
