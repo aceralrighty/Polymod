@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
-using TBD.Repository.Services.Base;
-using TBD.Repository.Services.Stats;
+using TBD.Repository.Base;
+using TBD.Repository.Stats;
 
 namespace TBD.Services.Stats;
 

@@ -3,7 +3,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Models.DTOs;
-using TBD.Repository.Services.UserAddress;
+using TBD.Repository.UserAddress;
 
 namespace TBD.Services.UserAddress;
 
