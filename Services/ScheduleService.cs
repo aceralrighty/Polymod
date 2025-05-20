@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Models.Entities;
-using TBD.Repository.Services.Base;
-using TBD.Repository.Services.Schedule;
+using TBD.Repository.Base;
+using TBD.Repository.Schedule;
 
 namespace TBD.Services;
 
@@ -11,17 +11,34 @@ public class ScheduleService(GenericDatabaseContext context)
 {
     public async Task<Schedule> GroupAllUsersByWorkDayAsync(Schedule schedule)
     {
-        return await _dbSet.FirstOrDefaultAsync();
+        var query = _dbSet.AsQueryable();
+        return await query.FirstOrDefaultAsync();
     }
 
-    public async Task<List<IGrouping<bool, Schedule>>> GetAllByWorkDayAsync(
-        Schedule schedule)
+    public async Task<(List<Schedule> Matches, List<Schedule> NonMatches)> GetAllByWorkDayAsync(Schedule schedule)
     {
-        return await _dbSet.GroupBy(s => s.DaysWorked.Keys == schedule.DaysWorked.Keys).ToListAsync();
+        var matching = await _dbSet
+            .Where(s => s.DaysWorkedJson == schedule.DaysWorkedJson)
+            .ToListAsync();
+
+        var nonMatching = await _dbSet
+            .Where(s => s.DaysWorkedJson != schedule.DaysWorkedJson)
+            .ToListAsync();
+
+        return (matching, nonMatching);
     }
+
 
     public async Task<Schedule> FindByWorkDayAsync(Schedule schedule)
     {
-        return await _dbSet.Where(s => s.DaysWorked.Keys == schedule.DaysWorked.Keys).FirstOrDefaultAsync();
+        // Modified to be more testable - create the query then execute it
+        var query = _dbSet.AsQueryable();
+        var filteredQuery = query.Where(s => s.DaysWorkedJson == schedule.DaysWorkedJson);
+        return await filteredQuery.FirstOrDefaultAsync();
+    }
+
+    public IQueryable<Schedule> GetQueryable()
+    {
+        return _dbSet.AsQueryable();
     }
 }

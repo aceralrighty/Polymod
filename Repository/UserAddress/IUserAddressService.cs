@@ -1,6 +1,6 @@
-using TBD.Repository.Services.Base;
+using TBD.Repository.Base;
 
-namespace TBD.Repository.Services.UserAddress;
+namespace TBD.Repository.UserAddress;
 
 public interface IUserAddressService:IGenericRepository<Models.Entities.UserAddress>
 {

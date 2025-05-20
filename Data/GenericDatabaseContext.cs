@@ -3,12 +3,24 @@ using TBD.Models.Entities;
 
 namespace TBD.Data;
 
-public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : DbContext(options)
+public class GenericDatabaseContext : DbContext
 {
-    public DbSet<User> Users { get; set; }
-    public DbSet<Stats> Stats { get; set; }
-    public DbSet<UserAddress> UserAddresses { get; set; }
+    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<Stats> Stats { get; set; }
+    public virtual DbSet<UserAddress> UserAddresses { get; set; }
     public DbSet<Schedule> Schedules { get; set; }
+
+    public GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> options) : base(options)
+    {
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseInMemoryDatabase("FallbackTestDb");
+        }
+    }
 
     /// Configures the model and relationships for the context using the specified ModelBuilder.
     /// This method is called by the framework when the model for a derived context has been initialized,
@@ -34,7 +46,7 @@ public class GenericDatabaseContext(DbContextOptions<GenericDatabaseContext> opt
         modelBuilder.Entity<UserAddress>().HasIndex(u => u.Id).IsUnique();
         modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         modelBuilder.Entity<UserAddress>().HasIndex(ua => ua.Id).IsUnique();
-        
+
         modelBuilder.Entity<Schedule>().HasIndex(s => s.Id).IsUnique();
         modelBuilder.Entity<Schedule>().Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         base.OnModelCreating(modelBuilder);

@@ -1,6 +1,6 @@
-using TBD.Repository.Services.Base;
+using TBD.Repository.Base;
 
-namespace TBD.Repository.Services.Stats;
+namespace TBD.Repository.Stats;
 
 public interface IStatsRepository: IGenericRepository<Models.Entities.Stats>
 {

@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Data;
 using TBD.Data.Seeding;
-using TBD.Repository.Services.Base;
-using TBD.Repository.Services.Schedule;
-using TBD.Repository.Services.Stats;
-using TBD.Repository.Services.User;
-using TBD.Repository.Services.UserAddress;
+using TBD.Repository.Base;
+using TBD.Repository.Schedule;
+using TBD.Repository.Stats;
+using TBD.Repository.User;
+using TBD.Repository.UserAddress;
 using TBD.Services;
 using TBD.Services.Stats;
 using TBD.Services.User;
