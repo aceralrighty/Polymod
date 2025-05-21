@@ -1,15 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using TBD.Data;
+using TBD.AddressService;
 using TBD.Data.Seeding;
-using TBD.Repository.Base;
-using TBD.Repository.Schedule;
-using TBD.Repository.Stats;
-using TBD.Repository.User;
-using TBD.Repository.UserAddress;
-using TBD.Services;
-using TBD.Services.Stats;
-using TBD.Services.User;
-using TBD.Services.UserAddress;
+using TBD.UserModule;
 
 namespace TBD;
 
@@ -19,28 +10,24 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Service registration
-        builder.Services.AddDbContextPool<GenericDatabaseContext>(u =>
-            u.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+        // Modularized service registrations
+        builder.Services.AddUserService(builder.Configuration);     // Register UserModule services
+        builder.Services.AddAddressService(builder.Configuration); // Register AddressModule services
 
-        builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-        builder.Services.AddScoped<IUserRepository, UserRepository>();
-        builder.Services.AddScoped<IStatsRepository, StatsRepository>();
-        builder.Services.AddScoped<IUserAddressRepository, UserAddressService>();
-        builder.Services.AddScoped<IUserAddressService, UserAddressService>();
-        builder.Services.AddScoped<IScheduleService, ScheduleService>();
-        builder.Services.AddAutoMapper(typeof(Program));
+        // Shared components and features
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
 
         var app = builder.Build();
 
+        // Seed data if enabled in configuration
         if (builder.Configuration.GetValue("SeedData", false))
         {
             await DataSeeder.SeedAsync(app.Services);
         }
 
+        // Configure Middleware and Endpoints
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
@@ -50,6 +37,6 @@ public class Program
         app.UseAuthorization();
         app.MapControllers();
 
-        await app.RunAsync(); // ✅ Corrected
+        await app.RunAsync(); // Run the web application
     }
 }
