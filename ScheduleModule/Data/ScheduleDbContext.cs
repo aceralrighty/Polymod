@@ -3,13 +3,9 @@ using TBD.ScheduleModule.Models;
 
 namespace TBD.ScheduleModule.Data;
 
-public class ScheduleDbContext : DbContext
+public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : DbContext(options)
 {
     public DbSet<Schedule> Schedules { get; set; }
-
-    public ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : base(options)
-    {
-    }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -21,12 +17,19 @@ public class ScheduleDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Schedule>().HasOne(s => s.User).WithOne(u => u.Schedule)
+        modelBuilder.Entity<Schedule>()
+            .HasOne(s => s.User)
+            .WithOne(u => u.Schedule)
             .HasForeignKey<Schedule>(s => s.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<Schedule>().Property(s => s.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+        modelBuilder.Entity<Schedule>()
+            .Property(s => s.CreatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
+
         base.OnModelCreating(modelBuilder);
     }
+
 
     public override int SaveChanges()
     {
@@ -57,5 +60,4 @@ public class ScheduleDbContext : DbContext
 
         return await base.SaveChangesAsync(cancellationToken);
     }
-    
 }

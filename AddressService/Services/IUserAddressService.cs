@@ -1,5 +1,4 @@
 using TBD.AddressService.Models;
-using TBD.Models.DTOs;
 using TBD.Shared.DTOs;
 
 namespace TBD.AddressService.Services;

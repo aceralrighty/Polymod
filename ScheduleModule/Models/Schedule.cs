@@ -6,15 +6,25 @@ using TBD.UserModule.Models;
 namespace TBD.ScheduleModule.Models;
 
 [Table("Schedule")]
-public class Schedule(User user) : GenericScheduleEntity
+public class Schedule : GenericScheduleEntity
 {
     public double? TotalHoursWorked { get; set; }
 
+    public Schedule()
+    {
+    }
 
-    public Guid UserId { get; set; } = user.Id;
+    public Schedule(User user)
+    {
+        UserId = user.Id;
+        User = user;
+    }
+
+
+    public Guid UserId { get; set; }
 
     // Navigation property with ForeignKey attribute referencing the property name
-    [ForeignKey("UserId")] [Required] public User User { get; set; } = user;
+    [ForeignKey("UserId")] [Required] public User User { get; set; }
 
     public double? BasePay { get; set; }
 

@@ -4,10 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressService.Data;
 using TBD.AddressService.Models;
 using TBD.AddressService.Repositories;
-using TBD.Data;
-using TBD.Models.DTOs;
 using TBD.Shared.DTOs;
-using TBD.UserModule.Models;
 
 namespace TBD.AddressService.Services;
 
