@@ -3,6 +3,9 @@
 *.sublime-workspace
 *.sublime-project
 User.db
+/Migrations
+appsettings.json
+appsettings.*.json
 # User-specific files
 *.suo
 *.user

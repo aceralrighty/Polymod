@@ -12,7 +12,7 @@ public static class UserModule
     public static IServiceCollection AddUserService(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<UserDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("UserDatabase")));
+            options.UseSqlServer(configuration.GetConnectionString("UserDb")));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
         services.AddAutoMapper(typeof(UserModule).Assembly);
