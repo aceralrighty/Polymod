@@ -30,6 +30,7 @@
 
     <ItemGroup>
       <Folder Include="AddressService\Controllers\" />
+      <Folder Include="ScheduleModule\Controllers\" />
       <Folder Include="UserModule\Controllers\" />
       <Folder Include="UserModule\Models\DTOs\UserAddressMappingProfile\" />
     </ItemGroup>

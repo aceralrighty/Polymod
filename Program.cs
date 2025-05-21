@@ -1,5 +1,6 @@
 using TBD.AddressService;
 using TBD.Data.Seeding;
+using TBD.ScheduleModule;
 using TBD.UserModule;
 
 namespace TBD;
@@ -13,6 +14,7 @@ public class Program
         // Modularized service registrations
         builder.Services.AddUserService(builder.Configuration);     // Register UserModule services
         builder.Services.AddAddressService(builder.Configuration); // Register AddressModule services
+        builder.Services.AddScheduleModule(builder.Configuration); // Register ScheduleModule services
 
         // Shared components and features
         builder.Services.AddAuthorization();
