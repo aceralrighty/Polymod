@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.Models.Entities;
+using TBD.AddressService.Models;
+using TBD.UserModule.Data;
+using TBD.UserModule.Models;
 
 namespace TBD.Data.Seeding;
 
@@ -8,7 +10,7 @@ public class DataSeeder
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<GenericDatabaseContext>();
+        var context = scope.ServiceProvider.GetRequiredService<UserDbContext>();
 
         await context.Database.MigrateAsync();
     
@@ -19,7 +21,7 @@ public class DataSeeder
         await SeedUserAddressesAsync(context);
     }
 
-    private static async Task SeedUsersAsync(GenericDatabaseContext context)
+    private static async Task SeedUsersAsync(UserDbContext context)
     {
         // Check if there are already users in the database
         if (await context.Set<User>().AnyAsync())
@@ -58,7 +60,7 @@ public class DataSeeder
         Console.WriteLine($"Seeded {users.Count} users");
     }
 
-    private static async Task SeedUserAddressesAsync(GenericDatabaseContext context)
+    private static async Task SeedUserAddressesAsync(UserDbContext context)
     {
         // Check if there are already addresses in the database
         if (await context.Set<UserAddress>().AnyAsync())
