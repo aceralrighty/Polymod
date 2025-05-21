@@ -8,13 +8,21 @@ namespace TBD.DesignTimeFactories
     {
         public AddressDbContext CreateDbContext(string[] args)
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory()) // assumes root folder
-                .AddJsonFile("appsettings.Development.json") // or "appsettings.json"
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
                 .Build();
 
+            var connectionString = configuration.GetConnectionString("AddressDb");
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException("Connection string 'AddressDb' not found.");
+
             var optionsBuilder = new DbContextOptionsBuilder<AddressDbContext>();
-            optionsBuilder.UseSqlServer(configuration.GetConnectionString("AddressDb"));
+            optionsBuilder.UseSqlServer(connectionString);
 
             return new AddressDbContext(optionsBuilder.Options);
         }
