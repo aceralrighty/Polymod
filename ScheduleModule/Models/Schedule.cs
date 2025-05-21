@@ -85,11 +85,31 @@ public class Schedule : GenericScheduleEntity
     [NotMapped]
     public Dictionary<string, int> DaysWorked
     {
-        get => (string.IsNullOrEmpty(DaysWorkedJson)
-                   ? new Dictionary<string, int>()
-                   : JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson)) ??
-               throw new InvalidOperationException();
-        init => DaysWorkedJson = JsonSerializer.Serialize(value);
+        get
+        {
+            if (string.IsNullOrEmpty(DaysWorkedJson))
+            {
+                return new Dictionary<string, int>();
+            }
+        
+            try
+            {
+                var result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
+                if (result == null)
+                {
+                    throw new InvalidOperationException("Deserialization resulted in a null dictionary.");
+                }
+                return result;
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidOperationException("Failed to deserialize DaysWorkedJson due to invalid JSON.", ex);
+            }
+        }
+        set
+        {
+            DaysWorkedJson = JsonSerializer.Serialize(value ?? new Dictionary<string, int>());
+        }
     }
 
     public virtual void RecalculateTotalHours()

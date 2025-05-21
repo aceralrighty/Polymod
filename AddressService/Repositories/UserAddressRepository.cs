@@ -17,17 +17,17 @@ internal class UserAddressRepository : GenericAddressRepository<UserAddress>, IU
             u.Address1 == userAddress.Address1 && u.ZipCode == userAddress.ZipCode) ?? throw new Exception();
     }
 
-    public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync(UserAddress userAddress)
+    public async Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.State).ToListAsync();
+        return (await _dbSet.GroupBy(ua => ua.State).ToListAsync())!;
     }
 
-    public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync(UserAddress userAddress)
+    public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.ZipCode ?? 0).ToListAsync();
+        return await _dbSet.GroupBy(ua => ua.ZipCode).ToListAsync();
     }
 
-    public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync(UserAddress userAddress)
+    public async Task<List<IGrouping<string, UserAddress>>> GroupByCityAsync()
     {
         return await _dbSet.GroupBy(ua => ua.City).ToListAsync();
     }

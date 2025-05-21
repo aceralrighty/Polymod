@@ -11,6 +11,10 @@ public class AddressDbContext : DbContext
     {
     }
 
+    public AddressDbContext()
+    {
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
