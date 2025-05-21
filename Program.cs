@@ -11,34 +11,33 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Modularized service registrations
-        builder.Services.AddUserService(builder.Configuration);     // Register UserModule services
-        builder.Services.AddAddressService(builder.Configuration); // Register AddressModule services
-        builder.Services.AddScheduleModule(builder.Configuration); // Register ScheduleModule services
+        builder.Services.AddUserService(builder.Configuration);
+        builder.Services.AddAddressService(builder.Configuration);
+        builder.Services.AddScheduleModule(builder.Configuration);
 
-        // Shared components and features
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
 
         var app = builder.Build();
 
-        // Seed data if enabled in configuration
         if (builder.Configuration.GetValue("SeedData", false))
         {
             await DataSeeder.SeedAsync(app.Services);
         }
 
-        // Configure Middleware and Endpoints
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
         }
 
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection(); // Disabled for testing
         app.UseAuthorization();
         app.MapControllers();
 
-        await app.RunAsync(); // Run the web application
+        app.MapGet("/test", () => "Hello, World!");
+
+        Console.WriteLine("Starting application...");
+        await app.RunAsync("http://0.0.0.0:5000"); // Explicit HTTP binding
     }
 }

@@ -1,23 +1,24 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
+﻿# Stage 1: build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["TBD.csproj", "./"]
-RUN dotnet restore "TBD.csproj"
-COPY . .
-WORKDIR "/src/"
-RUN dotnet build "./TBD.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./TBD.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+# Copy everything
+COPY . ./
+
+# Restore dependencies
+RUN dotnet restore ./TBD.csproj
+
+# Build and publish
+RUN dotnet publish ./TBD.csproj -c Release -o /out
+
+# Stage 2: runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+WORKDIR /app
+COPY --from=build /out .
+
+# Expose HTTP and HTTPS
+EXPOSE 5000
+EXPOSE 5001
+
+# Start app
 ENTRYPOINT ["dotnet", "TBD.dll"]
