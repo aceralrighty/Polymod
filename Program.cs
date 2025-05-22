@@ -18,13 +18,11 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if (builder.Configuration.GetValue("SeedData", false))
-{
-    await DataSeeder.SeedAsync(app.Services);
-}
 
 if (app.Environment.IsDevelopment())
 {
+    // Testing Only
+    await DataSeeder.ReseedForTestingAsync(app.Services);
     app.MapOpenApi();
 }
 

@@ -8,12 +8,17 @@ namespace TBD.Data.Seeding;
 
 public class DataSeeder
 {
-    public static async Task SeedAsync(IServiceProvider serviceProvider)
+  
+    public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
 
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
+
+        // ⚠️ Drop and recreate the DBs - only do this for local testing!
+        await userContext.Database.EnsureDeletedAsync();
+        await addressContext.Database.EnsureDeletedAsync();
 
         await userContext.Database.MigrateAsync();
         await addressContext.Database.MigrateAsync();
@@ -24,12 +29,6 @@ public class DataSeeder
 
     private static async Task SeedUsersAsync(UserDbContext context)
     {
-        // Check if there are already users in the database
-        if (await context.Set<User>().AnyAsync())
-        {
-            return; // Skip seeding if data already exists
-        }
-
         var users = new List<User>
         {
             new User
@@ -38,6 +37,7 @@ public class DataSeeder
                 Username = "john.doe",
                 Email = "john.doe@example.com",
                 CreatedAt = DateTime.UtcNow,
+                UpdatedAt = null,
             },
             new User
             {
@@ -45,6 +45,7 @@ public class DataSeeder
                 Username = "jane.smith",
                 Email = "jane.smith@example.com",
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(10),
+                UpdatedAt = null,
             },
             new User
             {
@@ -52,6 +53,7 @@ public class DataSeeder
                 Username = "admin.user",
                 Email = "admin@example.com",
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(20),
+                UpdatedAt = null,
             }
         };
 
@@ -63,12 +65,8 @@ public class DataSeeder
 
     private static async Task SeedUserAddressesAsync(AddressDbContext addressContext, UserDbContext context)
     {
-        // Check if there are already addresses in the AddressDbContext
-        if (await addressContext.UserAddress.AnyAsync())
-            return;
-
         var users = await context.Set<User>().ToListAsync();
-        if (!users.Any())
+        if (users.Count == 0)
         {
             Console.WriteLine("No users found for address seeding");
             return;
@@ -124,5 +122,4 @@ public class DataSeeder
         await addressContext.UserAddress.AddRangeAsync(addresses);
         await addressContext.SaveChangesAsync();
     }
-
 }
