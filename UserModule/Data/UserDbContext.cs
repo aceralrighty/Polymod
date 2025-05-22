@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using TBD.ScheduleModule.Models;
 using TBD.UserModule.Models;
 using Microsoft.EntityFrameworkCore.Metadata;
