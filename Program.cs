@@ -11,6 +11,7 @@ builder.Logging.AddConsole();
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
+builder.Services.AddScheduleModule(builder.Configuration);
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -23,6 +24,7 @@ if (app.Environment.IsDevelopment())
 {
     // Testing Only
     await DataSeeder.ReseedForTestingAsync(app.Services);
+    await ScheduleSeeder.ReseedForTestingAsync(app.Services);
     app.MapOpenApi();
 }
 

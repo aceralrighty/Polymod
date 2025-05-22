@@ -18,5 +18,10 @@ public class User: GenericUserEntity
     public string? Email { get; set; }
 
     [Required] public Schedule? Schedule { get; init; }
+
+    public User()
+    {
+        Schedule = new Schedule();
+    }
     
 }
