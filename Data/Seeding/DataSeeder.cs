@@ -27,6 +27,7 @@ public class DataSeeder
         await SeedUserAddressesAsync(addressContext, userContext);
     }
 
+    
     private static async Task SeedUsersAsync(UserDbContext context)
     {
         var users = new List<User>
