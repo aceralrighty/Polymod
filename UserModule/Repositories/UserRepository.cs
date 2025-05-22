@@ -6,9 +6,10 @@ namespace TBD.UserModule.Repositories;
 
 internal class UserRepository : GenericUserRepository<User>, IUserRepository
 {
-    protected UserRepository(UserDbContext context) : base(context)
+    public UserRepository(UserDbContext context) : base(context)
     {
     }
+    
 
     public async Task<User> GetByEmailAsync(string email)
     {

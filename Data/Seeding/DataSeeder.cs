@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.AddressService.Data;
 using TBD.AddressService.Models;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
@@ -10,15 +11,15 @@ public class DataSeeder
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<UserDbContext>();
 
-        await context.Database.MigrateAsync();
-    
-        // Call to seed users first
-        await SeedUsersAsync(context);
-    
-        // Then seed addresses
-        await SeedUserAddressesAsync(context);
+        var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+        var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
+
+        await userContext.Database.MigrateAsync();
+        await addressContext.Database.MigrateAsync();
+
+        await SeedUsersAsync(userContext);
+        await SeedUserAddressesAsync(addressContext, userContext);
     }
 
     private static async Task SeedUsersAsync(UserDbContext context)
@@ -60,15 +61,12 @@ public class DataSeeder
         Console.WriteLine($"Seeded {users.Count} users");
     }
 
-    private static async Task SeedUserAddressesAsync(UserDbContext context)
+    private static async Task SeedUserAddressesAsync(AddressDbContext addressContext, UserDbContext context)
     {
-        // Check if there are already addresses in the database
-        if (await context.Set<UserAddress>().AnyAsync())
-        {
-            return; // Skip seeding if data already exists
-        }
+        // Check if there are already addresses in the AddressDbContext
+        if (await addressContext.UserAddress.AnyAsync())
+            return;
 
-        // Get users to associate addresses with
         var users = await context.Set<User>().ToListAsync();
         if (!users.Any())
         {
@@ -78,7 +76,6 @@ public class DataSeeder
 
         var addresses = new List<UserAddress>();
 
-        // Add address for first user
         if (users.Count > 0)
         {
             addresses.Add(new UserAddress(
@@ -94,7 +91,6 @@ public class DataSeeder
             });
         }
 
-        // Add address for second user
         if (users.Count > 1)
         {
             addresses.Add(new UserAddress(
@@ -110,7 +106,6 @@ public class DataSeeder
             });
         }
 
-        // Add address for third user
         if (users.Count > 2)
         {
             addresses.Add(new UserAddress(
@@ -126,7 +121,8 @@ public class DataSeeder
             });
         }
 
-        await context.Set<UserAddress>().AddRangeAsync(addresses);
-        await context.SaveChangesAsync();
+        await addressContext.UserAddress.AddRangeAsync(addresses);
+        await addressContext.SaveChangesAsync();
     }
+
 }

@@ -6,7 +6,7 @@ using TBD.UserModule.Models;
 namespace TBD.ScheduleModule.Models;
 
 [Table("Schedule")]
-public class Schedule : GenericScheduleEntity
+public sealed class Schedule : GenericScheduleEntity
 {
     public double? TotalHoursWorked { get; set; }
 
@@ -28,7 +28,7 @@ public class Schedule : GenericScheduleEntity
 
     public double? BasePay { get; set; }
 
-    public virtual double? Overtime
+    public double? Overtime
     {
         get
         {
@@ -41,7 +41,7 @@ public class Schedule : GenericScheduleEntity
         }
     }
 
-    public virtual double? OvertimeRate
+    public double? OvertimeRate
     {
         get
         {
@@ -54,7 +54,7 @@ public class Schedule : GenericScheduleEntity
         }
     }
 
-    public virtual double? TotalPay
+    public double? TotalPay
     {
         get
         {
@@ -85,14 +85,31 @@ public class Schedule : GenericScheduleEntity
     [NotMapped]
     public Dictionary<string, int> DaysWorked
     {
-        get => (string.IsNullOrEmpty(DaysWorkedJson)
-                   ? new Dictionary<string, int>()
-                   : JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson)) ??
-               throw new InvalidOperationException();
-        init => DaysWorkedJson = JsonSerializer.Serialize(value);
+        get
+        {
+            if (string.IsNullOrEmpty(DaysWorkedJson))
+            {
+                return new Dictionary<string, int>();
+            }
+        
+            try
+            {
+                var result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
+                if (result == null)
+                {
+                    throw new InvalidOperationException("Deserialization resulted in a null dictionary.");
+                }
+                return result;
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidOperationException("Failed to deserialize DaysWorkedJson due to invalid JSON.", ex);
+            }
+        }
+        set => DaysWorkedJson = JsonSerializer.Serialize(value ?? new Dictionary<string, int>());
     }
 
-    public virtual void RecalculateTotalHours()
+    public void RecalculateTotalHours()
     {
         TotalHoursWorked = 0;
         var daysWorked = DaysWorked; // Use the property to deserialize

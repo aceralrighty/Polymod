@@ -14,24 +14,22 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper)
     protected readonly AddressDbContext _context = context;
     private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
 
-    public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync(
-        UserAddress userAddress)
+    public async Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.State).ToListAsync() ??
-               throw new NullReferenceException(nameof(userAddress));
+        var addresses = await _dbSet.ToListAsync();
+        return addresses.GroupBy(ua => ua.State).ToList();
     }
 
-    public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync(
-        UserAddress userAddress)
+    public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.ZipCode ?? 0).ToListAsync();
+        return await _dbSet.GroupBy(ua => ua.ZipCode).ToListAsync();
     }
 
-    public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync(
-        UserAddress userAddress)
+
+    public async Task<List<IGrouping<string, UserAddress>>> GroupByCityAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.City).ToListAsync() ??
-               throw new NullReferenceException(nameof(userAddress));
+        var addresses = await _dbSet.ToListAsync();
+        return addresses.GroupBy(ua => ua.City).ToList();
     }
 
     public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)

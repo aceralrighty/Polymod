@@ -7,7 +7,7 @@ namespace TBD.UserModule.Models;
 [Table("Users")]
 public class User: GenericUserEntity
 {
-    [Key] public Guid Id { get; set; }
+    [Key] public new Guid Id { get; set; }
 
     [Column(TypeName = "varchar(255)")]
     [Required]

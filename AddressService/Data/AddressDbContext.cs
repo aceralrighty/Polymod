@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using TBD.AddressService.Models;
 
 namespace TBD.AddressService.Data;
@@ -8,6 +9,10 @@ public class AddressDbContext : DbContext
     public DbSet<UserAddress> UserAddress { get; set; }
 
     public AddressDbContext(DbContextOptions<AddressDbContext> options) : base(options)
+    {
+    }
+
+    public AddressDbContext()
     {
     }
 
@@ -22,18 +27,23 @@ public class AddressDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserAddress>().HasIndex(u => u.Id).IsUnique();
-        modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt)
+            .ValueGeneratedOnAdd().Metadata
+            .SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+        ;
     }
 
     public override int SaveChanges()
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is UserAddress);
+        var entries = ChangeTracker.Entries().Where(u =>
+            u.Entity is UserAddress && (u.State == EntityState.Added || u.State == EntityState.Modified));
         foreach (var entityEntry in entries)
         {
-            ((UserAddress)entityEntry.Entity).UpdatedAt = DateTime.UtcNow;
+            var entity = (UserAddress)entityEntry.Entity;
+            entity.UpdatedAt = DateTime.UtcNow;
             if (entityEntry.State == EntityState.Added)
             {
-                ((UserAddress)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
+                entity.CreatedAt = DateTime.UtcNow;
             }
         }
 
@@ -42,13 +52,15 @@ public class AddressDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is UserAddress);
+        var entries = ChangeTracker.Entries().Where(u =>
+            u.Entity is UserAddress && (u.State == EntityState.Added || u.State == EntityState.Modified));
         foreach (var entityEntry in entries)
         {
-            ((UserAddress)entityEntry.Entity).UpdatedAt = DateTime.UtcNow;
+            var entity = (UserAddress)entityEntry.Entity;
+            entity.UpdatedAt = DateTime.UtcNow;
             if (entityEntry.State == EntityState.Added)
             {
-                ((UserAddress)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
+                entity.CreatedAt = DateTime.UtcNow;
             }
         }
 

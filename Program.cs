@@ -3,42 +3,34 @@ using TBD.Data.Seeding;
 using TBD.ScheduleModule;
 using TBD.UserModule;
 
-namespace TBD;
+var builder = WebApplication.CreateBuilder(args);
 
-public class Program
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
+builder.Services.AddUserService(builder.Configuration);
+builder.Services.AddAddressService(builder.Configuration);
+builder.Services.AddScheduleModule(builder.Configuration);
+
+builder.Services.AddAuthorization();
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+
+var app = builder.Build();
+
+if (builder.Configuration.GetValue("SeedData", false))
 {
-    public static async Task Main(string[] args)
-    {
-        var builder = WebApplication.CreateBuilder(args);
-
-        // Modularized service registrations
-        builder.Services.AddUserService(builder.Configuration);     // Register UserModule services
-        builder.Services.AddAddressService(builder.Configuration); // Register AddressModule services
-        builder.Services.AddScheduleModule(builder.Configuration); // Register ScheduleModule services
-
-        // Shared components and features
-        builder.Services.AddAuthorization();
-        builder.Services.AddControllers();
-        builder.Services.AddOpenApi();
-
-        var app = builder.Build();
-
-        // Seed data if enabled in configuration
-        if (builder.Configuration.GetValue("SeedData", false))
-        {
-            await DataSeeder.SeedAsync(app.Services);
-        }
-
-        // Configure Middleware and Endpoints
-        if (app.Environment.IsDevelopment())
-        {
-            app.MapOpenApi();
-        }
-
-        app.UseHttpsRedirection();
-        app.UseAuthorization();
-        app.MapControllers();
-
-        await app.RunAsync(); // Run the web application
-    }
+    await DataSeeder.SeedAsync(app.Services);
 }
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseAuthorization();
+app.MapControllers();
+
+
+Console.WriteLine("Starting app...");
+await app.RunAsync();
