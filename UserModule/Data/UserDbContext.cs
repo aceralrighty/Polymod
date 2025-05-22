@@ -47,14 +47,20 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
         foreach (var entry in entries)
         {
             var entity = (User)entry.Entity;
-            if (entry.State == EntityState.Added)
+            switch (entry.State)
             {
-                entity.CreatedAt = DateTime.UtcNow;
-                // Do not set UpdatedAt for new entities
-            }
-            else if (entry.State == EntityState.Modified)
-            {
-                entity.UpdatedAt = DateTime.UtcNow;
+                case EntityState.Added:
+                    entity.CreatedAt = DateTime.UtcNow;
+                    // Do not set UpdatedAt for new entities
+                    break;
+                case EntityState.Modified:
+                    entity.UpdatedAt = DateTime.UtcNow;
+                    break;
+                case EntityState.Detached:
+                case EntityState.Unchanged:
+                case EntityState.Deleted:
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -78,6 +84,9 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
                 case EntityState.Modified:
                     entity.UpdatedAt = DateTime.UtcNow;
                     break;
+                case EntityState.Detached:
+                case EntityState.Unchanged:
+                case EntityState.Deleted:
                 default:
                     throw new ArgumentOutOfRangeException();
             }
