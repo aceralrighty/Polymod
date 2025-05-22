@@ -15,8 +15,9 @@ public class DataSeeder
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
 
-        await userContext.Database.MigrateAsync();
-        await addressContext.Database.MigrateAsync();
+        await userContext.Database.EnsureCreatedAsync();
+        await addressContext.Database.EnsureCreatedAsync();
+        
 
         await SeedUsersAsync(userContext);
         await SeedUserAddressesAsync(addressContext, userContext);
@@ -38,6 +39,7 @@ public class DataSeeder
                 Username = "john.doe",
                 Email = "john.doe@example.com",
                 CreatedAt = DateTime.UtcNow,
+                UpdatedAt = null,
             },
             new User
             {
@@ -45,6 +47,7 @@ public class DataSeeder
                 Username = "jane.smith",
                 Email = "jane.smith@example.com",
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(10),
+                UpdatedAt = null,
             },
             new User
             {
@@ -52,6 +55,7 @@ public class DataSeeder
                 Username = "admin.user",
                 Email = "admin@example.com",
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(20),
+                UpdatedAt = null,
             }
         };
 
@@ -68,7 +72,7 @@ public class DataSeeder
             return;
 
         var users = await context.Set<User>().ToListAsync();
-        if (!users.Any())
+        if (users.Count == 0)
         {
             Console.WriteLine("No users found for address seeding");
             return;
