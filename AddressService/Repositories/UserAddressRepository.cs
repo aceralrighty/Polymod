@@ -6,7 +6,7 @@ namespace TBD.AddressService.Repositories;
 
 internal class UserAddressRepository : GenericAddressRepository<UserAddress>, IUserAddressRepository
 {
-    protected UserAddressRepository(AddressDbContext context) : base(context)
+    public UserAddressRepository(AddressDbContext context) : base(context)
     {
     }
 

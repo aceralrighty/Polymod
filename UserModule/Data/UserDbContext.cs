@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.ScheduleModule.Models;
 using TBD.UserModule.Models;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace TBD.UserModule.Data;
 
@@ -21,25 +22,35 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
             .IsUnique();
-        modelBuilder.Entity<User>().Property(u => u.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Username)
             .IsUnique();
 
-        modelBuilder.Entity<User>().HasOne(u => u.Schedule).WithOne(s => s.User).HasForeignKey<Schedule>(s => s.UserId)
+        modelBuilder.Entity<User>()
+            .Property(u => u.CreatedAt)
+            .ValueGeneratedOnAdd()
+            .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Schedule)
+            .WithOne(s => s.User)
+            .HasForeignKey<Schedule>(s => s.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 
     public override int SaveChanges()
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is User);
-        foreach (var entityEntry in entries)
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.Entity is User && (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+        foreach (var entry in entries)
         {
-            ((User)entityEntry.Entity).UpdatedAt = DateTime.UtcNow;
-            if (entityEntry.State == EntityState.Added)
+            var entity = (User)entry.Entity;
+            entity.UpdatedAt = DateTime.UtcNow;
+            if (entry.State == EntityState.Added)
             {
-                ((User)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
+                entity.CreatedAt = DateTime.UtcNow;
             }
         }
 
@@ -48,13 +59,16 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is User);
-        foreach (var entityEntry in entries)
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.Entity is User && (e.State == EntityState.Added || e.State == EntityState.Modified));
+
+        foreach (var entry in entries)
         {
-            ((User)entityEntry.Entity).UpdatedAt = DateTime.UtcNow;
-            if (entityEntry.State == EntityState.Added)
+            var entity = (User)entry.Entity;
+            entity.UpdatedAt = DateTime.UtcNow;
+            if (entry.State == EntityState.Added)
             {
-                ((User)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
+                entity.CreatedAt = DateTime.UtcNow;
             }
         }
 
