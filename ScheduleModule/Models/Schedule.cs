@@ -69,7 +69,6 @@ public sealed class Schedule : GenericScheduleEntity
 
 
     [Column(TypeName = "nvarchar(9)")] public string DaysWorkedJson { get; set; } = "{}";
-
     /// <summary>
     /// Represents a dictionary containing the days of work and corresponding hours worked for each day.
     /// Maps to a serialized JSON string in the database.
