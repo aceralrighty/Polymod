@@ -14,9 +14,9 @@ public class UserSchedule
     public double? BasePay { get; set; }
 
     // Calculated properties are now computed once when needed
-    public double? Overtime => _overtime ??= TotalHoursWorked > 40 ? TotalHoursWorked - 40 : 0;
+    private double? Overtime => _overtime ??= TotalHoursWorked > 40 ? TotalHoursWorked - 40 : 0;
 
-    public double? OvertimeRate => _overtimeRate ??= Overtime > 0 ? BasePay * 1.5 * Overtime : 0;
+    private double? OvertimeRate => _overtimeRate ??= Overtime > 0 ? BasePay * 1.5 * Overtime : 0;
 
     public double? TotalPay => _totalPay ??= TotalHoursWorked > 40
         ? OvertimeRate + (BasePay * TotalHoursWorked)

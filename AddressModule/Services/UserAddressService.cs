@@ -54,11 +54,11 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
         return await _dbSet.Where(expression).ToListAsync();
     }
 
-    public async Task<UserAddress> GetByIdAsync(Guid id)
+    public async Task<UserAddress?> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FirstOrDefaultAsync(i => i.Id == id).WaitAsync(TimeSpan.FromSeconds(30)) ??
-               throw new InvalidOperationException();
+        return await _dbSet.FirstOrDefaultAsync(i => i.Id == id).WaitAsync(TimeSpan.FromSeconds(30));
     }
+
 
     public async Task AddAsync(UserAddress entity)
     {

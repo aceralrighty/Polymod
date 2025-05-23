@@ -4,13 +4,9 @@ using TBD.AddressModule.Models;
 
 namespace TBD.AddressModule.Repositories;
 
-internal class UserAddressRepository : GenericAddressRepository<UserAddress>, IUserAddressRepository
+internal class UserAddressRepository(AddressDbContext context)
+    : GenericAddressRepository<UserAddress>(context), IUserAddressRepository
 {
-    public UserAddressRepository(AddressDbContext context) : base(context)
-    {
-    }
-
-
     public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)
     {
         return await _dbSet.FirstOrDefaultAsync(u =>

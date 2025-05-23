@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace TBD.API.DTOs;
+
 public class UserAddressRequest
 {
     public UserAddressRequest()

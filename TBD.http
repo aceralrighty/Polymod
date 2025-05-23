@@ -1,6 +1,40 @@
 @TBD_HostAddress = http://localhost:5137
 
-GET {{TBD_HostAddress}}/weatherforecast/
+### Get all addresses
+GET {{TBD_HostAddress}}/api/Address
 Accept: application/json
 
-###
+### Get address by id
+GET {{TBD_HostAddress}}/api/Address/554cf214-45fd-4e32-87f4-fa0bb8abcbc1
+Accept: application/json
+
+### Create new address
+POST {{TBD_HostAddress}}/api/Address
+Content-Type: application/json
+
+{
+  "id": "fcfeec42-6f71-49c5-8a79-b77d6b457baa",
+  "userId": "7d41785a-3e00-4e18-b26d-e8bbc3eda826",
+  "address1": "123 Main St",
+  "address2": "Apt 4B",
+  "city": "Springfield",
+  "state": "IL",
+  "zipCode": 62704
+}
+
+
+### Update existing address
+PUT {{TBD_HostAddress}}/api/Address/fcfeec42-6f71-49c5-8a79-b77d6b457baa
+Content-Type: application/json
+
+{
+  "id": "fcfeec42-6f71-49c5-8a79-b77d6b457baa",
+  "address1": "456 Elm Street",
+  "address2": "Suite 200",
+  "city": "Springfield",
+  "state": "IL",
+  "zipCode": 62705
+}
+
+### Delete address by id
+DELETE {{TBD_HostAddress}}/api/Address/fcfeec42-6f71-49c5-8a79-b77d6b457baa
