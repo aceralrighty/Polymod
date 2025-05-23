@@ -43,7 +43,8 @@ public class ScheduleSeeder
             {
                 Id = Guid.NewGuid(),
                 Username = "alice",
-                Email = "alice@example.com"
+                Email = "alice@example.com",
+                Schedule = new Schedule()
             }
         };
         schedule1.UserId = schedule1.User.Id;
@@ -62,7 +63,8 @@ public class ScheduleSeeder
             {
                 Id = Guid.NewGuid(),
                 Username = "bob",
-                Email = "bob@example.com"
+                Email = "bob@example.com",
+                Schedule = new Schedule()
             }
         };
         schedule2.UserId = schedule2.User.Id;

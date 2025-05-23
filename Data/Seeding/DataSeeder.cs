@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
+using TBD.ScheduleModule.Models;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
@@ -39,6 +40,7 @@ public class DataSeeder
                 Email = "john.doe@example.com",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = null,
+                Schedule = new Schedule()
             },
             new User
             {
@@ -47,6 +49,7 @@ public class DataSeeder
                 Email = "jane.smith@example.com",
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(10),
                 UpdatedAt = null,
+                Schedule = new Schedule()
             },
             new User
             {
@@ -55,6 +58,7 @@ public class DataSeeder
                 Email = "admin@example.com",
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(20),
                 UpdatedAt = null,
+                Schedule = new Schedule()
             }
         };
 

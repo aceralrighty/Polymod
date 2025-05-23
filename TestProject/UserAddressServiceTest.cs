@@ -34,7 +34,8 @@ namespace TBD.TestProject
             {
                 Id = Guid.NewGuid(),
                 Email = "testuser@example.com", // Add required Email
-                Username = "testuser"          // Add required Username
+                Username = "testuser",
+                Schedule = null // Add required Username
                 // Add other required properties if any
             };
 
