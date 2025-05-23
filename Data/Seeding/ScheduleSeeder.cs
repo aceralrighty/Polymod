@@ -14,6 +14,10 @@ public class ScheduleSeeder
         var scheduleContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
 
+        if (scope is IDisposable)
+        {
+            Console.WriteLine("Disposing");
+        }
         await userContext.Database.EnsureDeletedAsync();
         await scheduleContext.Database.EnsureDeletedAsync();
         await userContext.Database.MigrateAsync();

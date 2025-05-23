@@ -19,7 +19,6 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-
 if (app.Environment.IsDevelopment())
 {
     // Testing Only
@@ -31,6 +30,5 @@ if (app.Environment.IsDevelopment())
 app.UseAuthorization();
 app.MapControllers();
 
-
-Console.WriteLine("Starting app...");
+Console.WriteLine("Starting Server");
 await app.RunAsync();
