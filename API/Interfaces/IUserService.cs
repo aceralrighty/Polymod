@@ -2,7 +2,7 @@ using TBD.API.DTOs;
 
 namespace TBD.API.Interfaces;
 
-interface IUserService
+internal interface IUserService
 {
     Task<UserDto?> GetUserByIdAsync(Guid id);
     Task<UserDto?> GetUserByEmailAsync(string email);
