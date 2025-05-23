@@ -1,6 +1,8 @@
 // UserModule.cs
 
 using Microsoft.EntityFrameworkCore;
+using TBD.API.Interfaces;
+using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Repositories;
 using TBD.UserModule.Services;
@@ -15,7 +17,7 @@ public static class UserModule
             options.UseSqlServer(configuration.GetConnectionString("UserDb")));
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
-        services.AddAutoMapper(typeof(UserModule).Assembly);
+        services.AddAutoMapper(typeof(UserMapping).Assembly);
         return services;
     }
 

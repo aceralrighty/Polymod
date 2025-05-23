@@ -5,7 +5,7 @@ using NUnit.Framework;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Services;
-using TBD.Shared.DTOs;
+using TBD.API.DTOs;
 using TBD.UserModule.Models;
 
 namespace TBD.TestProject
@@ -66,7 +66,7 @@ namespace TBD.TestProject
             // Setup mapper mock
             _mockMapper = new Mock<IMapper>();
     
-            _userAddressService = new UserAddressService(_context, _mockMapper.Object);
+            
         }
         [TearDown]
         public void TearDown()

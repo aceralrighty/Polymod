@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 
-namespace TBD.Shared.DTOs;
+namespace TBD.API.DTOs;
 
 public class UserSchedule
 {

@@ -1,6 +1,6 @@
 using AutoMapper;
+using TBD.API.DTOs;
 using TBD.ScheduleModule.Models;
-using TBD.Shared.DTOs;
 
 namespace TBD.Shared.Utils;
 

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TBD.Shared.DTOs;
+namespace TBD.API.DTOs;
 
 public class UserDto
 {

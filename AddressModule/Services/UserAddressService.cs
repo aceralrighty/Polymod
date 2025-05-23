@@ -4,15 +4,19 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Repositories;
-using TBD.Shared.DTOs;
+using TBD.API.DTOs;
+using TBD.API.Interfaces;
 
 namespace TBD.AddressModule.Services;
 
-internal class UserAddressService(AddressDbContext context, IMapper mapper)
+internal class UserAddressService(AddressDbContext context, IMapper mapper, IUserService userService)
     : IUserAddressService, IUserAddressRepository
 {
     protected readonly AddressDbContext _context = context;
     private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
+    private readonly IMapper _mapper = mapper;
+    private readonly IUserService _userService = userService;
+    
 
     public async Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync()
     {
@@ -82,14 +86,27 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper)
 
     public async Task<UserAddress> UpdateUserAddress(UserAddressRequest userAddressDto)
     {
+        // 1. Validate the user exists before updating the address
+        var user = await _userService.GetUserByIdAsync(userAddressDto.UserId);
+        if (user == null)
+        {
+            throw new ArgumentException("User not found, cannot update address.");
+        }
+
+        // 2. Fetch existing address entity
         var existingAddress = await _dbSet.FirstOrDefaultAsync(i => i.Id == userAddressDto.Id);
         if (existingAddress == null)
         {
             throw new ArgumentNullException(nameof(existingAddress), "User Address does not exist");
         }
 
-        mapper.Map(userAddressDto, existingAddress);
+        // 3. Map updated fields from DTO to the entity
+        _mapper.Map(userAddressDto, existingAddress);
+
+        // 4. Save changes to DB
         await _context.SaveChangesAsync();
+
         return existingAddress;
     }
+
 }
