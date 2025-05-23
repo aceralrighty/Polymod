@@ -3,101 +3,93 @@ using Microsoft.EntityFrameworkCore;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
-namespace TBD.UserModule.Controllers
+namespace TBD.UserModule.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class UserController(UserDbContext context) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UserController : ControllerBase
+    // GET: api/User
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<User>>> GetUsers()
     {
-        private readonly UserDbContext _context;
+        return await context.Users.ToListAsync();
+    }
 
-        public UserController(UserDbContext context)
+    // GET: api/User/5
+    [HttpGet("{id}")]
+    public async Task<ActionResult<User>> GetUser(Guid id)
+    {
+        var user = await context.Users.FindAsync(id);
+
+        if (user == null)
         {
-            _context = context;
+            return NotFound();
         }
 
-        // GET: api/User
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+        return user;
+    }
+
+    // PUT: api/User/5
+    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutUser(Guid id, User user)
+    {
+        if (id != user.Id)
         {
-            return await _context.Users.ToListAsync();
+            return BadRequest();
         }
 
-        // GET: api/User/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(Guid id)
-        {
-            var user = await _context.Users.FindAsync(id);
+        context.Entry(user).State = EntityState.Modified;
 
-            if (user == null)
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!UserExists(id))
             {
                 return NotFound();
             }
-
-            return user;
-        }
-
-        // PUT: api/User/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(Guid id, User user)
-        {
-            if (id != user.Id)
+            else
             {
-                return BadRequest();
+                throw;
             }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
-        // POST: api/User
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
+        return NoContent();
+    }
+
+    // POST: api/User
+    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+    [HttpPost]
+    public async Task<ActionResult<User>> PostUser(User user)
+    {
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        return CreatedAtAction("GetUser", new { id = user.Id }, user);
+    }
+
+    // DELETE: api/User/5
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        var user = await context.Users.FindAsync(id);
+        if (user == null)
         {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetUser", new { id = user.Id }, user);
+            return NotFound();
         }
 
-        // DELETE: api/User/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(Guid id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+        context.Users.Remove(user);
+        await context.SaveChangesAsync();
 
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
+        return NoContent();
+    }
 
-            return NoContent();
-        }
-
-        private bool UserExists(Guid id)
-        {
-            return _context.Users.Any(e => e.Id == id);
-        }
+    private bool UserExists(Guid id)
+    {
+        return context.Users.Any(e => e.Id == id);
     }
 }
