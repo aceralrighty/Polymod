@@ -1,103 +1,83 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
+using TBD.AddressModule.Services;
+using TBD.API.DTOs;
 
 namespace TBD.AddressModule.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AddressController : ControllerBase
+    public class AddressController(IUserAddressService userAddressService, IMapper mapper) : ControllerBase
     {
-        private readonly AddressDbContext _context;
-
-        public AddressController(AddressDbContext context)
-        {
-            _context = context;
-        }
-
         // GET: api/Address
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserAddress>>> GetUserAddress()
+        public async Task<ActionResult<IEnumerable<UserAddressResponse>>> GetUserAddresses()
         {
-            return await _context.UserAddress.ToListAsync();
+            var addresses = await userAddressService.GetAllAsync();
+            var result = mapper.Map<IEnumerable<UserAddressResponse>>(addresses);
+            return Ok(result);
         }
 
         // GET: api/Address/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserAddress>> GetUserAddress(Guid id)
+        public async Task<ActionResult<UserAddressResponse>> GetUserAddress(Guid id)
         {
-            var userAddress = await _context.UserAddress.FindAsync(id);
-
-            if (userAddress == null)
+            var address = await userAddressService.GetByIdAsync(id);
+            if (address == null)
             {
                 return NotFound();
             }
 
-            return userAddress;
-        }
-
-        // PUT: api/Address/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserAddress(Guid id, UserAddress userAddress)
-        {
-            if (id != userAddress.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(userAddress).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserAddressExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            var result = mapper.Map<UserAddressResponse>(address);
+            return Ok(result);
         }
 
         // POST: api/Address
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<UserAddress>> PostUserAddress(UserAddress userAddress)
+        public async Task<ActionResult<UserAddressResponse>> PostUserAddress([FromBody] UserAddressRequest request)
         {
-            _context.UserAddress.Add(userAddress);
-            await _context.SaveChangesAsync();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            return CreatedAtAction("GetUserAddress", new { id = userAddress.Id }, userAddress);
+            var entity = mapper.Map<UserAddress>(request);
+            await userAddressService.AddAsync(entity);
+
+            var responseDto = mapper.Map<UserAddressResponse>(entity);
+            return CreatedAtAction(nameof(GetUserAddress), new { id = entity.Id }, responseDto);
+        }
+
+        // PUT: api/Address/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutUserAddress(Guid id, [FromBody] UserAddressRequest request)
+        {
+            if (id != request.Id)
+                return BadRequest("ID in URL and body must match");
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var existingAddress = await userAddressService.GetByIdAsync(id);
+            if (existingAddress == null)
+                return NotFound();
+
+            // Map the updated values from DTO to existing entity
+            mapper.Map(request, existingAddress);
+            await userAddressService.UpdateAsync(existingAddress);
+
+            return NoContent();
         }
 
         // DELETE: api/Address/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUserAddress(Guid id)
         {
-            var userAddress = await _context.UserAddress.FindAsync(id);
-            if (userAddress == null)
-            {
+            var existingAddress = await userAddressService.GetByIdAsync(id);
+            if (existingAddress == null)
                 return NotFound();
-            }
 
-            _context.UserAddress.Remove(userAddress);
-            await _context.SaveChangesAsync();
-
+            await userAddressService.RemoveAsync(existingAddress);
             return NoContent();
-        }
-
-        private bool UserAddressExists(Guid id)
-        {
-            return _context.UserAddress.Any(e => e.Id == id);
         }
     }
 }
