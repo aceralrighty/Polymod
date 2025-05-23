@@ -1,9 +1,8 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using TBD.AddressService.Data;
-using TBD.Data;
+using TBD.AddressModule.Data;
 
-namespace TBD.AddressService.Repositories;
+namespace TBD.AddressModule.Repositories;
 
 public class GenericAddressRepository<T>(AddressDbContext context)
     where T : class

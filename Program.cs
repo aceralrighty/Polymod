@@ -1,4 +1,4 @@
-using TBD.AddressService;
+using TBD.AddressModule;
 using TBD.Data.Seeding;
 using TBD.ScheduleModule;
 using TBD.UserModule;

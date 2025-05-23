@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using TBD.AddressService.Models;
+using TBD.AddressModule.Models;
 
-namespace TBD.AddressService.Data;
+namespace TBD.AddressModule.Data;
 
 public class AddressDbContext : DbContext
 {

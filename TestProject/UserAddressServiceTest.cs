@@ -2,12 +2,13 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using NUnit.Framework;
-using TBD.AddressService.Data;
-using TBD.AddressService.Models;
+using TBD.AddressModule.Data;
+using TBD.AddressModule.Models;
+using TBD.AddressModule.Services;
 using TBD.Shared.DTOs;
 using TBD.UserModule.Models;
 
-namespace TBD.AddressService.Services
+namespace TBD.TestProject
 {
     [TestFixture]
     public class UserAddressServiceTests

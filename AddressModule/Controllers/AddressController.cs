@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TBD.AddressService.Data;
-using TBD.AddressService.Models;
+using TBD.AddressModule.Data;
+using TBD.AddressModule.Models;
 
-namespace TBD.AddressService.Controllers
+namespace TBD.AddressModule.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -1,12 +1,12 @@
 using System.Linq.Expressions;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using TBD.AddressService.Data;
-using TBD.AddressService.Models;
-using TBD.AddressService.Repositories;
+using TBD.AddressModule.Data;
+using TBD.AddressModule.Models;
+using TBD.AddressModule.Repositories;
 using TBD.Shared.DTOs;
 
-namespace TBD.AddressService.Services;
+namespace TBD.AddressModule.Services;
 
 internal class UserAddressService(AddressDbContext context, IMapper mapper)
     : IUserAddressService, IUserAddressRepository

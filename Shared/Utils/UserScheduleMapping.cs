@@ -1,6 +1,8 @@
 using AutoMapper;
+using TBD.ScheduleModule.Models;
+using TBD.Shared.DTOs;
 
-namespace TBD.ScheduleModule.Models.DTOs.UserScheduleMappingProfile;
+namespace TBD.Shared.Utils;
 
 public class UserScheduleMapping : Profile
 {

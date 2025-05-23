@@ -1,7 +1,8 @@
 using NUnit.Framework;
+using TBD.ScheduleModule.Models;
 using TBD.UserModule.Models;
 
-namespace TBD.ScheduleModule.Models;
+namespace TBD.TestProject;
 
 [TestFixture]
 [TestOf(typeof(Schedule))]

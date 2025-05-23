@@ -1,6 +1,6 @@
-using TBD.AddressService.Models;
+using TBD.AddressModule.Models;
 
-namespace TBD.AddressService.Repositories;
+namespace TBD.AddressModule.Repositories;
 
 public interface IUserAddressRepository
 {

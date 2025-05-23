@@ -1,7 +1,7 @@
-using TBD.AddressService.Models;
+using TBD.AddressModule.Models;
 using TBD.Shared.DTOs;
 
-namespace TBD.AddressService.Services;
+namespace TBD.AddressModule.Services;
 
 internal interface IUserAddressService
 {

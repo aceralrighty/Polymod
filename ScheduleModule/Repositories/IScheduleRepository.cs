@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using TBD.ScheduleModule.Models;
-using TBD.ScheduleModule.Models.DTOs;
 
 namespace TBD.ScheduleModule.Repositories;
 

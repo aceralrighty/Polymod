@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TBD.UserModule.Models;
 
-namespace TBD.AddressService.Models;
+namespace TBD.AddressModule.Models;
 
 [Table("Address")]
 public class UserAddress

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace TBD.AddressService.Models;
+namespace TBD.AddressModule.Models;
 
 public class GenericAddressEntity
 {

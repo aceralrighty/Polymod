@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.AddressService.Data;
-using TBD.AddressService.Repositories;
-using TBD.AddressService.Services;
+using TBD.AddressModule.Data;
+using TBD.AddressModule.Repositories;
+using TBD.AddressModule.Services;
 
-namespace TBD.AddressService;
+namespace TBD.AddressModule;
 
 public static class AddressModule
 {

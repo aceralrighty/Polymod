@@ -1,5 +1,5 @@
 using AutoMapper;
-using TBD.AddressService.Models;
+using TBD.AddressModule.Models;
 using TBD.Shared.DTOs;
 
 namespace TBD.Shared.Utils;

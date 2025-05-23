@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.AddressService.Data;
-using TBD.AddressService.Models;
+using TBD.AddressModule.Data;
+using TBD.AddressModule.Models;
 
-namespace TBD.AddressService.Repositories;
+namespace TBD.AddressModule.Repositories;
 
 internal class UserAddressRepository : GenericAddressRepository<UserAddress>, IUserAddressRepository
 {

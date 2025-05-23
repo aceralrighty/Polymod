@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using TBD.AddressService.Data;
+using TBD.AddressModule.Data;
 
 namespace TBD.DesignTimeFactories
 {
