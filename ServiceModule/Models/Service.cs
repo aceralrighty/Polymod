@@ -13,6 +13,7 @@ public class Service
     public decimal Price { get; set; }
     public int DurationInMinutes { get; set; }
     public Guid ProviderId { get; set; }
+    private decimal TotalPrice => Price * DurationInMinutes;
 
-    public string FormattedPrice => Price.ToString("C");
+    public string FormattedPrice => TotalPrice.ToString("C");
 }
