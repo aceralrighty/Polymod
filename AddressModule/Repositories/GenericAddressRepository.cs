@@ -1,19 +1,14 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using TBD.UserModule.Data;
+using TBD.AddressModule.Data;
 
-namespace TBD.UserModule.Repositories;
+namespace TBD.AddressModule.Repositories;
 
-public class GenericUserRepository<T> where T : class
+public class GenericAddressRepository<T>(AddressDbContext context)
+    where T : class
 {
-    protected readonly UserDbContext _context;
-    protected readonly DbSet<T> _dbSet;
-
-    protected GenericUserRepository(UserDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<T>();
-    }
+    protected readonly AddressDbContext _context = context;
+    protected readonly DbSet<T> _dbSet = context.Set<T>();
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
@@ -27,18 +22,20 @@ public class GenericUserRepository<T> where T : class
 
     public virtual async Task<T> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FindAsync(id) ??
+        return await _dbSet.FindAsync(id) ?? 
                throw new InvalidOperationException($"Entity with id {id} not found");
     }
 
     public virtual async Task AddAsync(T entity)
     {
         await _dbSet.AddAsync(entity);
+        await _context.SaveChangesAsync();
     }
 
     public virtual async Task AddRangeAsync(IEnumerable<T> entities)
     {
         await _dbSet.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
     }
 
     public virtual async Task UpdateAsync(T entity)

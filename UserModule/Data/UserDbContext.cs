@@ -48,23 +48,25 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
 
         foreach (var entry in entries)
         {
-            var entity = (User)entry.Entity;
-            switch (entry.State)
+            if (entry.Entity is User user)
             {
-                case EntityState.Added:
-                    entity.CreatedAt = DateTime.UtcNow;
-                    // Do not set UpdatedAt for new entities
-                    break;
-                case EntityState.Modified:
-                    entity.UpdatedAt = DateTime.UtcNow;
-                    break;
-                case EntityState.Detached:
-                case EntityState.Unchanged:
-                case EntityState.Deleted:
-                default:
-                    throw new ArgumentOutOfRangeException();
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        user.CreatedAt = DateTime.UtcNow;
+                        break;
+                    case EntityState.Modified:
+                        user.UpdatedAt = DateTime.UtcNow;
+                        break;
+                    case EntityState.Detached:
+                    case EntityState.Unchanged:
+                    case EntityState.Deleted:
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
+
 
         return base.SaveChanges();
     }
@@ -76,21 +78,22 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
 
         foreach (var entry in entries)
         {
-            var entity = (User)entry.Entity;
-            switch (entry.State)
+            if (entry.Entity is User user)
             {
-                case EntityState.Added:
-                    entity.CreatedAt = DateTime.UtcNow;
-                    // Do not set UpdatedAt for new entities
-                    break;
-                case EntityState.Modified:
-                    entity.UpdatedAt = DateTime.UtcNow;
-                    break;
-                case EntityState.Detached:
-                case EntityState.Unchanged:
-                case EntityState.Deleted:
-                default:
-                    throw new ArgumentOutOfRangeException();
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        user.CreatedAt = DateTime.UtcNow;
+                        break;
+                    case EntityState.Modified:
+                        user.UpdatedAt = DateTime.UtcNow;
+                        break;
+                    case EntityState.Detached:
+                    case EntityState.Unchanged:
+                    case EntityState.Deleted:
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
 

@@ -26,6 +26,7 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
         modelBuilder.Entity<Schedule>()
             .Property(s => s.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
+        modelBuilder.Entity<Schedule>().Property(s => s.DaysWorkedJson).HasColumnType("varchar(255)");
 
         base.OnModelCreating(modelBuilder);
     }
@@ -36,12 +37,14 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
         var entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
         foreach (var entityEntry in entries)
         {
-            ((Schedule)entityEntry.Entity).UpdatedAt = DateTime.UtcNow;
+            if (entityEntry.Entity is not Schedule schedule) continue;
+            schedule.UpdatedAt = DateTime.UtcNow;
             if (entityEntry.State == EntityState.Added)
             {
-                ((Schedule)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
+                schedule.CreatedAt = DateTime.UtcNow;
             }
         }
+
 
         return base.SaveChanges();
     }
@@ -51,10 +54,11 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
         var entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
         foreach (var entityEntry in entries)
         {
-            ((Schedule)entityEntry.Entity).UpdatedAt = DateTime.UtcNow;
+            if (entityEntry.Entity is not Schedule schedule) continue;
+            schedule.UpdatedAt = DateTime.UtcNow;
             if (entityEntry.State == EntityState.Added)
             {
-                ((Schedule)entityEntry.Entity).CreatedAt = DateTime.UtcNow;
+                schedule.CreatedAt = DateTime.UtcNow;
             }
         }
 

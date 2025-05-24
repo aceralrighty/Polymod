@@ -1,38 +1,46 @@
-
+using AutoMapper;
+using TBD.API.DTOs;
+using TBD.API.Interfaces;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;
 
 namespace TBD.UserModule.Services;
 
-internal class UserService(IUserRepository userRepository) : IUserService
+internal class UserService(IUserRepository userRepository, IMapper mapper) : IUserService
 {
-    public async Task<User> GetUserByIdAsync(Guid id)
+    public async Task<UserDto?> GetUserByIdAsync(Guid id)
     {
-        return await userRepository.GetByIdAsync(id);
+        var user = await userRepository.GetByIdAsync(id);
+        return mapper.Map<UserDto>(user);
     }
 
-    public async Task<User> GetUserByEmailAsync(string email)
+    public async Task<UserDto?> GetUserByEmailAsync(string email)
     {
-        return await userRepository.GetByEmailAsync(email);
+        var user = await userRepository.GetByEmailAsync(email);
+        return mapper.Map<UserDto>(user);
     }
 
-    public async Task<User> GetUserByUsernameAsync(string username)
+    public async Task<UserDto?> GetUserByUsernameAsync(string username)
     {
-        return await userRepository.GetByUsernameAsync(username);
+        var user = await userRepository.GetByUsernameAsync(username);
+        return mapper.Map<UserDto>(user);
     }
 
-    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
     {
-        return await userRepository.GetAllAsync();
+        var users = await userRepository.GetAllAsync();
+        return mapper.Map<IEnumerable<UserDto>>(users);
     }
 
-    public async Task CreateUserAsync(User user)
+    public async Task CreateUserAsync(UserDto userDto)
     {
+        var user = mapper.Map<User>(userDto);
         await userRepository.AddAsync(user);
     }
 
-    public async Task UpdateUserAsync(User user)
+    public async Task UpdateUserAsync(UserDto userDto)
     {
+        var user = mapper.Map<User>(userDto);
         await userRepository.UpdateAsync(user);
     }
 

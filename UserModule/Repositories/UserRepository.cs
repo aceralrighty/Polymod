@@ -4,13 +4,8 @@ using TBD.UserModule.Models;
 
 namespace TBD.UserModule.Repositories;
 
-internal class UserRepository : GenericUserRepository<User>, IUserRepository
+internal class UserRepository(UserDbContext context) : GenericUserRepository<User>(context), IUserRepository
 {
-    public UserRepository(UserDbContext context) : base(context)
-    {
-    }
-    
-
     public async Task<User> GetByEmailAsync(string email)
     {
         return await _dbSet.FirstOrDefaultAsync(u => u.Email == email) ??

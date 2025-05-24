@@ -1,15 +1,15 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using TBD.UserModule.Data;
+using TBD.ServiceModule.Data;
 
-namespace TBD.UserModule.Repositories;
+namespace TBD.ServiceModule.Repositories;
 
-public class GenericUserRepository<T> where T : class
+public class GenericServiceRepository<T> where T : class
 {
-    protected readonly UserDbContext _context;
+    protected readonly ServiceDbContext _context;
     protected readonly DbSet<T> _dbSet;
 
-    protected GenericUserRepository(UserDbContext context)
+    protected GenericServiceRepository(ServiceDbContext context)
     {
         _context = context;
         _dbSet = context.Set<T>();
@@ -20,15 +20,14 @@ public class GenericUserRepository<T> where T : class
         return await _dbSet.ToListAsync();
     }
 
+    public async Task<T?> GetByIdAsync(Guid id)
+    {
+        return await _dbSet.FindAsync(id);
+    }
+
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> expression)
     {
         return await _dbSet.Where(expression).ToListAsync();
-    }
-
-    public virtual async Task<T> GetByIdAsync(Guid id)
-    {
-        return await _dbSet.FindAsync(id) ??
-               throw new InvalidOperationException($"Entity with id {id} not found");
     }
 
     public virtual async Task AddAsync(T entity)

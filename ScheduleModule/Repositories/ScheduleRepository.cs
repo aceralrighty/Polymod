@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
-using TBD.ScheduleModule.Models.DTOs;
 
 namespace TBD.ScheduleModule.Repositories;
 
