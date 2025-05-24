@@ -32,6 +32,7 @@
     <ItemGroup>
         <Folder Include="AddressModule\Controllers\" />
         <Folder Include="ScheduleModule\Controllers\"/>
+        <Folder Include="ServiceModule\Controllers\" />
         <Folder Include="UserModule\Controllers\"/>
     </ItemGroup>
 
