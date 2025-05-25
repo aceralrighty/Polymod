@@ -43,8 +43,20 @@ public class ServiceSeeder
             DurationInMinutes = 60,
             ProviderId = Guid.NewGuid()
         };
+        var service3 = new Service
+        {
+            Id = Guid.NewGuid(),
+            Title = "Zumba",
+            Description = "Get your body fit with Zumba",
+            Price = 20,
+            DurationInMinutes = 60,
+            ProviderId = Guid.NewGuid()
+        };
+        Console.WriteLine($"This costs {service3.FormattedPrice}");
 
         services.Add(service1);
+        services.Add(service2);
+        services.Add(service3);
         await serviceContext.Services.AddRangeAsync(services);
         await serviceContext.SaveChangesAsync();
     }
