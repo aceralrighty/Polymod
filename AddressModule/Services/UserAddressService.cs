@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
+using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Repositories;
 using TBD.API.DTOs;
@@ -14,14 +15,13 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
 {
     protected readonly AddressDbContext _context = context;
     private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
-    private readonly IMapper _mapper = mapper;
-    private readonly IUserService _userService = userService;
-    
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync()
+
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync()
     {
         var addresses = await _dbSet.ToListAsync();
-        return addresses.GroupBy(ua => ua.State).ToList();
+        return addresses.GroupBy(ua => ua.State).ToList() ??
+               throw new UserStateGroupException("There are no states to group in the database");
     }
 
     public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync()
@@ -30,10 +30,11 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
     }
 
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByCityAsync()
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync()
     {
         var addresses = await _dbSet.ToListAsync();
-        return addresses.GroupBy(ua => ua.City).ToList();
+        return addresses.GroupBy(ua => ua.City).ToList() ??
+               throw new CityGroupingNotAvailableException("There are no cities to group in the database");
     }
 
     public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)
@@ -87,7 +88,7 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
     public async Task<UserAddress> UpdateUserAddress(UserAddressRequest userAddressDto)
     {
         // 1. Validate the user exists before updating the address
-        var user = await _userService.GetUserByIdAsync(userAddressDto.UserId);
+        var user = await userService.GetUserByIdAsync(userAddressDto.UserId);
         if (user == null)
         {
             throw new ArgumentException("User not found, cannot update address.");
@@ -101,12 +102,11 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
         }
 
         // 3. Map updated fields from DTO to the entity
-        _mapper.Map(userAddressDto, existingAddress);
+        mapper.Map(userAddressDto, existingAddress);
 
         // 4. Save changes to DB
         await _context.SaveChangesAsync();
 
         return existingAddress;
     }
-
 }

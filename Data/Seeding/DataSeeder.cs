@@ -7,7 +7,7 @@ using TBD.UserModule.Models;
 
 namespace TBD.Data.Seeding;
 
-public class DataSeeder
+public static class DataSeeder
 {
   
     public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)

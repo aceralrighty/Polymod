@@ -1,5 +1,4 @@
 using TBD.API.DTOs;
-using TBD.ServiceModule.Models;
 
 namespace TBD.ServiceModule.Services;
 
