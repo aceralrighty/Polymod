@@ -18,6 +18,6 @@ public class ServiceDbContext(DbContextOptions<ServiceDbContext> options) : DbCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Service>().HasIndex(u => u.Id).IsUnique();
-        modelBuilder.Entity<Service>().Property(s => s.FormattedPrice).HasColumnType("varchar(255)");
+        modelBuilder.Entity<Service>().Property(u => u.TotalPrice).HasComputedColumnSql("Price * DurationInMinutes");
     }
 }

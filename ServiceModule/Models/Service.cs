@@ -14,5 +14,7 @@ public class Service
     public int DurationInMinutes { get; set; }
     public Guid ProviderId { get; set; }
 
-    public string FormattedPrice => Price.ToString("C");
+    public decimal TotalPrice { get; set; }
+
+    [NotMapped] public string FormattedPrice => TotalPrice.ToString("C");
 }

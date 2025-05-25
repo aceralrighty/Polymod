@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TBD.ServiceModule.Data;
+using TBD.ServiceModule.Models;
 
 namespace TBD.ServiceModule.Repositories;
 
