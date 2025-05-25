@@ -2,21 +2,26 @@
 
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-lts
-    container_name: dev_sql_server
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sql1
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrongPassword@!
     ports:
       - "1433:1433"
-    environment:
-      SA_PASSWORD: "sang192,albs"
-      ACCEPT_EULA: "Y"
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P sang192,albs -Q 'SELECT 1'"]
+      test: ["CMD-SHELL", "sqlcmd -U sa -P Sang192albs@ -Q 'SELECT 1'"]
       interval: 10s
       timeout: 5s
       retries: 10
-    volumes:
-      - sql_data:/var/opt/mssql
-    restart: unless-stopped
 
-volumes:
-  sql_data:
+  app:
+    build:
+      context: .
+    ports:
+      - "5000:5000" # change as needed
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=YourDbName;User=sa;Password=Sang192albs@
