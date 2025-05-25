@@ -4,7 +4,7 @@ using TBD.ServiceModule.Models;
 
 namespace TBD.Data.Seeding;
 
-public class ServiceSeeder
+public static class ServiceSeeder
 {
     public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
@@ -27,8 +27,8 @@ public class ServiceSeeder
             Id = Guid.NewGuid(),
             Title = "Pilates",
             Description = "Get your body fit with Pilates",
-            Price = 20,
-            DurationInMinutes = 60,
+            Price = 40,
+            DurationInMinutes = 45,
             ProviderId = Guid.NewGuid()
         };
         Console.WriteLine($"This costs {service1.FormattedPrice}");
@@ -39,8 +39,8 @@ public class ServiceSeeder
             Id = Guid.NewGuid(),
             Title = "Yoga",
             Description = "Get your body fit with Yoga",
-            Price = 20,
-            DurationInMinutes = 60,
+            Price = 37,
+            DurationInMinutes = 30,
             ProviderId = Guid.NewGuid()
         };
         var service3 = new Service
@@ -48,8 +48,8 @@ public class ServiceSeeder
             Id = Guid.NewGuid(),
             Title = "Zumba",
             Description = "Get your body fit with Zumba",
-            Price = 20,
-            DurationInMinutes = 60,
+            Price = 50,
+            DurationInMinutes = 15,
             ProviderId = Guid.NewGuid()
         };
         Console.WriteLine($"This costs {service3.FormattedPrice}");
