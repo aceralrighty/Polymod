@@ -11,10 +11,11 @@ namespace TBD.AddressModule.Controllers
     public class AddressController(IUserAddressService userAddressService, IMapper mapper) : ControllerBase
     {
         // GET: api/Address
+        [Route("api/[controller]/{id}")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserAddressResponse>>> GetUserAddresses()
+        public async Task<ActionResult<IEnumerable<UserAddressResponse>>> GetUserAddresses(Guid id, [FromBody] UserAddressRequest request)
         {
-            var addresses = await userAddressService.GetAllAsync();
+            var addresses = await userAddressService.GetAllAsync(id);
             var result = mapper.Map<IEnumerable<UserAddressResponse>>(addresses);
             return Ok(result);
         }
