@@ -20,8 +20,20 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync()
     {
         var addresses = await _dbSet.ToListAsync();
-        return addresses.GroupBy(ua => ua.State).ToList() ??
-               throw new UserStateGroupException("There are no states to group in the database");
+        try
+        {
+            var groupedAddress = addresses.GroupBy(ua => ua.State).ToList();
+            if (groupedAddress.Count == 0)
+            {
+                throw new UserStateGroupException("There are no states to group in the database");
+            }
+
+            return groupedAddress;
+        }
+        catch (Exception e)
+        {
+            throw new CityGroupingNotAvailableException("There are no cities to group in the database", e);
+        }
     }
 
     public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync()
@@ -33,8 +45,16 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync()
     {
         var addresses = await _dbSet.ToListAsync();
-        return addresses.GroupBy(ua => ua.City).ToList() ??
-               throw new CityGroupingNotAvailableException("There are no cities to group in the database");
+        try
+        {
+            var groupedCities = addresses.GroupBy(ua => ua.City).ToList();
+            
+            return groupedCities;
+        }
+        catch (Exception e)
+        {
+            throw new CityGroupingNotAvailableException("There are no cities to group in the database", e);
+        }
     }
 
     public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)
@@ -44,8 +64,9 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
                throw new InvalidOperationException();
     }
 
-    public async Task<IEnumerable<UserAddress>> GetAllAsync()
+    public async Task<IEnumerable<UserAddress>> GetAllAsync(Guid userId)
     {
+        var address = await _dbSet.FindAsync(userId);
         return await _dbSet.ToListAsync();
     }
 

@@ -12,7 +12,7 @@ public class UserAddress
 
     [Required] [ForeignKey(nameof(UserId))] public User User { get; set; }
 
-    [Required] [MaxLength(255)] public string? Address1 { get; set; }
+    [Required] [MaxLength(255)] public string Address1 { get; set; }
     [MaxLength(255)] public string? Address2 { get; set; }
     [Required] [MaxLength(255)] public string? City { get; set; }
     [Required] [MaxLength(255)] public string? State { get; set; }

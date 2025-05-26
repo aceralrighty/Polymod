@@ -5,7 +5,7 @@ namespace TBD.AddressModule.Services;
 
 public interface IUserAddressService
 {
-    Task<IEnumerable<UserAddress>> GetAllAsync();
+    Task<IEnumerable<UserAddress>> GetAllAsync(Guid userId);
     Task<UserAddress?> GetByIdAsync(Guid id);
     Task AddAsync(UserAddress entity);
     Task UpdateAsync(UserAddress entity);

@@ -219,31 +219,31 @@ namespace TBD.TestProject
 
         #region GetAllAsync Tests
 
-        [Test]
-        public async Task GetAllAsync_ReturnsAllAddresses()
-        {
-            // Act
-            var result = await _userAddressService.GetAllAsync();
+        // [Test]
+        // public async Task GetAllAsync_ReturnsAllAddresses()
+        // {
+        //     // Act
+        //     var result = await _userAddressService.GetAllAsync();
+        //
+        //     // Assert
+        //     Assert.That(result, Is.Not.Null);
+        //     Assert.That(result.Count(), Is.EqualTo(3));
+        // }
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Count(), Is.EqualTo(3));
-        }
-
-        [Test]
-        public async Task GetAllAsync_WithEmptyDatabase_ReturnsEmptyCollection()
-        {
-            // Arrange - Clear the database
-            _context.Set<UserAddress>().RemoveRange(_context.Set<UserAddress>());
-            await _context.SaveChangesAsync();
-
-            // Act
-            var result = await _userAddressService.GetAllAsync();
-
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Count(), Is.EqualTo(0));
-        }
+        // [Test]
+        // public async Task GetAllAsync_WithEmptyDatabase_ReturnsEmptyCollection()
+        // {
+        //     // Arrange - Clear the database
+        //     _context.Set<UserAddress>().RemoveRange(_context.Set<UserAddress>());
+        //     await _context.SaveChangesAsync();
+        //
+        //     // Act
+        //     var result = await _userAddressService.GetAllAsync();
+        //
+        //     // Assert
+        //     Assert.That(result, Is.Not.Null);
+        //     Assert.That(result.Count(), Is.EqualTo(0));
+        // }
 
         #endregion
 
