@@ -5,6 +5,7 @@ using TBD.ServiceModule.Models;
 
 namespace TBD.ServiceModule.Repositories;
 
+// not exactly sure if this is something that I still need given the architecture. 
 public class GenericServiceRepository<T> where T : class
 {
     protected readonly ServiceDbContext _context;
