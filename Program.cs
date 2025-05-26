@@ -13,13 +13,14 @@ builder.Logging.AddConsole();
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
-builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddAutoMapper(typeof(ServiceMapping));
-
+builder.Services.AddAutoMapper(typeof(UserAddressMapping));
+builder.Services.AddAutoMapper(typeof(UserMapping));
+builder.Services.AddAutoMapper(typeof(UserScheduleMapping));
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
