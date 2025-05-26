@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
@@ -17,12 +18,23 @@ public static class DataSeeder
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
 
-        // ⚠️ Drop and recreate the DBs - only do this for local testing!
+        // Drop everything first
         await userContext.Database.EnsureDeletedAsync();
         await addressContext.Database.EnsureDeletedAsync();
 
+        // Create in order - user context first, then address
         await userContext.Database.MigrateAsync();
-        await addressContext.Database.MigrateAsync();
+    
+        // Only migrate address context if it has unique tables
+        // Skip if it shares tables with UserDbContext
+        try 
+        {
+            await addressContext.Database.MigrateAsync();
+        }
+        catch (SqlException ex) when (ex.Number == 2714) // Object already exists
+        {
+            Console.WriteLine("Address context tables already exist, skipping migration");
+        }
 
         await SeedUsersAsync(userContext);
         await SeedUserAddressesAsync(addressContext, userContext);

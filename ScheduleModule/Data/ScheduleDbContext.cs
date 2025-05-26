@@ -27,6 +27,7 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
             .Property(s => s.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
         modelBuilder.Entity<Schedule>().Property(s => s.DaysWorkedJson).HasColumnType("varchar(255)");
+        modelBuilder.Entity<Schedule>().Property(u => u.TotalPay).HasComputedColumnSql("BasePay * TotalHoursWorked");
 
         base.OnModelCreating(modelBuilder);
     }

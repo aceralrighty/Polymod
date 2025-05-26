@@ -25,10 +25,27 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    // Testing Only
-    await DataSeeder.ReseedForTestingAsync(app.Services);
-    await ScheduleSeeder.ReseedForTestingAsync(app.Services);
-    await ServiceSeeder.ReseedForTestingAsync(app.Services);
+    try
+    {
+        Console.WriteLine("🌱 Starting database seeding...");
+
+        // Seed in order with error handling
+        await DataSeeder.ReseedForTestingAsync(app.Services);
+        await Task.Delay(1000); // Give DB time to settle
+
+        await ScheduleSeeder.ReseedForTestingAsync(app.Services);
+        await Task.Delay(1000);
+
+        await ServiceSeeder.ReseedForTestingAsync(app.Services);
+
+        Console.WriteLine("✅ All seeding complete!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Seeding failed: {ex.Message}");
+        // Decide if you want to continue or throw
+    }
+
     app.MapOpenApi();
 }
 
