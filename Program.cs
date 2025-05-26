@@ -43,7 +43,7 @@ if (app.Environment.IsDevelopment())
     catch (Exception ex)
     {
         Console.WriteLine($"❌ Seeding failed: {ex.Message}");
-        // Decide if you want to continue or throw
+        throw new NullReferenceException("Seeding failed", ex);
     }
 
     app.MapOpenApi();

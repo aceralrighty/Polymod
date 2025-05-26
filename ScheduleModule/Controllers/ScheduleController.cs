@@ -7,27 +7,20 @@ namespace TBD.ScheduleModule.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ScheduleController : ControllerBase
+    public class ScheduleController(ScheduleDbContext context) : ControllerBase
     {
-        private readonly ScheduleDbContext _context;
-
-        public ScheduleController(ScheduleDbContext context)
-        {
-            _context = context;
-        }
-
         // GET: api/Schedule
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Schedule>>> GetSchedules()
         {
-            return await _context.Schedules.ToListAsync();
+            return await context.Schedules.ToListAsync();
         }
 
         // GET: api/Schedule/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Schedule>> GetSchedule(Guid id)
         {
-            var schedule = await _context.Schedules.FindAsync(id);
+            var schedule = await context.Schedules.FindAsync(id);
 
             if (schedule == null)
             {
@@ -47,11 +40,11 @@ namespace TBD.ScheduleModule.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(schedule).State = EntityState.Modified;
+            context.Entry(schedule).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -73,8 +66,8 @@ namespace TBD.ScheduleModule.Controllers
         [HttpPost]
         public async Task<ActionResult<Schedule>> PostSchedule(Schedule schedule)
         {
-            _context.Schedules.Add(schedule);
-            await _context.SaveChangesAsync();
+            context.Schedules.Add(schedule);
+            await context.SaveChangesAsync();
 
             return CreatedAtAction("GetSchedule", new { id = schedule.Id }, schedule);
         }
@@ -83,21 +76,21 @@ namespace TBD.ScheduleModule.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSchedule(Guid id)
         {
-            var schedule = await _context.Schedules.FindAsync(id);
+            var schedule = await context.Schedules.FindAsync(id);
             if (schedule == null)
             {
                 return NotFound();
             }
 
-            _context.Schedules.Remove(schedule);
-            await _context.SaveChangesAsync();
+            context.Schedules.Remove(schedule);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
 
         private bool ScheduleExists(Guid id)
         {
-            return _context.Schedules.Any(e => e.Id == id);
+            return context.Schedules.Any(e => e.Id == id);
         }
     }
 }
