@@ -76,6 +76,28 @@ namespace TBD.ScheduleModule.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSchedule(Guid id)
         {
+            var schedule = await context.Schedules
+                .Where(s => s.DeletedAt == null)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (schedule == null)
+            {
+                return NotFound();
+            }
+
+            // Soft delete: set DeletedAt timestamp instead of removing
+            schedule.DeletedAt = DateTime.UtcNow;
+            schedule.UpdatedAt = DateTime.UtcNow;
+
+            context.Entry(schedule).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}/permanent")]
+        public async Task<IActionResult> DeleteSchedulePermanently(Guid id)
+        {
             var schedule = await context.Schedules.FindAsync(id);
             if (schedule == null)
             {
@@ -84,7 +106,6 @@ namespace TBD.ScheduleModule.Controllers
 
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync();
-
             return NoContent();
         }
 
