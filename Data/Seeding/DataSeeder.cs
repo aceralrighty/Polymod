@@ -39,7 +39,7 @@ public static class DataSeeder
                 Username = "john.doe",
                 Email = "john.doe@example.com",
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = null,
+                UpdatedAt = DateTime.UtcNow - TimeSpan.FromDays(20),
                 Schedule = new Schedule()
             },
             new User
@@ -47,8 +47,8 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "jane.smith",
                 Email = "jane.smith@example.com",
-                CreatedAt = DateTime.Today - TimeSpan.FromDays(10),
-                UpdatedAt = null,
+                CreatedAt = DateTime.Today - TimeSpan.FromDays(30),
+                UpdatedAt = DateTime.UtcNow - TimeSpan.FromDays(10),
                 Schedule = new Schedule()
             },
             new User
@@ -57,7 +57,7 @@ public static class DataSeeder
                 Username = "admin.user",
                 Email = "admin@example.com",
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(20),
-                UpdatedAt = null,
+                UpdatedAt = DateTime.Today - TimeSpan.FromDays(5),
                 Schedule = new Schedule()
             }
         };

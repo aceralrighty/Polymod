@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TBD.GenericDBProperties;
 using TBD.UserModule.Models;
 
 namespace TBD.AddressModule.Models;
 
 [Table("Address")]
 public class UserAddress
-    : GenericAddressEntity
+    : BaseTableProperties
 {
     [Required] public Guid UserId { get; set; }
 

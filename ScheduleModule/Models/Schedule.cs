@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
+using TBD.GenericDBProperties;
 using TBD.UserModule.Models;
 
 namespace TBD.ScheduleModule.Models;
 
 [Table("Schedule")]
-public sealed class Schedule : GenericScheduleEntity
+public sealed class Schedule : BaseTableProperties
 {
     public double? TotalHoursWorked { get; set; }
 
