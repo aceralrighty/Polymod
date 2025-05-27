@@ -13,7 +13,7 @@ public static class ScheduleSeeder
         using var scope = serviceProvider.CreateScope();
         var scheduleContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
-        
+
         await userContext.Database.EnsureDeletedAsync();
         await scheduleContext.Database.EnsureDeletedAsync();
         await userContext.Database.MigrateAsync();
@@ -65,10 +65,28 @@ public static class ScheduleSeeder
         };
         schedule2.UserId = schedule2.User.Id;
         schedule2.RecalculateTotalHours();
-
+        var schedule3 = new Schedule
+        {
+            Id = Guid.NewGuid(),
+            DaysWorked = new Dictionary<string, int>
+            {
+                { "Monday", 10 }, { "Tuesday", 10 }, { "Wednesday", 10 },
+                { "Thursday", 8 }, { "Friday", 10 }, { "Saturday", 0 }, { "Sunday", 0 }
+            },
+            BasePay = 28,
+            User = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "Adam",
+                Email = "Adam@example.com",
+                Schedule = new Schedule()
+            }
+        };
+        schedule3.UserId = schedule3.User.Id;
+        schedule3.RecalculateTotalHours();
         schedules.Add(schedule1);
         schedules.Add(schedule2);
-
+        schedules.Add(schedule3);
         await scheduleContext.Schedules.AddRangeAsync(schedules);
         await scheduleContext.SaveChangesAsync();
     }
