@@ -1,6 +1,9 @@
+using System.Data;
 using System.Linq.Expressions;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using TBD.ScheduleModule.Data;
+using TBD.ScheduleModule.Models;
 
 namespace TBD.ScheduleModule.Repositories;
 
@@ -8,11 +11,13 @@ public class GenericScheduleRepository<T> where T : class
 {
     protected readonly ScheduleDbContext context;
     protected readonly DbSet<T> _dbSet;
+    private readonly IDbConnection _connection;
 
     protected GenericScheduleRepository(ScheduleDbContext context)
     {
         this.context = context;
         _dbSet = context.Set<T>();
+        _connection = context.Database.GetDbConnection();
     }
 
     public async Task<IEnumerable<T>> GetAllAsync()
@@ -27,7 +32,8 @@ public class GenericScheduleRepository<T> where T : class
 
     public async Task<T> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FindAsync(id) ?? throw new InvalidOperationException();
+        const string sql = @"SELECT * FROM Schedules WHERE Id = @Id";
+        return await _connection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ?? throw new KeyNotFoundException();
     }
 
     public async Task AddAsync(T entity)
