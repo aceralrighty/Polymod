@@ -74,7 +74,7 @@ I'm still building out the full functionality for each module and service. Once 
 - Inter-service communication (e.g., REST, gRPC)
 - Service discovery
 - Independent scaling and deployment
-- Event-driven patterns with tools like Kafka or RabbitMQ
+- Abstract Data Layers to learn not to rely on the **EntityFramework** so much
 
 ---
 

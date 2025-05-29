@@ -1,5 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Services;
 using TBD.API.DTOs;
@@ -8,12 +10,14 @@ namespace TBD.AddressModule.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AddressController(IUserAddressService userAddressService, IMapper mapper) : ControllerBase
+    public class AddressController(IUserAddressService userAddressService, IMapper mapper, AddressDbContext context)
+        : ControllerBase
     {
         // GET: api/Address
         [Route("api/[controller]/{id}")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserAddressResponse>>> GetUserAddresses(Guid id, [FromBody] UserAddressRequest request)
+        public async Task<ActionResult<IEnumerable<UserAddressResponse>>> GetUserAddresses(Guid id,
+            [FromBody] UserAddressRequest request)
         {
             var addresses = await userAddressService.GetAllAsync(id);
             var result = mapper.Map<IEnumerable<UserAddressResponse>>(addresses);
@@ -73,11 +77,33 @@ namespace TBD.AddressModule.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUserAddress(Guid id)
         {
-            var existingAddress = await userAddressService.GetByIdAsync(id);
-            if (existingAddress == null)
+            var address = await context.UserAddress.Where(u => u.DeletedAt == null)
+                .FirstOrDefaultAsync(u => u.Id == id);
+            if (address == null)
+            {
                 return NotFound();
+            }
 
-            await userAddressService.RemoveAsync(existingAddress);
+            // Soft delete: set DeletedAt timestamp instead of removing
+            address.DeletedAt = DateTime.UtcNow;
+            address.UpdatedAt = DateTime.UtcNow;
+
+            context.Entry(address).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}/permanent")]
+        public async Task<IActionResult> DeleteUserAddressPermanently(Guid id)
+        {
+            var address = await context.UserAddress.FindAsync(id);
+            if (address == null)
+            {
+                return NotFound();
+            }
+
+            context.UserAddress.Remove(address);
+            await context.SaveChangesAsync();
             return NoContent();
         }
     }

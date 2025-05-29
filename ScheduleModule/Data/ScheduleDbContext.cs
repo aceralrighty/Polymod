@@ -27,7 +27,16 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
             .Property(s => s.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
         modelBuilder.Entity<Schedule>().Property(s => s.DaysWorkedJson).HasColumnType("varchar(255)");
-        modelBuilder.Entity<Schedule>().Property(u => u.TotalPay).HasComputedColumnSql("BasePay * TotalHoursWorked");
+        modelBuilder.Entity<Schedule>()
+            .Property(s => s.TotalPay)
+            .HasComputedColumnSql(
+                "CASE " +
+                "WHEN [TotalHoursWorked] > 40 THEN ([BasePay] * 40) + (([BasePay] * 1.5) * ([TotalHoursWorked] - 40)) " +
+                "ELSE [BasePay] * [TotalHoursWorked] " +
+                "END"
+            );
+
+        modelBuilder.Entity<Schedule>().HasQueryFilter(s => s.DeletedAt == null);
 
         base.OnModelCreating(modelBuilder);
     }

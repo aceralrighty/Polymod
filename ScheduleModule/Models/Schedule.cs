@@ -55,21 +55,11 @@ public sealed class Schedule : BaseTableProperties
         }
     }
 
-    public double? TotalPay
-    {
-        get
-        {
-            if (TotalHoursWorked is > 40)
-            {
-                return OvertimeRate + (BasePay * TotalHoursWorked);
-            }
-
-            return BasePay * TotalHoursWorked;
-        }
-    }
+    public double? TotalPay { get; set; }
 
 
     [Column(TypeName = "nvarchar(9)")] public string DaysWorkedJson { get; set; } = "{}";
+
     /// <summary>
     /// Represents a dictionary containing the days of work and corresponding hours worked for each day.
     /// Maps to a serialized JSON string in the database.
@@ -91,7 +81,7 @@ public sealed class Schedule : BaseTableProperties
             {
                 return new Dictionary<string, int>();
             }
-        
+
             try
             {
                 var result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
@@ -99,6 +89,7 @@ public sealed class Schedule : BaseTableProperties
                 {
                     throw new InvalidOperationException("Deserialization resulted in a null dictionary.");
                 }
+
                 return result;
             }
             catch (JsonException ex)
