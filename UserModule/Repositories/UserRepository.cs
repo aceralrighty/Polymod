@@ -17,4 +17,19 @@ internal class UserRepository(UserDbContext context) : GenericUserRepository<Use
         return await _dbSet.FirstOrDefaultAsync(u => u.Username == username) ??
                throw new InvalidOperationException($"User with username {username} not found");
     }
+
+    public async Task<int> GetCountAsync()
+    {
+        return await _dbSet.CountAsync();
+    }
+
+    public async Task<IEnumerable<User>> GetPagedAsync(int page, int pageSize)
+    {
+        return await _context.Users.OrderBy(u => u.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+    }
+
+    public async Task<IEnumerable<User>> GetTopAsync(int count)
+    {
+        return await _context.Users.Take(count).ToListAsync();
+    }
 }

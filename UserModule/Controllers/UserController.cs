@@ -1,95 +1,132 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using TBD.UserModule.Data;
-using TBD.UserModule.Models;
+using TBD.API.DTOs;
+using TBD.API.Interfaces;
 
 namespace TBD.UserModule.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UserController(UserDbContext context) : ControllerBase
+public class UserController(IUserService userService) : ControllerBase
 {
-    // GET: api/User
+    // GET: api/User - PAGINATED to avoid LOH issues
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<User>>> GetUsers()
+    public async Task<ActionResult<PagedResult<UserDto>>> GetUsers(int page = 1, int pageSize = 50)
     {
-        return await context.Users.ToListAsync();
+        try
+        {
+            var result = await userService.GetUsersAsync(page, pageSize);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
     // GET: api/User/5
     [HttpGet("{id}")]
-    public async Task<ActionResult<User>> GetUser(Guid id)
+    public async Task<ActionResult<UserDto>> GetUser(Guid id)
     {
-        var user = await context.Users.FindAsync(id);
+        var user = await userService.GetUserByIdAsync(id);
 
         if (user == null)
         {
-            return NotFound();
+            return NotFound($"User with ID {id} not found");
         }
 
-        return user;
+        return Ok(user);
+    }
+
+    // GET: api/User/email/{email}
+    [HttpGet("email/{email}")]
+    public async Task<ActionResult<UserDto>> GetUserByEmail(string email)
+    {
+        var user = await userService.GetUserByEmailAsync(email);
+
+        if (user == null)
+        {
+            return NotFound($"User with email {email} not found");
+        }
+
+        return Ok(user);
+    }
+
+    // GET: api/User/username/{username}
+    [HttpGet("username/{username}")]
+    public async Task<ActionResult<UserDto>> GetUserByUsername(string username)
+    {
+        var user = await userService.GetUserByUsernameAsync(username);
+
+        if (user == null)
+        {
+            return NotFound($"User with username {username} not found");
+        }
+
+        return Ok(user);
     }
 
     // PUT: api/User/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutUser(Guid id, User user)
+    public async Task<IActionResult> PutUser(Guid id, UserDto userDto)
     {
-        if (id != user.Id)
+        if (id != userDto.Id)
         {
-            return BadRequest();
+            return BadRequest("ID in URL doesn't match ID in request body");
         }
-
-        context.Entry(user).State = EntityState.Modified;
 
         try
         {
-            await context.SaveChangesAsync();
+            await userService.UpdateUserAsync(userDto);
+            return NoContent();
         }
-        catch (DbUpdateConcurrencyException)
+        catch (ArgumentException ex)
         {
-            if (!UserExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            return NotFound(ex.Message);
         }
-
-        return NoContent();
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
     // POST: api/User
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost]
-    public async Task<ActionResult<User>> PostUser(User user)
+    public async Task<ActionResult<UserDto>> PostUser(UserDto userDto)
     {
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
-
-        return CreatedAtAction("GetUser", new { id = user.Id }, user);
+        try
+        {
+            await userService.CreateUserAsync(userDto);
+            
+            // Return the created user (fetch it to get the generated ID)
+            var createdUser = await userService.GetUserByEmailAsync(userDto.Email);
+            return CreatedAtAction("GetUser", new { id = createdUser?.Id }, createdUser);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
     // DELETE: api/User/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        var user = await context.Users.FindAsync(id);
-        if (user == null)
+        try
         {
-            return NotFound();
+            await userService.DeleteUserAsync(id);
+            return NoContent();
         }
-
-        context.Users.Remove(user);
-        await context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    private bool UserExists(Guid id)
-    {
-        return context.Users.Any(e => e.Id == id);
+        catch (ArgumentException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 }
