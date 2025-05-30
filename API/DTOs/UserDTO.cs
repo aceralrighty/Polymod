@@ -14,4 +14,8 @@ public class UserDto
     [Column(TypeName = "varchar(255)")]
     [Required]
     public string? Email { get; set; }
+
+    [Column(TypeName = "varchar(255)")]
+    [Required]
+    public string? Password { get; set; }
 }

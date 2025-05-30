@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.ScheduleModule.Models;
+using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
@@ -50,6 +51,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "john.doe",
                 Email = "john.doe@example.com",
+                Password = Hasher.HashPassword("oneTwoBuckleMySHoe"),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow - TimeSpan.FromDays(20),
                 Schedule = new Schedule()
@@ -59,6 +61,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "jane.smith",
                 Email = "jane.smith@example.com",
+                Password = Hasher.HashPassword("BiggieBoogieWoogie"),
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(30),
                 UpdatedAt = DateTime.UtcNow - TimeSpan.FromDays(10),
                 Schedule = new Schedule()
@@ -68,6 +71,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "admin.user",
                 Email = "admin@example.com",
+                Password = Hasher.HashPassword("NobodyLovesMe"),
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(20),
                 UpdatedAt = DateTime.Today - TimeSpan.FromDays(5),
                 Schedule = new Schedule()

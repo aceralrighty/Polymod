@@ -1,6 +1,7 @@
 using AutoMapper;
 using TBD.API.DTOs;
 using TBD.API.Interfaces;
+using TBD.Shared.Utils;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;
 
@@ -35,6 +36,13 @@ internal class UserService(IUserRepository userRepository, IMapper mapper) : IUs
     public async Task CreateUserAsync(UserDto userDto)
     {
         var user = mapper.Map<User>(userDto);
+        if (string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrWhiteSpace(userDto.Password))
+        {
+            throw new ArgumentException("Password cannot be empty");
+        }
+
+        // Hash the password
+        user.Password = Hasher.HashPassword(userDto.Password);
         await userRepository.AddAsync(user);
     }
 

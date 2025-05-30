@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
+using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
@@ -39,6 +40,7 @@ public static class ScheduleSeeder
             {
                 Id = Guid.NewGuid(),
                 Username = "alice",
+                Password = Hasher.HashPassword("<PASSWORD>"),
                 Email = "alice@example.com",
                 Schedule = new Schedule()
             }
@@ -59,6 +61,7 @@ public static class ScheduleSeeder
             {
                 Id = Guid.NewGuid(),
                 Username = "bob",
+                Password = Hasher.HashPassword("AsAnIrishPotato"),
                 Email = "bob@example.com",
                 Schedule = new Schedule()
             }
@@ -78,6 +81,7 @@ public static class ScheduleSeeder
             {
                 Id = Guid.NewGuid(),
                 Username = "Adam",
+                Password = Hasher.HashPassword("PotatoLover"),
                 Email = "Adam@example.com",
                 Schedule = new Schedule()
             }
