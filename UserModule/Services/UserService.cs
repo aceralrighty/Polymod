@@ -26,15 +26,16 @@ internal class UserService(IUserRepository userRepository, IMapper mapper) : IUs
         var user = await userRepository.GetByUsernameAsync(username);
         return mapper.Map<UserDto>(user);
     }
+
     public async Task<PagedResult<UserDto>> GetUsersAsync(int page = 1, int pageSize = 50)
     {
         // Validate parameters
         if (page < 1) page = 1;
-        if (pageSize < 1 || pageSize > 100) pageSize = 50; // Max 100 to prevent abuse
+        if (pageSize is < 1 or > 100) pageSize = 50; // Max 100 to prevent abuse
 
         var totalCount = await userRepository.GetCountAsync();
         var users = await userRepository.GetPagedAsync(page, pageSize);
-        
+
         return new PagedResult<UserDto>
         {
             Items = mapper.Map<IEnumerable<UserDto>>(users),
@@ -43,7 +44,8 @@ internal class UserService(IUserRepository userRepository, IMapper mapper) : IUs
             PageSize = pageSize
         };
     }
-    [Obsolete("This method is deprecated. Use GetAllUsersAsync instead")]
+
+    [Obsolete("This method is deprecated. Use the new one with pagination to avoid memory issues.")]
     public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
     {
         var users = await userRepository.GetAllAsync();
@@ -56,6 +58,11 @@ internal class UserService(IUserRepository userRepository, IMapper mapper) : IUs
         if (string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrWhiteSpace(userDto.Password))
         {
             throw new ArgumentException("Password cannot be empty");
+        }
+
+        if (Hasher.Verify(user.Password, userDto.Password))
+        {
+            return; // Passwords are the same, do not create a new user.
         }
 
         // Hash the password
