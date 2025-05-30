@@ -26,7 +26,24 @@ internal class UserService(IUserRepository userRepository, IMapper mapper) : IUs
         var user = await userRepository.GetByUsernameAsync(username);
         return mapper.Map<UserDto>(user);
     }
+    public async Task<PagedResult<UserDto>> GetUsersAsync(int page = 1, int pageSize = 50)
+    {
+        // Validate parameters
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 50; // Max 100 to prevent abuse
 
+        var totalCount = await userRepository.GetCountAsync();
+        var users = await userRepository.GetPagedAsync(page, pageSize);
+        
+        return new PagedResult<UserDto>
+        {
+            Items = mapper.Map<IEnumerable<UserDto>>(users),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+    [Obsolete("This method is deprecated. Use GetAllUsersAsync instead")]
     public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
     {
         var users = await userRepository.GetAllAsync();

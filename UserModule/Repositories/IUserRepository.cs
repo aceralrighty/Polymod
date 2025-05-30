@@ -14,4 +14,8 @@ internal interface IUserRepository
     Task AddRangeAsync(IEnumerable<User> entities);
     Task UpdateAsync(User entity);
     Task RemoveAsync(User entity);
+    Task<int> GetCountAsync();
+    Task<IEnumerable<User>> GetPagedAsync(int page, int pageSize);
+    Task<IEnumerable<User>> GetTopAsync(int count);
+    
 }
