@@ -28,6 +28,7 @@ public class ScheduleTest
         {
             Id = Guid.NewGuid(),
             Username = "User1",
+            Password = "<PASSWORD>",
             Email = "user1@example.com",
             Schedule = new Schedule()
         };
