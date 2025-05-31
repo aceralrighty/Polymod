@@ -4,7 +4,7 @@ namespace TBD.Shared.Utils;
 
 /**
  *<summary>
- *  this Hasher adapts the hashing algorithm to the available memory and CPU cores (based on system environment), as to not allow for GC pressure and avoid LOH allocation. 
+ *  this Hasher adapts the hashing algorithm to the available memory and CPU cores (based on system environment), as to not allow for GC pressure and avoid LOH allocation.
  * </summary>
  */
 public static class Hasher
