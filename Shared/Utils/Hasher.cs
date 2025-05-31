@@ -8,7 +8,7 @@ public static class Hasher
     {
         
         return Argon2.Hash(password, timeCost: 4, memoryCost: 32768, parallelism: 2,
-            type: Argon2Type.DataDependentAddressing, hashLength: 32);
+            type: Argon2Type.DataIndependentAddressing, hashLength: 32);
     }
 
     public static bool Verify(string encodedHash, string password)
