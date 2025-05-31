@@ -20,4 +20,15 @@ public class ServiceDbContext(DbContextOptions<ServiceDbContext> options) : DbCo
         modelBuilder.Entity<Service>().HasIndex(u => u.Id).IsUnique();
         modelBuilder.Entity<Service>().Property(u => u.TotalPrice).HasComputedColumnSql("Price * DurationInMinutes");
     }
+
+    public override int SaveChanges()
+    {
+        var entries = ChangeTracker.Entries().Where(s => s.Entity is Service);
+        foreach (var entityEntry in entries)
+        {
+            if (entityEntry.Entity is not Service service) continue;
+            
+        }
+        return base.SaveChanges();
+    }
 }
