@@ -44,7 +44,7 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
     public override int SaveChanges()
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => e.Entity is User && (e.State == EntityState.Added || e.State == EntityState.Modified));
+            .Where(e => e is { Entity: User, State: EntityState.Added or EntityState.Modified });
 
         foreach (var entry in entries)
         {
@@ -74,7 +74,7 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => e.Entity is User && (e.State == EntityState.Added || e.State == EntityState.Modified));
+            .Where(e => e is { Entity: User, State: EntityState.Added or EntityState.Modified });
 
         foreach (var entry in entries)
         {
