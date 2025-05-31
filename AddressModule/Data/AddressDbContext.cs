@@ -36,7 +36,7 @@ public class AddressDbContext : DbContext
     public override int SaveChanges()
     {
         var entries = ChangeTracker.Entries().Where(u =>
-            u.Entity is UserAddress && (u.State == EntityState.Added || u.State == EntityState.Modified));
+            u is { Entity: Models.UserAddress, State: EntityState.Added or EntityState.Modified });
         foreach (var entityEntry in entries)
         {
             var entity = (UserAddress)entityEntry.Entity;
@@ -53,7 +53,7 @@ public class AddressDbContext : DbContext
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var entries = ChangeTracker.Entries().Where(u =>
-            u.Entity is UserAddress && (u.State == EntityState.Added || u.State == EntityState.Modified));
+            u is { Entity: Models.UserAddress, State: EntityState.Added or EntityState.Modified });
         foreach (var entityEntry in entries)
         {
             var entity = (UserAddress)entityEntry.Entity;
