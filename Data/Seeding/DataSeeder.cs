@@ -46,7 +46,7 @@ public static class DataSeeder
     {
         var users = new List<User>
         {
-            new User
+            new()
             {
                 Id = Guid.NewGuid(),
                 Username = "john.doe",
@@ -56,7 +56,7 @@ public static class DataSeeder
                 UpdatedAt = DateTime.UtcNow - TimeSpan.FromDays(20),
                 Schedule = new Schedule()
             },
-            new User
+            new()
             {
                 Id = Guid.NewGuid(),
                 Username = "jane.smith",
@@ -66,13 +66,23 @@ public static class DataSeeder
                 UpdatedAt = DateTime.UtcNow - TimeSpan.FromDays(10),
                 Schedule = new Schedule()
             },
-            new User
+            new()
             {
                 Id = Guid.NewGuid(),
                 Username = "admin.user",
                 Email = "admin@example.com",
                 Password = Hasher.HashPassword("NobodyLovesMe"),
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(20),
+                UpdatedAt = DateTime.Today - TimeSpan.FromDays(5),
+                Schedule = new Schedule()
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Username = "fleece.johnson",
+                Email = "BWarrior@example.com",
+                Password = Hasher.HashPassword("ChrisHandsome"),
+                CreatedAt = DateTime.Today - TimeSpan.FromDays(10),
                 UpdatedAt = DateTime.Today - TimeSpan.FromDays(5),
                 Schedule = new Schedule()
             }
@@ -138,6 +148,18 @@ public static class DataSeeder
             {
                 Id = Guid.NewGuid()
             });
+        }
+
+        if (users.Count > 3)
+        {
+            addresses.Add(new UserAddress(
+                userId: users[3].Id,
+                user: users[3],
+                address1: "123 Main Street",
+                address2: "Apt 101",
+                city: "Seattle",
+                state: "WA",
+                zipCode: 98101));
         }
 
         await addressContext.UserAddress.AddRangeAsync(addresses);
