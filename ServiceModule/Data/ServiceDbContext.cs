@@ -21,5 +21,4 @@ public class ServiceDbContext(DbContextOptions<ServiceDbContext> options) : DbCo
         modelBuilder.Entity<Service>().HasIndex(u => u.Id).IsUnique();
         modelBuilder.Entity<Service>().Property(u => u.TotalPrice).HasComputedColumnSql("Price * DurationInMinutes");
     }
-    
 }
