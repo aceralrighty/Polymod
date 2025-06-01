@@ -52,11 +52,30 @@ public static class ServiceSeeder
             DurationInMinutes = 15,
             ProviderId = Guid.NewGuid()
         };
+        var service4 = new Service
+        {
+            Id = Guid.NewGuid(),
+            Title = "Boxing",
+            Description = "Get your body fit with Boxing",
+            Price = 30,
+            DurationInMinutes = 60,
+            ProviderId = Guid.NewGuid()
+        };
+        var services5 = new Service
+        {
+            Id = Guid.NewGuid(),
+            Title = "Spinning",
+            Description = "Get your body fit with Spinning",
+            Price = 20,
+            DurationInMinutes = 61,
+        };
         Console.WriteLine($"This costs {service3.FormattedPrice}");
 
         services.Add(service1);
         services.Add(service2);
         services.Add(service3);
+        services.Add(service4);
+        services.Add(services5);
         await serviceContext.Services.AddRangeAsync(services);
         await serviceContext.SaveChangesAsync();
     }

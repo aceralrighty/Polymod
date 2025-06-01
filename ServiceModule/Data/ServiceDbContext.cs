@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.API.DTOs;
 using TBD.ServiceModule.Models;
 
 namespace TBD.ServiceModule.Data;
@@ -19,6 +18,13 @@ public class ServiceDbContext(DbContextOptions<ServiceDbContext> options) : DbCo
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Service>().HasIndex(u => u.Id).IsUnique();
-        modelBuilder.Entity<Service>().Property(u => u.TotalPrice).HasComputedColumnSql("Price * DurationInMinutes");
+        modelBuilder.Entity<Service>()
+            .Property(s => s.TotalPrice)
+            .HasComputedColumnSql(
+                "CAST(ROUND(CASE " +
+                "WHEN [DurationInMinutes] < 60 THEN ([Price] / 60.0 * [DurationInMinutes]) " +
+                "ELSE [Price] * ([DurationInMinutes] / 60.0) END, 2) AS DECIMAL(18,2))",
+                stored: true
+            );
     }
 }
