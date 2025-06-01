@@ -31,9 +31,7 @@ public static class ServiceSeeder
             DurationInMinutes = 45,
             ProviderId = Guid.NewGuid()
         };
-        Console.WriteLine($"This costs {service1.FormattedPrice}");
-
-
+        
         var service2 = new Service
         {
             Id = Guid.NewGuid(),
@@ -79,7 +77,7 @@ public static class ServiceSeeder
             DurationInMinutes = 120,
             ProviderId = Guid.NewGuid()
         };
-        Console.WriteLine($"This costs {service3.FormattedPrice}");
+        
 
         services.Add(service1);
         services.Add(service2);
