@@ -7,11 +7,11 @@ namespace TBD.ServiceModule.Models;
 public class Service
 {
     [Key] public Guid Id { get; set; }
-    [MaxLength(255)] public string Title { get; set; } = null!;
-    [MaxLength(255)] public string Description { get; set; } = null!;
+    [MaxLength(255)] public string Title { get; init; } = null!;
+    [MaxLength(255)] public string Description { get; init; } = null!;
 
-    public decimal Price { get; set; }
-    public int DurationInMinutes { get; set; }
+    public decimal Price { get; init; }
+    public int DurationInMinutes { get; init; }
     public Guid ProviderId { get; init; }
 
     public decimal TotalPrice { get; init; }
