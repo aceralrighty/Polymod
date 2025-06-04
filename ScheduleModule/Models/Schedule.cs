@@ -91,7 +91,7 @@ public sealed class Schedule : BaseTableProperties
 
             try
             {
-                var result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
+                Dictionary<string, int>? result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
                 if (result == null)
                 {
                     throw new InvalidOperationException("Deserialization resulted in a null dictionary.");
@@ -110,8 +110,8 @@ public sealed class Schedule : BaseTableProperties
     public void RecalculateTotalHours()
     {
         TotalHoursWorked = 0;
-        var daysWorked = DaysWorked; // Use the property to deserialize
-        foreach (var hours in daysWorked.Values)
+        Dictionary<string, int> daysWorked = DaysWorked; // Use the property to deserialize
+        foreach (int hours in daysWorked.Values)
         {
             TotalHoursWorked += hours;
         }

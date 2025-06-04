@@ -21,8 +21,8 @@ public static class Hasher
     private static HashingConfig DetermineOptimalConfig()
     {
         // Determine available memory and CPU cores
-        var availableMemoryMb = GC.GetTotalMemory(false) / (1024 * 1024);
-        var processorCount = Environment.ProcessorCount;
+        long availableMemoryMb = GC.GetTotalMemory(false) / (1024 * 1024);
+        int processorCount = Environment.ProcessorCount;
 
         // Conservative settings that avoid LOH
         return new HashingConfig
