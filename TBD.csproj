@@ -38,6 +38,10 @@
         <Folder Include="UserModule\Controllers\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include=".github\workflows\ci.yaml" />
+    </ItemGroup>
+
     
     
 
