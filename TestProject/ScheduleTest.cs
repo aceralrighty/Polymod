@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
+using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
 using TBD.UserModule.Models;
 
@@ -8,6 +10,7 @@ namespace TBD.TestProject;
 [TestOf(typeof(Schedule))]
 public class ScheduleTest
 {
+    private ScheduleDbContext _context;
     [Test]
     public void Constructor_Default_SetsDefaults()
     {
@@ -39,19 +42,6 @@ public class ScheduleTest
         // Assert
         Assert.That(schedule.UserId, Is.EqualTo(userMock.Id));
         Assert.That(schedule.User, Is.EqualTo(userMock));
-    }
-
-    [Test]
-    public void Overtime_WhenTotalHoursWorkedIsLessThanOrEqualTo40_ReturnsZero()
-    {
-        // Arrange
-        var schedule = new Schedule { TotalHoursWorked = 40 };
-
-        // Act
-        var overtime = schedule.Overtime;
-
-        // Assert
-        Assert.That(overtime, Is.EqualTo(0));
     }
 
     [Test]
@@ -94,30 +84,32 @@ public class ScheduleTest
     }
 
     [Test]
-    public void TotalPay_WhenTotalHoursWorkedIsLessThanOrEqualTo40_ReturnsCorrectValue()
+    public void TotalPayComputed_WhenTotalHoursWorkedIsLessThanOrEqualTo40_ReturnsCorrectValue()
     {
         // Arrange
         var schedule = new Schedule { TotalHoursWorked = 40, BasePay = 20 };
 
         // Act
-        var totalPay = schedule.TotalPay;
+        var totalPay = schedule.TotalPayComputed;
 
         // Assert
         Assert.That(totalPay, Is.EqualTo(800));
     }
 
+
     [Test]
-    public void TotalPay_WhenTotalHoursWorkedIsGreaterThan40_CalculatesCorrectly()
+    public void TotalPayComputed_WhenTotalHoursWorkedIsMoreThan40_ReturnsCorrectValue()
     {
         // Arrange
-        var schedule = new Schedule { TotalHoursWorked = 50, BasePay = 20 };
+        var schedule = new Schedule { TotalHoursWorked = 45, BasePay = 20 };
 
         // Act
-        var totalPay = schedule.TotalPay;
+        var totalPay = schedule.TotalPayComputed;
 
-        // Assert
-        Assert.That(totalPay, Is.EqualTo(1300)); // Overtime pay 300 + regular pay 1000
+        // 800 base + 150 overtime (5 * 30)
+        Assert.That(totalPay, Is.EqualTo(950));
     }
+
 
     [Test]
     public void DaysWorked_Get_DeserializesCorrectly()

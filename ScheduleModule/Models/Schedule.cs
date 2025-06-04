@@ -55,7 +55,14 @@ public sealed class Schedule : BaseTableProperties
         }
     }
 
+
     public double? TotalPay { get; set; }
+
+    [NotMapped]
+    public double TotalPayComputed => TotalHoursWorked <= 40
+        ? BasePay.GetValueOrDefault() * TotalHoursWorked.GetValueOrDefault()
+        : (BasePay.GetValueOrDefault() * 40) +
+          ((BasePay.GetValueOrDefault() * 1.5) * (TotalHoursWorked.GetValueOrDefault() - 40));
 
 
     [Column(TypeName = "nvarchar(9)")] public string DaysWorkedJson { get; set; } = "{}";
