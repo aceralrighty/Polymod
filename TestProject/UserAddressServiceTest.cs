@@ -408,7 +408,7 @@ namespace TBD.TestProject
         {
             // Act & Assert
             Assert.ThrowsAsync<ArgumentNullException>(
-                async () => await _userAddressService.AddRangeAsync(null));
+                async () => await _userAddressService.AddRangeAsync(null!));
         }
 
         #endregion

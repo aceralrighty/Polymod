@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using AutoMapper;
@@ -48,6 +49,7 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
             {
                 throw new CityGroupingNotAvailableException("There are no cities to group in the database");
             }
+
             return groupedCities;
         }
         catch (Exception e)
@@ -83,12 +85,20 @@ internal class UserAddressService(AddressDbContext context, IMapper mapper, IUse
 
     public async Task AddAsync(UserAddress entity)
     {
-        await _dbSet.AddAsync(entity);
+        if (entity == null)
+            throw new ArgumentNullException(nameof(entity), "The address collection cannot be null.");
+
+        await _dbSet.AddRangeAsync(entity);
         await _context.SaveChangesAsync();
     }
 
     public async Task AddRangeAsync(IEnumerable<UserAddress> entities)
     {
+        if (entities == null)
+        {
+            throw new ArgumentNullException(nameof(entities), "The address collection cannot be null.");
+        }
+
         await _dbSet.AddRangeAsync(entities);
         await _context.SaveChangesAsync();
     }
