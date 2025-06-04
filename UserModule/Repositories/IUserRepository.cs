@@ -17,5 +17,4 @@ internal interface IUserRepository
     Task<int> GetCountAsync();
     Task<IEnumerable<User>> GetPagedAsync(int page, int pageSize);
     Task<IEnumerable<User>> GetTopAsync(int count);
-    
 }

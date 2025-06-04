@@ -45,8 +45,8 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     public override int SaveChanges()
     {
-        IEnumerable<EntityEntry> entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
-        foreach (EntityEntry entityEntry in entries)
+        var entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
+        foreach (var entityEntry in entries)
         {
             if (entityEntry.Entity is not Schedule schedule) continue;
             schedule.UpdatedAt = DateTime.UtcNow;
@@ -62,8 +62,8 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        IEnumerable<EntityEntry> entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
-        foreach (EntityEntry entityEntry in entries)
+        var entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
+        foreach (var entityEntry in entries)
         {
             if (entityEntry.Entity is not Schedule schedule) continue;
             schedule.UpdatedAt = DateTime.UtcNow;
