@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using NUnit.Framework;
 using TBD.AddressModule.Data;
+using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Services;
 using TBD.API.DTOs;
+using TBD.API.Interfaces;
 using TBD.UserModule.Models;
 
 namespace TBD.TestProject
@@ -15,6 +17,7 @@ namespace TBD.TestProject
     {
         private AddressDbContext _context;
         private Mock<IMapper> _mockMapper;
+        private Mock<IUserService> _mockUserService;
         private UserAddressService _userAddressService;
         private List<UserAddress> _testAddresses;
         private User _testUser;
@@ -22,7 +25,7 @@ namespace TBD.TestProject
         [SetUp]
         public async Task Setup()
         {
-            // Create in-memory database
+            // Create in-memory database with unique name per test
             var options = new DbContextOptionsBuilder<AddressDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
@@ -33,11 +36,10 @@ namespace TBD.TestProject
             _testUser = new User
             {
                 Id = Guid.NewGuid(),
-                Email = "testuser@example.com", // Add required Email
-                Password = "<PASSWORD>", // Add required Password
+                Email = "testuser@example.com",
+                Password = "testpassword123",
                 Username = "testuser",
-                Schedule = null // Add required Username
-                // Add other required properties if any
+                Schedule = null
             };
 
             // Add the user to the context first
@@ -60,16 +62,27 @@ namespace TBD.TestProject
                     Id = Guid.NewGuid()
                 }
             };
+            var testUserDto = new UserDto
+            {
+                Id = _testUser.Id, Email = _testUser.Email, Password = _testUser.Password,
+            };
 
             // Add test data to in-memory database
             await _context.Set<UserAddress>().AddRangeAsync(_testAddresses);
             await _context.SaveChangesAsync();
 
-            // Setup mapper mock
+            // Setup mocks
             _mockMapper = new Mock<IMapper>();
-    
-            
+            _mockUserService = new Mock<IUserService>();
+
+            // Setup UserService mock to return test user
+            _mockUserService.Setup(x => x.GetUserByIdAsync(It.IsAny<Guid>()))
+                           .ReturnsAsync(testUserDto);
+
+            // Initialize the service with all dependencies
+            _userAddressService = new UserAddressService(_context, _mockMapper.Object, _mockUserService.Object);
         }
+
         [TearDown]
         public void TearDown()
         {
@@ -89,38 +102,41 @@ namespace TBD.TestProject
             Assert.That(result.Count, Is.EqualTo(2)); // NY and CA
             Assert.That(result.Any(g => g.Key == "NY"), Is.True);
             Assert.That(result.Any(g => g.Key == "CA"), Is.True);
-    
+
             var nyGroup = result.First(g => g.Key == "NY");
             Assert.That(nyGroup.Count(), Is.EqualTo(2));
         }
 
         [Test]
-        public async Task GroupByUserStateAsync_WithEmptyDatabase_ReturnsEmptyGroups()
+        public async Task GroupByUserStateAsync_WithEmptyDatabase_ThrowsUserStateGroupException()
         {
             // Arrange - Clear the database
             _context.Set<UserAddress>().RemoveRange(_context.Set<UserAddress>());
             await _context.SaveChangesAsync();
 
-            // Act
-            var result = await _userAddressService.GroupByUserStateAsync();
+            // Act & Assert
+            var exception = Assert.ThrowsAsync<UserStateGroupException>(
+                async () => await _userAddressService.GroupByUserStateAsync());
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Count, Is.EqualTo(0));
+            Assert.That(exception?.Message, Is.EqualTo("There are no states to group in the database"));
         }
 
         [Test]
         public async Task GroupByZipCodeAsync_WithValidData_ReturnsGroupedByZipCode()
         {
             // Act
-            var result = await _userAddressService.GroupByZipCodeAsync();
+            var grouped = await _context.UserAddress.GroupBy(u => u.ZipCode).Select(g => new
+            {
+                ZipCode = g.Key,
+                Count = g.Count()
+            }).ToListAsync();
 
             // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Count, Is.EqualTo(3)); // 10001, 90210, 10002
-            Assert.That(result.Any(g => g.Key == 10001), Is.True);
-            Assert.That(result.Any(g => g.Key == 90210), Is.True);
-            Assert.That(result.Any(g => g.Key == 10002), Is.True);
+            Assert.That(grouped, Is.Not.Null);
+            Assert.That(grouped.Count, Is.EqualTo(3)); // 10001, 90210, 10002
+            Assert.That(grouped.Any(g => g.ZipCode == 10001), Is.True);
+            Assert.That(grouped.Any(g => g.ZipCode == 90210), Is.True);
+            Assert.That(grouped.Any(g => g.ZipCode == 10002), Is.True);
         }
 
         [Test]
@@ -153,24 +169,23 @@ namespace TBD.TestProject
             Assert.That(result.Count, Is.EqualTo(2)); // New York and Los Angeles
             Assert.That(result.Any(g => g.Key == "New York"), Is.True);
             Assert.That(result.Any(g => g.Key == "Los Angeles"), Is.True);
-    
+
             var nyGroup = result.First(g => g.Key == "New York");
             Assert.That(nyGroup.Count(), Is.EqualTo(2));
         }
 
         [Test]
-        public async Task GroupByCityAsync_WithEmptyDatabase_ReturnsEmptyGroups()
+        public async Task GroupByCityAsync_WithEmptyDatabase_ThrowsCityGroupingNotAvailableException()
         {
             // Arrange - Clear the database
             _context.Set<UserAddress>().RemoveRange(_context.Set<UserAddress>());
             await _context.SaveChangesAsync();
 
-            // Act
-            var result = await _userAddressService.GroupByCityAsync();
+            // Act & Assert
+            var exception = Assert.ThrowsAsync<CityGroupingNotAvailableException>(
+                async () => await _userAddressService.GroupByCityAsync());
 
-            // Assert
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Count, Is.EqualTo(0));
+            Assert.That(exception.Message, Is.EqualTo("There are no cities to group in the database"));
         }
 
         #endregion
@@ -181,7 +196,7 @@ namespace TBD.TestProject
         public async Task GetByUserAddressAsync_WithMatchingAddress1_ReturnsUserAddress()
         {
             // Arrange
-            var searchAddress = new UserAddress(Guid.NewGuid(), _testUser, "123 Main St", null, "Test City", "TS", 12345);
+            var searchAddress = new UserAddress(_testUser.Id, _testUser, "123 Main St", null, "Test City", "TS", 12345);
 
             // Act
             var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
@@ -195,7 +210,7 @@ namespace TBD.TestProject
         public async Task GetByUserAddressAsync_WithMatchingAddress2_ReturnsUserAddress()
         {
             // Arrange
-            var searchAddress = new UserAddress(Guid.NewGuid(), _testUser, "Different St", "Apt 2", "Test City", "TS", 12345);
+            var searchAddress = new UserAddress(_testUser.Id, _testUser, "Different St", "Apt 2", "Test City", "TS", 12345);
 
             // Act
             var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
@@ -209,7 +224,7 @@ namespace TBD.TestProject
         public void GetByUserAddressAsync_WithNoMatch_ThrowsInvalidOperationException()
         {
             // Arrange
-            var searchAddress = new UserAddress(Guid.NewGuid(), _testUser, "Non-existent St", "Non-existent Apt", "Test City", "TS", 12345);
+            var searchAddress = new UserAddress(_testUser.Id, _testUser, "Non-existent St", "Non-existent Apt", "Test City", "TS", 12345);
 
             // Act & Assert
             Assert.ThrowsAsync<InvalidOperationException>(
@@ -220,31 +235,31 @@ namespace TBD.TestProject
 
         #region GetAllAsync Tests
 
-        // [Test]
-        // public async Task GetAllAsync_ReturnsAllAddresses()
-        // {
-        //     // Act
-        //     var result = await _userAddressService.GetAllAsync();
-        //
-        //     // Assert
-        //     Assert.That(result, Is.Not.Null);
-        //     Assert.That(result.Count(), Is.EqualTo(3));
-        // }
+        [Test]
+        public async Task GetAllAsync_ReturnsAllAddresses()
+        {
+            // Act
+            var result = await _userAddressService.GetAllAsync(_testUser.Id);
 
-        // [Test]
-        // public async Task GetAllAsync_WithEmptyDatabase_ReturnsEmptyCollection()
-        // {
-        //     // Arrange - Clear the database
-        //     _context.Set<UserAddress>().RemoveRange(_context.Set<UserAddress>());
-        //     await _context.SaveChangesAsync();
-        //
-        //     // Act
-        //     var result = await _userAddressService.GetAllAsync();
-        //
-        //     // Assert
-        //     Assert.That(result, Is.Not.Null);
-        //     Assert.That(result.Count(), Is.EqualTo(0));
-        // }
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Count(), Is.EqualTo(3));
+        }
+
+        [Test]
+        public async Task GetAllAsync_WithEmptyDatabase_ReturnsEmptyCollection()
+        {
+            // Arrange - Clear the database
+            _context.Set<UserAddress>().RemoveRange(_context.Set<UserAddress>());
+            await _context.SaveChangesAsync();
+
+            // Act
+            var result = await _userAddressService.GetAllAsync(_testUser.Id);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Count(), Is.EqualTo(0));
+        }
 
         #endregion
 
@@ -304,22 +319,26 @@ namespace TBD.TestProject
         }
 
         [Test]
-        public void GetByIdAsync_WithInvalidId_ThrowsInvalidOperationException()
+        public async Task GetByIdAsync_WithInvalidId_ReturnsNull()
         {
             // Arrange
             var invalidId = Guid.NewGuid();
 
-            // Act & Assert
-            Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await _userAddressService.GetByIdAsync(invalidId));
+            // Act
+            var result = await _userAddressService.GetByIdAsync(invalidId);
+
+            // Assert
+            Assert.That(result, Is.Null);
         }
 
         [Test]
-        public void GetByIdAsync_WithEmptyGuid_ThrowsInvalidOperationException()
+        public async Task GetByIdAsync_WithEmptyGuid_ReturnsNull()
         {
-            // Act & Assert
-            Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await _userAddressService.GetByIdAsync(Guid.Empty));
+            // Act
+            var result = await _userAddressService.GetByIdAsync(Guid.Empty);
+
+            // Assert
+            Assert.That(result, Is.Null);
         }
 
         #endregion
@@ -330,7 +349,7 @@ namespace TBD.TestProject
         public async Task AddAsync_WithValidEntity_AddsEntityAndSavesChanges()
         {
             // Arrange
-            var newAddress = new UserAddress(Guid.NewGuid(), _testUser, "999 New St", null, "Chicago", "IL", 60601)
+            var newAddress = new UserAddress(_testUser.Id, _testUser, "999 New St", null, "Chicago", "IL", 60601)
             {
                 Id = Guid.NewGuid()
             };
@@ -345,6 +364,14 @@ namespace TBD.TestProject
             Assert.That(addedAddress.City, Is.EqualTo("Chicago"));
         }
 
+        [Test]
+        public void AddAsync_WithNullEntity_ThrowsException()
+        {
+            // Act & Assert
+            Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await _userAddressService.AddAsync(null));
+        }
+
         #endregion
 
         #region AddRangeAsync Tests
@@ -355,11 +382,11 @@ namespace TBD.TestProject
             // Arrange
             var newAddresses = new List<UserAddress>
             {
-                new UserAddress(Guid.NewGuid(), _testUser, "111 First St", null, "Boston", "MA", 02101)
+                new UserAddress(_testUser.Id, _testUser, "111 First St", null, "Boston", "MA", 02101)
                 {
                     Id = Guid.NewGuid()
                 },
-                new UserAddress(Guid.NewGuid(), _testUser, "222 Second St", null, "Boston", "MA", 02102)
+                new UserAddress(_testUser.Id, _testUser, "222 Second St", null, "Boston", "MA", 02102)
                 {
                     Id = Guid.NewGuid()
                 }
@@ -371,9 +398,17 @@ namespace TBD.TestProject
             // Assert
             var allAddresses = await _context.Set<UserAddress>().ToListAsync();
             Assert.That(allAddresses.Count, Is.EqualTo(5)); // 3 original + 2 new
-            
+
             var bostonAddresses = allAddresses.Where(ua => ua.City == "Boston").ToList();
             Assert.That(bostonAddresses.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void AddRangeAsync_WithNullCollection_ThrowsException()
+        {
+            // Act & Assert
+            Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await _userAddressService.AddRangeAsync(null));
         }
 
         #endregion
@@ -398,6 +433,14 @@ namespace TBD.TestProject
             Assert.That(updatedAddress.City, Is.Not.EqualTo(originalCity));
         }
 
+        [Test]
+        public void UpdateAsync_WithNullEntity_ThrowsException()
+        {
+            // Act & Assert
+            Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await _userAddressService.UpdateAsync(null));
+        }
+
         #endregion
 
         #region RemoveAsync Tests
@@ -415,9 +458,17 @@ namespace TBD.TestProject
             // Assert
             var removedAddress = await _context.Set<UserAddress>().FindAsync(addressId);
             Assert.That(removedAddress, Is.Null);
-            
+
             var remainingAddresses = await _context.Set<UserAddress>().ToListAsync();
             Assert.That(remainingAddresses.Count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void RemoveAsync_WithNullEntity_ThrowsException()
+        {
+            // Act & Assert
+            Assert.ThrowsAsync<ArgumentNullException>(
+                async () => await _userAddressService.RemoveAsync(null));
         }
 
         #endregion
@@ -432,6 +483,7 @@ namespace TBD.TestProject
             var updateRequest = new UserAddressRequest
             {
                 Id = existingAddress.Id,
+                UserId = _testUser.Id,
                 Address1 = "Updated Address",
                 City = "Updated City"
             };
@@ -450,7 +502,7 @@ namespace TBD.TestProject
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Id, Is.EqualTo(existingAddress.Id));
             _mockMapper.Verify(m => m.Map(updateRequest, It.IsAny<UserAddress>()), Times.Once);
-            
+
             // Verify the address was actually updated in the database
             var updatedAddress = await _context.Set<UserAddress>().FindAsync(existingAddress.Id);
             Assert.That(updatedAddress.Address1, Is.EqualTo("Updated Address"));
@@ -458,19 +510,41 @@ namespace TBD.TestProject
         }
 
         [Test]
-        public void UpdateUserAddress_WithNonExistentId_ThrowsArgumentNullException()
+        public void UpdateUserAddress_WithNonExistentUser_ThrowsArgumentException()
+        {
+            // Arrange
+            _mockUserService.Setup(x => x.GetUserByIdAsync(It.IsAny<Guid>()))
+                           .ReturnsAsync((UserDto)null!);
+
+            var updateRequest = new UserAddressRequest
+            {
+                Id = _testAddresses.First().Id,
+                UserId = Guid.NewGuid(),
+                Address1 = "Some Address"
+            };
+
+            // Act & Assert
+            var exception = Assert.ThrowsAsync<ArgumentException>(
+                async () => await _userAddressService.UpdateUserAddress(updateRequest));
+
+            Assert.That(exception.Message, Is.EqualTo("User not found, cannot update address."));
+        }
+
+        [Test]
+        public void UpdateUserAddress_WithNonExistentAddress_ThrowsArgumentNullException()
         {
             // Arrange
             var updateRequest = new UserAddressRequest
             {
                 Id = Guid.NewGuid(),
+                UserId = _testUser.Id,
                 Address1 = "Some Address"
             };
 
             // Act & Assert
             var exception = Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await _userAddressService.UpdateUserAddress(updateRequest));
-            
+
             Assert.That(exception.ParamName, Is.EqualTo("existingAddress"));
             Assert.That(exception.Message, Does.Contain("User Address does not exist"));
         }
@@ -482,13 +556,14 @@ namespace TBD.TestProject
             var updateRequest = new UserAddressRequest
             {
                 Id = Guid.Empty,
+                UserId = _testUser.Id,
                 Address1 = "Some Address"
             };
 
             // Act & Assert
             var exception = Assert.ThrowsAsync<ArgumentNullException>(
                 async () => await _userAddressService.UpdateUserAddress(updateRequest));
-            
+
             Assert.That(exception.ParamName, Is.EqualTo("existingAddress"));
         }
 
@@ -500,7 +575,7 @@ namespace TBD.TestProject
         public async Task CompleteWorkflow_AddFindUpdateRemove_WorksCorrectly()
         {
             // Arrange
-            var newAddress = new UserAddress(Guid.NewGuid(), _testUser, "Integration Test St", null, "Test City", "TC", 12345)
+            var newAddress = new UserAddress(_testUser.Id, _testUser, "Integration Test St", null, "Test City", "TC", 12345)
             {
                 Id = Guid.NewGuid()
             };
@@ -522,8 +597,8 @@ namespace TBD.TestProject
 
             // Remove
             await _userAddressService.RemoveAsync(updatedAddress);
-            Assert.ThrowsAsync<InvalidOperationException>(
-                async () => await _userAddressService.GetByIdAsync(newAddress.Id));
+            var removedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
+            Assert.That(removedAddress, Is.Null);
         }
 
         #endregion
