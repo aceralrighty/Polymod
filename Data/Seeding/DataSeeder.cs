@@ -11,7 +11,6 @@ namespace TBD.Data.Seeding;
 
 public static class DataSeeder
 {
-  
     public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
@@ -25,10 +24,10 @@ public static class DataSeeder
 
         // Create in order - user context first, then address
         await userContext.Database.MigrateAsync();
-    
+
         // Only migrate address context if it has unique tables
         // Skip if it shares tables with UserDbContext
-        try 
+        try
         {
             await addressContext.Database.MigrateAsync();
         }
@@ -41,7 +40,7 @@ public static class DataSeeder
         await SeedUserAddressesAsync(addressContext, userContext);
     }
 
-    
+
     private static async Task SeedUsersAsync(UserDbContext context)
     {
         var users = new List<User>
@@ -84,6 +83,16 @@ public static class DataSeeder
                 Password = Hasher.HashPassword("ChrisHandsome"),
                 CreatedAt = DateTime.Today - TimeSpan.FromDays(10),
                 UpdatedAt = DateTime.Today - TimeSpan.FromDays(5),
+                Schedule = new Schedule()
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Username = "Chris.Hansen",
+                Email = "Catcher@example.com",
+                Password = Hasher.HashPassword("WhatWereYouGoingToDo?"),
+                CreatedAt = DateTime.Today + TimeSpan.FromDays(30),
+                UpdatedAt = DateTime.Today + TimeSpan.FromDays(50),
                 Schedule = new Schedule()
             }
         };
@@ -160,6 +169,18 @@ public static class DataSeeder
                 city: "Seattle",
                 state: "WA",
                 zipCode: 98101));
+        }
+
+        if (users.Count > 4)
+        {
+            addresses.Add(new UserAddress(
+                userId: users[4].Id,
+                user: users[4],
+                address1: "456 Market Street",
+                address2: "Suite 200",
+                city: "New York",
+                state: "NY",
+                zipCode: 10001));
         }
 
         await addressContext.UserAddress.AddRangeAsync(addresses);
