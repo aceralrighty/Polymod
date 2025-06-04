@@ -90,7 +90,7 @@ public class ScheduleTest
         var schedule = new Schedule { TotalHoursWorked = 40, BasePay = 20 };
 
         // Act
-        var totalPay = schedule.TotalPayComputed;
+        double totalPay = schedule.TotalPayComputed;
 
         // Assert
         Assert.That(totalPay, Is.EqualTo(800));
@@ -104,7 +104,7 @@ public class ScheduleTest
         var schedule = new Schedule { TotalHoursWorked = 45, BasePay = 20 };
 
         // Act
-        var totalPay = schedule.TotalPayComputed;
+        double totalPay = schedule.TotalPayComputed;
 
         // 800 base + 150 overtime (5 * 30)
         Assert.That(totalPay, Is.EqualTo(950));

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using TBD.ScheduleModule.Models;
 
 namespace TBD.ScheduleModule.Data;
@@ -44,8 +45,8 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     public override int SaveChanges()
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
-        foreach (var entityEntry in entries)
+        IEnumerable<EntityEntry> entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
+        foreach (EntityEntry entityEntry in entries)
         {
             if (entityEntry.Entity is not Schedule schedule) continue;
             schedule.UpdatedAt = DateTime.UtcNow;
@@ -61,8 +62,8 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
-        foreach (var entityEntry in entries)
+        IEnumerable<EntityEntry> entries = ChangeTracker.Entries().Where(u => u.Entity is Schedule);
+        foreach (EntityEntry entityEntry in entries)
         {
             if (entityEntry.Entity is not Schedule schedule) continue;
             schedule.UpdatedAt = DateTime.UtcNow;
