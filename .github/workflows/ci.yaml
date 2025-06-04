@@ -9,18 +9,18 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
+
     services:
       # SQL Server for testing migrations
       sqlserver:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
           ACCEPT_EULA: Y
-          SA_PASSWORD: YourStrong@Passw0rd
+          SA_PASSWORD: ${{ secrets.SQL_SA_PASSWORD }}
         ports:
           - 1433:1433
         options: >-
-          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1'"
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${{ secrets.SQL_SA_PASSWORD }} -Q 'SELECT 1'"
           --health-interval=10s
           --health-timeout=3s
           --health-retries=3
@@ -46,10 +46,10 @@ jobs:
       - name: Test database migrations
         run: |
           # Test each DbContext migration
-          dotnet ef database update --project . --context UserDbContext --connection "Server=localhost;Database=TBD_User_Test;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;"
-          dotnet ef database update --project . --context AddressDbContext --connection "Server=localhost;Database=TBD_Address_Test;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;"
-          dotnet ef database update --project . --context ScheduleDbContext --connection "Server=localhost;Database=TBD_Schedule_Test;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;"
-          dotnet ef database update --project . --context ServiceDbContext --connection "Server=localhost;Database=TBD_Service_Test;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;"
+          dotnet ef database update --project . --context UserDbContext --connection "Server=localhost;Database=TBD_User_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
+          dotnet ef database update --project . --context AddressDbContext --connection "Server=localhost;Database=TBD_Address_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
+          dotnet ef database update --project . --context ScheduleDbContext --connection "Server=localhost;Database=TBD_Schedule_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
+          dotnet ef database update --project . --context ServiceDbContext --connection "Server=localhost;Database=TBD_Service_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
 
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
@@ -62,7 +62,7 @@ jobs:
 
   code-quality:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
 
   security-scan:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
