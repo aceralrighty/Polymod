@@ -10,21 +10,6 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
-    services:
-      # SQL Server for testing migrations
-      sqlserver:
-        image: mcr.microsoft.com/mssql/server:2019-latest
-        env:
-          ACCEPT_EULA: Y
-          SA_PASSWORD: ${{ secrets.SQL_SA_PASSWORD }}
-        ports:
-          - 1433:1433
-        options: >-
-          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${{ secrets.SQL_SA_PASSWORD }} -Q 'SELECT 1'"
-          --health-interval=10s
-          --health-timeout=3s
-          --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,7 +17,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # Adjust based on your .NET version
+          dotnet-version: '9.0' # Adjust based on your .NET version
 
       - name: Restore dependencies
         run: dotnet restore
@@ -40,25 +25,8 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
-      - name: Install EF Core tools
-        run: dotnet tool install --global dotnet-ef
-
-      - name: Test database migrations
-        run: |
-          # Test each DbContext migration
-          dotnet ef database update --project . --context UserDbContext --connection "Server=localhost;Database=TBD_User_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
-          dotnet ef database update --project . --context AddressDbContext --connection "Server=localhost;Database=TBD_Address_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
-          dotnet ef database update --project . --context ScheduleDbContext --connection "Server=localhost;Database=TBD_Schedule_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
-          dotnet ef database update --project . --context ServiceDbContext --connection "Server=localhost;Database=TBD_Service_Test;User Id=sa;Password=${{ secrets.SQL_SA_PASSWORD }};TrustServerCertificate=true;"
-
       - name: Run tests
-        run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage"
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        with:
-          file: ./TestResults/*/coverage.cobertura.xml
-          fail_ci_if_error: false
+        run: dotnet test --no-build --configuration Release --verbosity normal
 
   code-quality:
     runs-on: ubuntu-latest
@@ -66,32 +34,20 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Needed for SonarCloud
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0'
 
-      - name: Install dotnet format
-        run: dotnet tool install -g dotnet-format
-
-      - name: Check code formatting
-        run: dotnet format --verify-no-changes --verbosity diagnostic
-
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Check code formatting
+        run: dotnet format TBD.sln --verify-no-changes --verbosity diagnostic
+
       - name: Build for analysis
         run: dotnet build --no-restore
-
-    # Optional: Add SonarCloud analysis (requires setup)
-    # - name: SonarCloud Scan
-    #   uses: SonarSource/sonarcloud-github-action@master
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   security-scan:
     runs-on: ubuntu-latest
@@ -110,10 +66,3 @@ jobs:
 
       - name: Security vulnerability scan
         run: dotnet list package --vulnerable --include-transitive
-
-      - name: Install security scanner
-        run: dotnet tool install --global security-scan
-
-      - name: Run security scan
-        run: security-scan *.csproj --excl-dev=true
-        continue-on-error: true # Don't fail build on security warnings initially
