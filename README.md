@@ -1,111 +1,102 @@
-# TBD Modular Monolith (.NET Learning Project)
+**TBD Modular Monolith (.NET Learning Project)**
+
+This is a personal project aimed at deepening my understanding of the ```.NET framework```, ```Entity Framework Core```,
+and building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application
+for better scalability and maintainability.
+
+The project includes separate modules for User, Address, Schedule, and Service management—each with its own domain
+logic, DbContext, models, repositories, and services.
 
 
-This is a personal project aimed at deepening my understanding of the **.NET framework**, **Entity Framework Core**, and building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application for better scalability and maintainability.
-
-The project includes distinct modules for User, Address, Schedule, and Service management, each with its own domain logic, DbContext, models, repositories, and services.
-
----
-
-## 🧱 Project Structure
+🧱 Project Structure
 
 ```plaintext
 .
-├── API                      # Shared DTOs and interfaces
+
+├── API                      # Shared DTOs and service interfaces
 │   ├── DTOs
 │   └── Interfaces
-├── AddressModule
-│   ├── Controllers
-│   ├── Data
-│   ├── Exceptions
-│   ├── Models
-│   ├── Repositories
-│   └── Services
-├── ScheduleModule
-│   ├── Controllers
-│   ├── Data
-│   ├── Models
-│   ├── Repositories
-│   └── Services
-├── ServiceModule
-│   ├── Controllers
-│   ├── Data
-│   ├── Models
-│   ├── Repositories
-│   └── Services
-├── UserModule
-│   ├── Controllers
-│   ├── Data
-│   ├── Models
-│   ├── Repositories
-│   └── Services
-├── Shared                  # Mapping and utility classes
+├── AddressModule           # Address-specific logic (controllers, data, models, etc.)
+├── ScheduleModule          # Schedule-specific logic
+├── ServiceModule           # Service-specific logic
+├── UserModule              # User-specific logic
+├── Shared                  # Mapping profiles and shared utilities
 │   └── Utils
 ├── GenericDBProperties     # Base model interfaces and shared properties
 ├── Data/Seeding            # Seeder classes per module
-├── DesignTimeFactories     # EF Core context factories for migrations
-├── Migrations              # Separated per DbContext
-├── TestProject             # xUnit test project
+├── DesignTimeFactories     # EF Core design-time context factories for migrations
+├── Migrations              # EF Core migrations organized by module
+├── TestProject             # xUnit tests for services and repositories
 ├── TBD.http                # HTTP requests for manual API testing
 ├── Dockerfile              # Docker build setup for API
 ├── docker-compose.yml      # SQL Server and API orchestration
-├── Program.cs, appsettings.json, etc.
-└── .github/workflows/ci.yml  # GitHub Actions CI pipeline
-🔁 CI/CD Pipeline
+├── .github/workflows/ci.yml # GitHub Actions CI pipeline
+└── Program.cs, appsettings.json, etc.
+```
 
-This project includes a CI pipeline powered by GitHub Actions.
+**🔁 CI/CD Pipeline**
 
-Trigger: Runs on pushes and pull requests to the main branch.
-Jobs:
-Restore and build the project
-Run all unit tests (xUnit)
-Validate the Docker image build
-📄 CI configuration: .github/workflows/ci.yml
+This project uses GitHub Actions to automatically build and test on every push or pull request to the main branch.
 
-You can monitor the workflow under the Actions tab in GitHub.
+Workflow includes:
+Restoring and building the solution
+Running all unit tests with xUnit
+Validating Docker image build
 
-🛠️ Future goals: Add deployment steps to push Docker images to a registry or deploy to cloud infrastructure like Azure or AWS.
-🧪 Goals
+**📄 CI configuration file: .github/workflows/ci.yml**
 
-Deepen understanding of .NET and EF Core
-Build a scalable system using modular monolith architecture
-Practice seeding data, managing multiple DbContexts, and setting up dependency injection
-Prepare for migrating to a microservices architecture:
-Learn service boundaries
-Implement inter-service communication
-Practice database-per-service pattern
-🐳 Docker Setup
+You can monitor the workflow under the Actions tab on GitHub.
 
-The project uses Docker to spin up SQL Server and the backend API together.
+🛠️ Future goals: Add deployment steps to publish Docker images to a container registry or deploy to cloud infrastructure
+like Azure or AWS.
 
-Run this to get started:
+**🧪 Goals**
 
-docker-compose up --build
+Grow fluency in .NET and Entity Framework Core
+Practice building a backend using modular monolith architecture
+Learn to seed data, manage multiple DbContexts, and configure dependency injection
+Prepare to transition into a microservices architecture:
+Define clear service boundaries
+Implement inter-service communication (REST, gRPC)
+Explore database-per-service and event-driven designs
+
+**🐳 Docker Setup**
+
+This project uses Docker to spin up a SQL Server container alongside the backend API.
+
+To get started:
+
+```docker-compose up --build```
+
 This will:
-
-Start a SQL Server container
+Start a SQL Server container with the correct ports and environment variables
 Build and run the backend API
-⚠️ Make sure Docker is running and port 1433 is available on your system.
-🗃️ Technologies Used
 
-.NET 9
+⚠️ Ensure Docker is running and port ```1433``` is available on your system.
+
+**🗃️ Technologies Used**
+
+.NET 8 (or latest .NET version)
 Entity Framework Core
-SQL Server (Docker)
+SQL Server (via Docker)
 AutoMapper
 xUnit
 Docker + Docker Compose
 GitHub Actions (CI)
-📦 What's Next?
 
-Finalize business logic for each module
+**📦 What's Next?**
+
+Finalize business logic and validations across all modules
 Add Swagger/OpenAPI support
-Begin splitting into microservices
-Implement centralized logging and configuration
-Explore alternative ORMs to reduce reliance on EF Core
-🙌 Contributions
+Begin breaking into microservices
+Add centralized logging and configuration management
+Experiment with alternative ORMs for deeper understanding
 
-This project is a personal learning effort. That said, feel free to open issues, share ideas, or fork it if you're interested in contributing.
+**🙌 Contributions**
 
-📄 License
+This is an educational and personal learning project. That said, feel free to fork it, open issues, or contribute ideas
+if it piques your interest.
+
+**📄 License**
 
 MIT — use it, learn from it, or build upon it freely.
