@@ -82,7 +82,7 @@ SQL Server (via Docker)\
 AutoMapper\
 xUnit\
 Docker + Docker Compose\
-GitHub Actions (CI)\
+GitHub Actions (CI)
 
 **📦 What's Next?**
 
