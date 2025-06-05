@@ -39,8 +39,8 @@ logic, DbContext, models, repositories, and services.
 This project uses GitHub Actions to automatically build and test on every push or pull request to the main branch.
 
 Workflow includes:
-Restoring and building the solution
-Running all unit tests with xUnit
+Restoring and building the solution\
+Running all unit tests with xUnit\
 Validating Docker image build
 
 **📄 CI configuration file: .github/workflows/ci.yml**
@@ -69,7 +69,7 @@ To get started:
 ```docker-compose up --build```
 
 This will:
-Start a SQL Server container with the correct ports and environment variables
+Start a SQL Server container with the correct ports and environment variables\
 Build and run the backend API
 
 ⚠️ Ensure Docker is running and port ```1433``` is available on your system.
