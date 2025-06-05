@@ -1,10 +1,11 @@
+using System.ComponentModel.DataAnnotations;
 using TBD.GenericDBProperties;
 
 namespace TBD.AuthModule.Models;
 
-public class AuthUser: DateableObject
+public class AuthUser : BaseTableProperties
 {
-    public Guid Id { get; set; }
+    public Guid AuthId { get; set; }
 
     // Core user info (duplicated for auth context)
     public required string Username { get; set; }
@@ -13,7 +14,10 @@ public class AuthUser: DateableObject
 
     // Auth-specific properties
     public string? RefreshToken { get; set; }
+
+    [DisplayFormat(DataFormatString = "{0:d}")]
     public DateTime? RefreshTokenExpiry { get; set; }
+
     public DateTime? LastLogin { get; set; }
     public int FailedLoginAttempts { get; set; }
 }

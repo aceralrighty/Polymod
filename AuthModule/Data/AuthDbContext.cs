@@ -1,14 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.AuthModule.Models;
-using TBD.ScheduleModule.Models;
-using TBD.UserModule.Models;
 
 namespace TBD.AuthModule.Data;
 
 public class AuthDbContext : DbContext
 {
     public DbSet<AuthUser> AuthUsers { get; set; }
-    public DbSet<User> Users { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -46,6 +44,6 @@ public class AuthDbContext : DbContext
             }
         }
 
-        return await base.SaveChangesAsync();
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }

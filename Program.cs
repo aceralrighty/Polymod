@@ -6,7 +6,7 @@ using TBD.ServiceModule;
 using TBD.Shared.Utils;
 using TBD.UserModule;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -24,7 +24,8 @@ builder.Services.AddAutoMapper(typeof(ServiceMapping));
 builder.Services.AddAutoMapper(typeof(UserAddressMapping));
 builder.Services.AddAutoMapper(typeof(UserMapping));
 builder.Services.AddAutoMapper(typeof(UserScheduleMapping));
-WebApplication app = builder.Build();
+builder.Services.AddAutoMapper(typeof(AuthUserMapping));
+var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
