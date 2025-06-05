@@ -9,7 +9,6 @@ namespace TBD.Shared.Utils;
 
 public class JwtTokenGenerator
 {
-
     public static string GenerateJwtToken(int length = 32)
     {
         var randomBytes = new byte[length];
@@ -29,11 +28,11 @@ public class JwtTokenGenerator
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim("jti", Guid.NewGuid().ToString()), // JWT ID for uniqueness
-            new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64) // Issued at
+            new Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+                ClaimValueTypes.Integer64) // Issued at
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor

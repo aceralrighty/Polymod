@@ -6,6 +6,7 @@ namespace TBD.AuthModule.Data;
 public class AuthDbContext : DbContext
 {
     public DbSet<AuthUser> AuthUsers { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -43,6 +44,6 @@ public class AuthDbContext : DbContext
             }
         }
 
-        return await base.SaveChangesAsync();
+        return await base.SaveChangesAsync(cancellationToken);
     }
 }
