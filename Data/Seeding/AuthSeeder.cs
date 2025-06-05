@@ -36,6 +36,7 @@ public static class AuthSeeder
             UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(30),
             LastLogin = DateTime.UtcNow + TimeSpan.FromDays(30)
         };
+
         var auth2 = new AuthUser
         {
             Id = Guid.NewGuid(),
@@ -50,6 +51,7 @@ public static class AuthSeeder
             UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(30),
             LastLogin = DateTime.UtcNow + TimeSpan.FromDays(20)
         };
+
         var auth3 = new AuthUser
         {
             Id = Guid.NewGuid(),
@@ -64,9 +66,269 @@ public static class AuthSeeder
             UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(20),
             LastLogin = DateTime.UtcNow + TimeSpan.FromDays(10)
         };
-        auths.Add(auth1);
-        auths.Add(auth2);
-        auths.Add(auth3);
+
+        var auth4 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "bryan.callen@suspicion.com",
+            HashedPassword = Hasher.HashPassword("ItsEntirelyPossible"),
+            Username = "TheFighter",
+            FailedLoginAttempts = 1,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(48),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(12),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(15),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(25),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(5)
+        };
+
+        var auth5 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "brendan.schaub@redacted.com",
+            HashedPassword = Hasher.HashPassword("GadooshBapa"),
+            Username = "ThickBoy",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(32),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(20),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(30),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(35),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(2)
+        };
+
+        var auth6 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "eddie.bravo@flatearth.com",
+            HashedPassword = Hasher.HashPassword("JiuJitsuTruth"),
+            Username = "10thPlanet",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(64),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(45),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(50),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(1)
+        };
+
+        var auth7 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "joey.diaz@coco.com",
+            HashedPassword = Hasher.HashPassword("TremendousStars"),
+            Username = "UncleJoey",
+            FailedLoginAttempts = 5,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(60),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(65),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(14)
+        };
+
+        var auth8 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "tom.segura@ymh.com",
+            HashedPassword = Hasher.HashPassword("MommyJeans"),
+            Username = "TopDog",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(40),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(18),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(25),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(28),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(3)
+        };
+
+        var auth9 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "christina.p@watermom.com",
+            HashedPassword = Hasher.HashPassword("HighAndTight"),
+            Username = "MainMommy",
+            FailedLoginAttempts = 2,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(56),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(22),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(18),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(24),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(6)
+        };
+
+        var auth10 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "bert.kreischer@machine.com",
+            HashedPassword = Hasher.HashPassword("ShirtlessComedy"),
+            Username = "TheMachine",
+            FailedLoginAttempts = 1,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(14),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(40),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(42),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(8),
+            DeletedAt = DateTime.UtcNow + TimeSpan.FromDays(10)
+        };
+
+        var auth11 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "duncan.trussell@midnight.com",
+            HashedPassword = Hasher.HashPassword("CosmicLove"),
+            Username = "MidnightGospel",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(72),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(25),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(35),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(38),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(4)
+        };
+
+        var auth12 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "andrew.santino@redhair.com",
+            HashedPassword = Hasher.HashPassword("CheetoFingers"),
+            Username = "RedRocket",
+            FailedLoginAttempts = 3,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(44),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(11),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(22),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(26),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(9)
+        };
+
+        var auth13 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "bobby.lee@tigerbelly.com",
+            HashedPassword = Hasher.HashPassword("BadFriends"),
+            Username = "Nosotros",
+            FailedLoginAttempts = 4,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(8),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(50),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(52),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(12)
+        };
+
+        var auth14 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "theo.von@rat.com",
+            HashedPassword = Hasher.HashPassword("DarkArts"),
+            Username = "KingRat",
+            FailedLoginAttempts = 1,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(52),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(16),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(28),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(31),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(7)
+        };
+
+        var auth15 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "whitney.cummings@robot.com",
+            HashedPassword = Hasher.HashPassword("GoodForYou"),
+            Username = "Robutney",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(60),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(21),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(33),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(36),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(5)
+        };
+
+        var auth16 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "tim.dillon@pigpen.com",
+            HashedPassword = Hasher.HashPassword("FakeNews"),
+            Username = "PigKing",
+            FailedLoginAttempts = 2,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(13),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(17),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(19),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(11)
+        };
+
+        var auth17 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "dave.smith@komedy.com",
+            HashedPassword = Hasher.HashPassword("PartOfTheProblem"),
+            Username = "BigJayOakerson",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(38),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(19),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(41),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(44),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(2)
+        };
+
+        var auth18 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "mark.normand@tuesdays.com",
+            HashedPassword = Hasher.HashPassword("WeAreGay"),
+            Username = "Queef",
+            FailedLoginAttempts = 3,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(46),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(10),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(26),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(29),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(13)
+        };
+
+        var auth19 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "sam.tripoli@tinfoil.com",
+            HashedPassword = Hasher.HashPassword("BrokenSimulation"),
+            Username = "TinfoilHat",
+            FailedLoginAttempts = 6,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(5),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(55),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(58),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(16)
+        };
+
+        var auth20 = new AuthUser
+        {
+            Id = Guid.NewGuid(),
+            AuthId = Guid.NewGuid(),
+            Email = "alex.jones@infowars.com",
+            HashedPassword = Hasher.HashPassword("TurningFrogsGay"),
+            Username = "InfoWarrior",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(80),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(100),
+            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(105),
+            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(1)
+        };
+
+        // Add all users to the list
+        auths.AddRange([
+            auth1, auth2, auth3, auth4, auth5, auth6, auth7, auth8, auth9, auth10, auth11, auth12, auth13, auth14,
+            auth15, auth16, auth17, auth18, auth19, auth20
+        ]);
+
         await authContext.AuthUsers.AddRangeAsync(auths);
         await authContext.SaveChangesAsync();
     }
