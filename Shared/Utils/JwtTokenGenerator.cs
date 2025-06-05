@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 
 namespace TBD.Shared.Utils;
 
-public static class JwtTokenGenerator
+public class JwtTokenGenerator
 {
     public static string GenerateJwtToken(int length = 32)
     {
