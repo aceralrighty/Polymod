@@ -21,7 +21,6 @@ public sealed class Schedule : BaseTableProperties
         User = user;
     }
 
-
     public Guid UserId { get; set; }
 
     // Navigation property with ForeignKey attribute referencing the property name
@@ -29,11 +28,14 @@ public sealed class Schedule : BaseTableProperties
 
     public double? BasePay { get; set; }
 
+    /// <summary>
+    /// Gets the total overtime hours (anything over 40 hours)
+    /// </summary>
     public double? Overtime
     {
         get
         {
-            if (TotalHoursWorked is > 40)
+            if (TotalHoursWorked > 40)
             {
                 return TotalHoursWorked - 40;
             }
@@ -42,28 +44,87 @@ public sealed class Schedule : BaseTableProperties
         }
     }
 
+    /// <summary>
+    /// Gets the overtime hours at 1.5x rate (hours 41-60)
+    /// </summary>
+    public double? OvertimeRegular
+    {
+        get
+        {
+            return TotalHoursWorked switch
+            {
+                <= 40 => 0,
+                <= 60 => TotalHoursWorked - 40,
+                _ => 20
+            };
+        }
+    }
+
+    /// <summary>
+    /// Gets the overtime hours at 2x rate (hours 61+)
+    /// </summary>
+    public double? OvertimeDouble
+    {
+        get
+        {
+            if (TotalHoursWorked <= 60) return 0;
+            return TotalHoursWorked - 60;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the total overtime pay using tiered rates
+    /// </summary>
     public double? OvertimeRate
     {
         get
         {
-            if (Overtime.HasValue)
+            if (!BasePay.HasValue || !TotalHoursWorked.HasValue || TotalHoursWorked <= 40)
             {
-                return BasePay * 1.5 * Overtime.Value;
+                return 0;
             }
 
-            return 0;
+            double overtimePay = 0;
+
+            // Calculate 1.5x overtime pay (hours 41-60)
+            var regularOvertimeHours = OvertimeRegular.GetValueOrDefault();
+            if (regularOvertimeHours > 0)
+            {
+                overtimePay += BasePay.Value * 1.5 * regularOvertimeHours;
+            }
+
+            // Calculate 2x overtime pay (hours 61+)
+            var doubleOvertimeHours = OvertimeDouble.GetValueOrDefault();
+            if (doubleOvertimeHours > 0)
+            {
+                overtimePay += BasePay.Value * 2.0 * doubleOvertimeHours;
+            }
+
+            return overtimePay;
         }
     }
 
-
     public double? TotalPay { get; set; }
 
+    /// <summary>
+    /// Computes total pay including tiered overtime rates
+    /// </summary>
     [NotMapped]
-    public double TotalPayComputed => TotalHoursWorked <= 40
-        ? BasePay.GetValueOrDefault() * TotalHoursWorked.GetValueOrDefault()
-        : (BasePay.GetValueOrDefault() * 40) +
-          ((BasePay.GetValueOrDefault() * 1.5) * (TotalHoursWorked.GetValueOrDefault() - 40));
+    public double TotalPayComputed
+    {
+        get
+        {
+            if (!BasePay.HasValue || !TotalHoursWorked.HasValue)
+            {
+                return 0;
+            }
 
+            double regularPay = BasePay.Value * Math.Min(TotalHoursWorked.Value, 40);
+            double overtimePay = OvertimeRate.GetValueOrDefault();
+
+            return regularPay + overtimePay;
+        }
+    }
 
     [Column(TypeName = "nvarchar(9)")] public string DaysWorkedJson { get; set; } = "{}";
 
@@ -91,7 +152,7 @@ public sealed class Schedule : BaseTableProperties
 
             try
             {
-                Dictionary<string, int>? result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
+                var result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
                 if (result == null)
                 {
                     throw new InvalidOperationException("Deserialization resulted in a null dictionary.");
