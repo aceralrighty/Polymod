@@ -76,20 +76,20 @@ Build and run the backend API
 
 **🗃️ Technologies Used**
 
-.NET 8 (or latest .NET version)
-Entity Framework Core
-SQL Server (via Docker)
-AutoMapper
-xUnit
-Docker + Docker Compose
-GitHub Actions (CI)
+.NET 8 (or latest .NET version)\
+Entity Framework Core\
+SQL Server (via Docker)\
+AutoMapper\
+xUnit\
+Docker + Docker Compose\
+GitHub Actions (CI)\
 
 **📦 What's Next?**
 
-Finalize business logic and validations across all modules
+Finalize business logic and validations across all modules\
 Add Swagger/OpenAPI support
-Begin breaking into microservices
-Add centralized logging and configuration management
+Begin breaking into microservices\
+Add centralized logging and configuration management\
 Experiment with alternative ORMs for deeper understanding
 
 **🙌 Contributions**
