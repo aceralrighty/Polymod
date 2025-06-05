@@ -9,7 +9,7 @@ namespace TBD.Shared.Utils;
 
 public class JwtTokenGenerator
 {
-    // Your existing method for generating random tokens (for refresh tokens, etc.)
+
     public static string GenerateJwtToken(int length = 32)
     {
         var randomBytes = new byte[length];
