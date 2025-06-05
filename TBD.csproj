@@ -33,6 +33,8 @@
 
     <ItemGroup>
         <Folder Include="AddressModule\Controllers\" />
+        <Folder Include="AuthModule\Controllers\" />
+        <Folder Include="AuthModule\Exceptions\" />
         <Folder Include="ScheduleModule\Controllers\" />
         <Folder Include="ServiceModule\Controllers\" />
         <Folder Include="UserModule\Controllers\" />

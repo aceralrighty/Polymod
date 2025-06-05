@@ -1,4 +1,5 @@
 using TBD.AddressModule;
+using TBD.AuthModule;
 using TBD.Data.Seeding;
 using TBD.ScheduleModule;
 using TBD.ServiceModule;
@@ -14,6 +15,8 @@ builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
+builder.Services.AddAuthModule(builder.Configuration);
+builder.Services.AddSingleton<JwtTokenGenerator>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
