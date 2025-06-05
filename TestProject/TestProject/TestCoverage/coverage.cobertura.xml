@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.0406" branch-rate="0.1472" version="1.9" timestamp="1749158480" lines-covered="219" lines-valid="5386" branches-covered="48" branches-valid="326">
+<coverage line-rate="0.0406" branch-rate="0.1472" version="1.9" timestamp="1749160476" lines-covered="219" lines-valid="5382" branches-covered="48" branches-valid="326">
   <sources>
     <source>/Users/adamziv/</source>
   </sources>
   <packages>
-    <package name="TBD" line-rate="0.0406" branch-rate="0.1472" complexity="680">
+    <package name="TBD" line-rate="0.0406" branch-rate="0.1472" complexity="679">
       <classes>
         <class name="Program/&lt;&lt;Main&gt;$&gt;d__0" filename="Desktop/UnknownProject/TBD/Program.cs" line-rate="0" branch-rate="0" complexity="2">
           <methods>
@@ -222,24 +222,6 @@
             <line number="81" hits="0" branch="False" />
             <line number="82" hits="0" branch="False" />
             <line number="83" hits="0" branch="False" />
-          </lines>
-        </class>
-        <class name="TBD.UserModule.Services.UserService/&lt;GetAllUsersAsync&gt;d__7" filename="Desktop/UnknownProject/TBD/UserModule/Services/UserService.cs" line-rate="0" branch-rate="1" complexity="1">
-          <methods>
-            <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
-              <lines>
-                <line number="50" hits="0" branch="False" />
-                <line number="51" hits="0" branch="False" />
-                <line number="52" hits="0" branch="False" />
-                <line number="53" hits="0" branch="False" />
-              </lines>
-            </method>
-          </methods>
-          <lines>
-            <line number="50" hits="0" branch="False" />
-            <line number="51" hits="0" branch="False" />
-            <line number="52" hits="0" branch="False" />
-            <line number="53" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.UserModule.Services.UserService/&lt;GetUserByEmailAsync&gt;d__4" filename="Desktop/UnknownProject/TBD/UserModule/Services/UserService.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -652,7 +634,7 @@
             </method>
             <method name="get_Schedule" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="20" hits="62" branch="False" />
+                <line number="20" hits="31" branch="False" />
               </lines>
             </method>
           </methods>
@@ -661,7 +643,7 @@
             <line number="14" hits="31" branch="False" />
             <line number="16" hits="61" branch="False" />
             <line number="18" hits="61" branch="False" />
-            <line number="20" hits="62" branch="False" />
+            <line number="20" hits="31" branch="False" />
           </lines>
         </class>
         <class name="TBD.UserModule.Data.UserDbContext" filename="Desktop/UnknownProject/TBD/UserModule/Data/UserDbContext.cs" line-rate="0" branch-rate="0" complexity="21">
@@ -1422,317 +1404,318 @@
           <methods>
             <method name="TearDown" signature="()" line-rate="0" branch-rate="0" complexity="2">
               <lines>
-                <line number="88" hits="0" branch="False" />
-                <line number="89" hits="0" branch="True" condition-coverage="0% (0/2)">
+                <line number="87" hits="0" branch="False" />
+                <line number="88" hits="0" branch="True" condition-coverage="0% (0/2)">
                   <conditions>
                     <condition number="8" type="jump" coverage="0%" />
                   </conditions>
                 </line>
-                <line number="90" hits="0" branch="False" />
+                <line number="89" hits="0" branch="False" />
               </lines>
             </method>
             <method name="GetByUserAddressAsync_WithNoMatch_ThrowsInvalidOperationException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="225" hits="0" branch="False" />
-                <line number="227" hits="0" branch="False" />
+                <line number="224" hits="0" branch="False" />
+                <line number="226" hits="0" branch="False" />
+                <line number="229" hits="0" branch="False" />
                 <line number="230" hits="0" branch="False" />
                 <line number="231" hits="0" branch="False" />
-                <line number="232" hits="0" branch="False" />
               </lines>
             </method>
             <method name="AddAsync_WithNullEntity_ThrowsException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="369" hits="0" branch="False" />
+                <line number="368" hits="0" branch="False" />
+                <line number="370" hits="0" branch="False" />
                 <line number="371" hits="0" branch="False" />
                 <line number="372" hits="0" branch="False" />
-                <line number="373" hits="0" branch="False" />
               </lines>
             </method>
             <method name="AddRangeAsync_WithNullCollection_ThrowsException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="408" hits="0" branch="False" />
+                <line number="407" hits="0" branch="False" />
+                <line number="409" hits="0" branch="False" />
                 <line number="410" hits="0" branch="False" />
                 <line number="411" hits="0" branch="False" />
-                <line number="412" hits="0" branch="False" />
               </lines>
             </method>
             <method name="UpdateAsync_WithNullEntity_ThrowsException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="438" hits="0" branch="False" />
+                <line number="437" hits="0" branch="False" />
+                <line number="439" hits="0" branch="False" />
                 <line number="440" hits="0" branch="False" />
                 <line number="441" hits="0" branch="False" />
-                <line number="442" hits="0" branch="False" />
               </lines>
             </method>
             <method name="RemoveAsync_WithNullEntity_ThrowsException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="468" hits="0" branch="False" />
+                <line number="467" hits="0" branch="False" />
+                <line number="469" hits="0" branch="False" />
                 <line number="470" hits="0" branch="False" />
                 <line number="471" hits="0" branch="False" />
-                <line number="472" hits="0" branch="False" />
               </lines>
             </method>
             <method name="UpdateUserAddress_WithNonExistentUser_ThrowsArgumentException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="514" hits="0" branch="False" />
+                <line number="513" hits="0" branch="False" />
+                <line number="515" hits="0" branch="False" />
                 <line number="516" hits="0" branch="False" />
-                <line number="517" hits="0" branch="False" />
+                <line number="518" hits="0" branch="False" />
                 <line number="519" hits="0" branch="False" />
                 <line number="520" hits="0" branch="False" />
                 <line number="521" hits="0" branch="False" />
                 <line number="522" hits="0" branch="False" />
                 <line number="523" hits="0" branch="False" />
-                <line number="524" hits="0" branch="False" />
+                <line number="526" hits="0" branch="False" />
                 <line number="527" hits="0" branch="False" />
-                <line number="528" hits="0" branch="False" />
+                <line number="529" hits="0" branch="False" />
                 <line number="530" hits="0" branch="False" />
-                <line number="531" hits="0" branch="False" />
               </lines>
             </method>
             <method name="UpdateUserAddress_WithNonExistentAddress_ThrowsArgumentNullException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="535" hits="0" branch="False" />
+                <line number="534" hits="0" branch="False" />
+                <line number="536" hits="0" branch="False" />
                 <line number="537" hits="0" branch="False" />
                 <line number="538" hits="0" branch="False" />
                 <line number="539" hits="0" branch="False" />
                 <line number="540" hits="0" branch="False" />
                 <line number="541" hits="0" branch="False" />
-                <line number="542" hits="0" branch="False" />
+                <line number="544" hits="0" branch="False" />
                 <line number="545" hits="0" branch="False" />
-                <line number="546" hits="0" branch="False" />
+                <line number="547" hits="0" branch="False" />
                 <line number="548" hits="0" branch="False" />
                 <line number="549" hits="0" branch="False" />
-                <line number="550" hits="0" branch="False" />
               </lines>
             </method>
             <method name="UpdateUserAddress_WithEmptyGuid_ThrowsArgumentNullException" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="554" hits="0" branch="False" />
+                <line number="553" hits="0" branch="False" />
+                <line number="555" hits="0" branch="False" />
                 <line number="556" hits="0" branch="False" />
                 <line number="557" hits="0" branch="False" />
                 <line number="558" hits="0" branch="False" />
                 <line number="559" hits="0" branch="False" />
                 <line number="560" hits="0" branch="False" />
-                <line number="561" hits="0" branch="False" />
+                <line number="563" hits="0" branch="False" />
                 <line number="564" hits="0" branch="False" />
-                <line number="565" hits="0" branch="False" />
+                <line number="566" hits="0" branch="False" />
                 <line number="567" hits="0" branch="False" />
-                <line number="568" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="88" hits="0" branch="False" />
-            <line number="89" hits="0" branch="True" condition-coverage="0% (0/2)">
+            <line number="87" hits="0" branch="False" />
+            <line number="88" hits="0" branch="True" condition-coverage="0% (0/2)">
               <conditions>
                 <condition number="8" type="jump" coverage="0%" />
               </conditions>
             </line>
-            <line number="90" hits="0" branch="False" />
-            <line number="225" hits="0" branch="False" />
-            <line number="227" hits="0" branch="False" />
+            <line number="89" hits="0" branch="False" />
+            <line number="224" hits="0" branch="False" />
+            <line number="226" hits="0" branch="False" />
+            <line number="229" hits="0" branch="False" />
             <line number="230" hits="0" branch="False" />
             <line number="231" hits="0" branch="False" />
-            <line number="232" hits="0" branch="False" />
-            <line number="369" hits="0" branch="False" />
+            <line number="368" hits="0" branch="False" />
+            <line number="370" hits="0" branch="False" />
             <line number="371" hits="0" branch="False" />
             <line number="372" hits="0" branch="False" />
-            <line number="373" hits="0" branch="False" />
-            <line number="408" hits="0" branch="False" />
+            <line number="407" hits="0" branch="False" />
+            <line number="409" hits="0" branch="False" />
             <line number="410" hits="0" branch="False" />
             <line number="411" hits="0" branch="False" />
-            <line number="412" hits="0" branch="False" />
-            <line number="438" hits="0" branch="False" />
+            <line number="437" hits="0" branch="False" />
+            <line number="439" hits="0" branch="False" />
             <line number="440" hits="0" branch="False" />
             <line number="441" hits="0" branch="False" />
-            <line number="442" hits="0" branch="False" />
-            <line number="468" hits="0" branch="False" />
+            <line number="467" hits="0" branch="False" />
+            <line number="469" hits="0" branch="False" />
             <line number="470" hits="0" branch="False" />
             <line number="471" hits="0" branch="False" />
-            <line number="472" hits="0" branch="False" />
-            <line number="514" hits="0" branch="False" />
+            <line number="513" hits="0" branch="False" />
+            <line number="515" hits="0" branch="False" />
             <line number="516" hits="0" branch="False" />
-            <line number="517" hits="0" branch="False" />
+            <line number="518" hits="0" branch="False" />
             <line number="519" hits="0" branch="False" />
             <line number="520" hits="0" branch="False" />
             <line number="521" hits="0" branch="False" />
             <line number="522" hits="0" branch="False" />
             <line number="523" hits="0" branch="False" />
-            <line number="524" hits="0" branch="False" />
+            <line number="526" hits="0" branch="False" />
             <line number="527" hits="0" branch="False" />
-            <line number="528" hits="0" branch="False" />
+            <line number="529" hits="0" branch="False" />
             <line number="530" hits="0" branch="False" />
-            <line number="531" hits="0" branch="False" />
-            <line number="535" hits="0" branch="False" />
+            <line number="534" hits="0" branch="False" />
+            <line number="536" hits="0" branch="False" />
             <line number="537" hits="0" branch="False" />
             <line number="538" hits="0" branch="False" />
             <line number="539" hits="0" branch="False" />
             <line number="540" hits="0" branch="False" />
             <line number="541" hits="0" branch="False" />
-            <line number="542" hits="0" branch="False" />
+            <line number="544" hits="0" branch="False" />
             <line number="545" hits="0" branch="False" />
-            <line number="546" hits="0" branch="False" />
+            <line number="547" hits="0" branch="False" />
             <line number="548" hits="0" branch="False" />
             <line number="549" hits="0" branch="False" />
-            <line number="550" hits="0" branch="False" />
-            <line number="554" hits="0" branch="False" />
+            <line number="553" hits="0" branch="False" />
+            <line number="555" hits="0" branch="False" />
             <line number="556" hits="0" branch="False" />
             <line number="557" hits="0" branch="False" />
             <line number="558" hits="0" branch="False" />
             <line number="559" hits="0" branch="False" />
             <line number="560" hits="0" branch="False" />
-            <line number="561" hits="0" branch="False" />
+            <line number="563" hits="0" branch="False" />
             <line number="564" hits="0" branch="False" />
-            <line number="565" hits="0" branch="False" />
+            <line number="566" hits="0" branch="False" />
             <line number="567" hits="0" branch="False" />
-            <line number="568" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;&lt;GroupByCityAsync_WithEmptyDatabase_ThrowsCityGroupingNotAvailableException&gt;b__13_0&gt;d" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="186" hits="0" branch="False" />
+                <line number="185" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="186" hits="0" branch="False" />
+            <line number="185" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;&lt;GroupByUserStateAsync_WithEmptyDatabase_ThrowsUserStateGroupException&gt;b__9_0&gt;d" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="119" hits="0" branch="False" />
+                <line number="118" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="119" hits="0" branch="False" />
+            <line number="118" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;&gt;c" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="12">
           <methods>
             <method name="&lt;GroupByUserStateAsync_WithValidData_ReturnsGroupedByState&gt;b__8_0" signature="(System.Linq.IGrouping`2&lt;System.String,TBD.AddressModule.Models.UserAddress&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="103" hits="0" branch="False" />
+                <line number="102" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByUserStateAsync_WithValidData_ReturnsGroupedByState&gt;b__8_1" signature="(System.Linq.IGrouping`2&lt;System.String,TBD.AddressModule.Models.UserAddress&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="104" hits="0" branch="False" />
+                <line number="103" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByUserStateAsync_WithValidData_ReturnsGroupedByState&gt;b__8_2" signature="(System.Linq.IGrouping`2&lt;System.String,TBD.AddressModule.Models.UserAddress&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="106" hits="0" branch="False" />
+                <line number="105" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByZipCodeAsync_WithValidData_ReturnsGroupedByZipCode&gt;b__10_0" signature="(&lt;&gt;f__AnonymousType8`2&lt;System.Int32,System.Int32&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="137" hits="0" branch="False" />
+                <line number="136" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByZipCodeAsync_WithValidData_ReturnsGroupedByZipCode&gt;b__10_1" signature="(&lt;&gt;f__AnonymousType8`2&lt;System.Int32,System.Int32&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="138" hits="0" branch="False" />
+                <line number="137" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByZipCodeAsync_WithValidData_ReturnsGroupedByZipCode&gt;b__10_2" signature="(&lt;&gt;f__AnonymousType8`2&lt;System.Int32,System.Int32&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="139" hits="0" branch="False" />
+                <line number="138" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByCityAsync_WithValidData_ReturnsGroupedByCity&gt;b__12_0" signature="(System.Linq.IGrouping`2&lt;System.String,TBD.AddressModule.Models.UserAddress&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="170" hits="0" branch="False" />
+                <line number="169" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByCityAsync_WithValidData_ReturnsGroupedByCity&gt;b__12_1" signature="(System.Linq.IGrouping`2&lt;System.String,TBD.AddressModule.Models.UserAddress&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="171" hits="0" branch="False" />
+                <line number="170" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;GroupByCityAsync_WithValidData_ReturnsGroupedByCity&gt;b__12_2" signature="(System.Linq.IGrouping`2&lt;System.String,TBD.AddressModule.Models.UserAddress&gt;)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="173" hits="0" branch="False" />
+                <line number="172" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;FindAsync_WithValidExpression_ReturnsMatchingAddresses&gt;b__19_0" signature="(TBD.AddressModule.Models.UserAddress)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="277" hits="0" branch="False" />
+                <line number="276" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;AddRangeAsync_WithValidEntities_AddsEntitiesAndSavesChanges&gt;b__27_0" signature="(TBD.AddressModule.Models.UserAddress)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="402" hits="0" branch="False" />
+                <line number="401" hits="0" branch="False" />
               </lines>
             </method>
             <method name="&lt;UpdateUserAddress_WithValidRequest_UpdatesAndReturnsAddress&gt;b__33_1" signature="(TBD.API.DTOs.UserAddressRequest,TBD.AddressModule.Models.UserAddress)" line-rate="0" branch-rate="1" complexity="1">
               <lines>
+                <line number="492" hits="0" branch="False" />
                 <line number="493" hits="0" branch="False" />
                 <line number="494" hits="0" branch="False" />
                 <line number="495" hits="0" branch="False" />
-                <line number="496" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
+            <line number="102" hits="0" branch="False" />
             <line number="103" hits="0" branch="False" />
-            <line number="104" hits="0" branch="False" />
-            <line number="106" hits="0" branch="False" />
+            <line number="105" hits="0" branch="False" />
+            <line number="136" hits="0" branch="False" />
             <line number="137" hits="0" branch="False" />
             <line number="138" hits="0" branch="False" />
-            <line number="139" hits="0" branch="False" />
+            <line number="169" hits="0" branch="False" />
             <line number="170" hits="0" branch="False" />
-            <line number="171" hits="0" branch="False" />
-            <line number="173" hits="0" branch="False" />
-            <line number="277" hits="0" branch="False" />
-            <line number="402" hits="0" branch="False" />
+            <line number="172" hits="0" branch="False" />
+            <line number="276" hits="0" branch="False" />
+            <line number="401" hits="0" branch="False" />
+            <line number="492" hits="0" branch="False" />
             <line number="493" hits="0" branch="False" />
             <line number="494" hits="0" branch="False" />
             <line number="495" hits="0" branch="False" />
-            <line number="496" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;AddAsync_WithValidEntity_AddsEntityAndSavesChanges&gt;d__25" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="350" hits="0" branch="False" />
+                <line number="349" hits="0" branch="False" />
+                <line number="351" hits="0" branch="False" />
                 <line number="352" hits="0" branch="False" />
                 <line number="353" hits="0" branch="False" />
                 <line number="354" hits="0" branch="False" />
-                <line number="355" hits="0" branch="False" />
-                <line number="358" hits="0" branch="False" />
+                <line number="357" hits="0" branch="False" />
+                <line number="360" hits="0" branch="False" />
                 <line number="361" hits="0" branch="False" />
                 <line number="362" hits="0" branch="False" />
                 <line number="363" hits="0" branch="False" />
                 <line number="364" hits="0" branch="False" />
-                <line number="365" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="350" hits="0" branch="False" />
+            <line number="349" hits="0" branch="False" />
+            <line number="351" hits="0" branch="False" />
             <line number="352" hits="0" branch="False" />
             <line number="353" hits="0" branch="False" />
             <line number="354" hits="0" branch="False" />
-            <line number="355" hits="0" branch="False" />
-            <line number="358" hits="0" branch="False" />
+            <line number="357" hits="0" branch="False" />
+            <line number="360" hits="0" branch="False" />
             <line number="361" hits="0" branch="False" />
             <line number="362" hits="0" branch="False" />
             <line number="363" hits="0" branch="False" />
             <line number="364" hits="0" branch="False" />
-            <line number="365" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;AddRangeAsync_WithValidEntities_AddsEntitiesAndSavesChanges&gt;d__27" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="381" hits="0" branch="False" />
+                <line number="380" hits="0" branch="False" />
+                <line number="382" hits="0" branch="False" />
                 <line number="383" hits="0" branch="False" />
                 <line number="384" hits="0" branch="False" />
                 <line number="385" hits="0" branch="False" />
@@ -1743,17 +1726,17 @@
                 <line number="390" hits="0" branch="False" />
                 <line number="391" hits="0" branch="False" />
                 <line number="392" hits="0" branch="False" />
-                <line number="393" hits="0" branch="False" />
-                <line number="396" hits="0" branch="False" />
+                <line number="395" hits="0" branch="False" />
+                <line number="398" hits="0" branch="False" />
                 <line number="399" hits="0" branch="False" />
-                <line number="400" hits="0" branch="False" />
+                <line number="402" hits="0" branch="False" />
                 <line number="403" hits="0" branch="False" />
-                <line number="404" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="381" hits="0" branch="False" />
+            <line number="380" hits="0" branch="False" />
+            <line number="382" hits="0" branch="False" />
             <line number="383" hits="0" branch="False" />
             <line number="384" hits="0" branch="False" />
             <line number="385" hits="0" branch="False" />
@@ -1764,455 +1747,455 @@
             <line number="390" hits="0" branch="False" />
             <line number="391" hits="0" branch="False" />
             <line number="392" hits="0" branch="False" />
-            <line number="393" hits="0" branch="False" />
-            <line number="396" hits="0" branch="False" />
+            <line number="395" hits="0" branch="False" />
+            <line number="398" hits="0" branch="False" />
             <line number="399" hits="0" branch="False" />
-            <line number="400" hits="0" branch="False" />
+            <line number="402" hits="0" branch="False" />
             <line number="403" hits="0" branch="False" />
-            <line number="404" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;CompleteWorkflow_AddFindUpdateRemove_WorksCorrectly&gt;d__37" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="576" hits="0" branch="False" />
+                <line number="575" hits="0" branch="False" />
+                <line number="577" hits="0" branch="False" />
                 <line number="578" hits="0" branch="False" />
                 <line number="579" hits="0" branch="False" />
                 <line number="580" hits="0" branch="False" />
-                <line number="581" hits="0" branch="False" />
+                <line number="583" hits="0" branch="False" />
                 <line number="584" hits="0" branch="False" />
                 <line number="585" hits="0" branch="False" />
-                <line number="586" hits="0" branch="False" />
+                <line number="588" hits="0" branch="False" />
                 <line number="589" hits="0" branch="False" />
-                <line number="590" hits="0" branch="False" />
+                <line number="592" hits="0" branch="False" />
                 <line number="593" hits="0" branch="False" />
                 <line number="594" hits="0" branch="False" />
                 <line number="595" hits="0" branch="False" />
-                <line number="596" hits="0" branch="False" />
+                <line number="598" hits="0" branch="False" />
                 <line number="599" hits="0" branch="False" />
                 <line number="600" hits="0" branch="False" />
                 <line number="601" hits="0" branch="False" />
-                <line number="602" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="576" hits="0" branch="False" />
+            <line number="575" hits="0" branch="False" />
+            <line number="577" hits="0" branch="False" />
             <line number="578" hits="0" branch="False" />
             <line number="579" hits="0" branch="False" />
             <line number="580" hits="0" branch="False" />
-            <line number="581" hits="0" branch="False" />
+            <line number="583" hits="0" branch="False" />
             <line number="584" hits="0" branch="False" />
             <line number="585" hits="0" branch="False" />
-            <line number="586" hits="0" branch="False" />
+            <line number="588" hits="0" branch="False" />
             <line number="589" hits="0" branch="False" />
-            <line number="590" hits="0" branch="False" />
+            <line number="592" hits="0" branch="False" />
             <line number="593" hits="0" branch="False" />
             <line number="594" hits="0" branch="False" />
             <line number="595" hits="0" branch="False" />
-            <line number="596" hits="0" branch="False" />
+            <line number="598" hits="0" branch="False" />
             <line number="599" hits="0" branch="False" />
             <line number="600" hits="0" branch="False" />
             <line number="601" hits="0" branch="False" />
-            <line number="602" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;FindAsync_WithComplexExpression_ReturnsMatchingAddresses&gt;d__21" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="293" hits="0" branch="False" />
-                <line number="295" hits="0" branch="False" />
+                <line number="292" hits="0" branch="False" />
+                <line number="294" hits="0" branch="False" />
+                <line number="297" hits="0" branch="False" />
                 <line number="298" hits="0" branch="False" />
                 <line number="299" hits="0" branch="False" />
                 <line number="300" hits="0" branch="False" />
-                <line number="301" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="293" hits="0" branch="False" />
-            <line number="295" hits="0" branch="False" />
+            <line number="292" hits="0" branch="False" />
+            <line number="294" hits="0" branch="False" />
+            <line number="297" hits="0" branch="False" />
             <line number="298" hits="0" branch="False" />
             <line number="299" hits="0" branch="False" />
             <line number="300" hits="0" branch="False" />
-            <line number="301" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;FindAsync_WithNoMatches_ReturnsEmptyCollection&gt;d__20" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="282" hits="0" branch="False" />
-                <line number="284" hits="0" branch="False" />
+                <line number="281" hits="0" branch="False" />
+                <line number="283" hits="0" branch="False" />
+                <line number="286" hits="0" branch="False" />
                 <line number="287" hits="0" branch="False" />
                 <line number="288" hits="0" branch="False" />
-                <line number="289" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="282" hits="0" branch="False" />
-            <line number="284" hits="0" branch="False" />
+            <line number="281" hits="0" branch="False" />
+            <line number="283" hits="0" branch="False" />
+            <line number="286" hits="0" branch="False" />
             <line number="287" hits="0" branch="False" />
             <line number="288" hits="0" branch="False" />
-            <line number="289" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;FindAsync_WithValidExpression_ReturnsMatchingAddresses&gt;d__19" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="270" hits="0" branch="False" />
-                <line number="272" hits="0" branch="False" />
+                <line number="269" hits="0" branch="False" />
+                <line number="271" hits="0" branch="False" />
+                <line number="274" hits="0" branch="False" />
                 <line number="275" hits="0" branch="False" />
-                <line number="276" hits="0" branch="False" />
-                <line number="278" hits="0" branch="False" />
+                <line number="277" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="270" hits="0" branch="False" />
-            <line number="272" hits="0" branch="False" />
+            <line number="269" hits="0" branch="False" />
+            <line number="271" hits="0" branch="False" />
+            <line number="274" hits="0" branch="False" />
             <line number="275" hits="0" branch="False" />
-            <line number="276" hits="0" branch="False" />
-            <line number="278" hits="0" branch="False" />
+            <line number="277" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GetAllAsync_ReturnsAllAddresses&gt;d__17" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="240" hits="0" branch="False" />
-                <line number="242" hits="0" branch="False" />
+                <line number="239" hits="0" branch="False" />
+                <line number="241" hits="0" branch="False" />
+                <line number="244" hits="0" branch="False" />
                 <line number="245" hits="0" branch="False" />
                 <line number="246" hits="0" branch="False" />
-                <line number="247" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="240" hits="0" branch="False" />
-            <line number="242" hits="0" branch="False" />
+            <line number="239" hits="0" branch="False" />
+            <line number="241" hits="0" branch="False" />
+            <line number="244" hits="0" branch="False" />
             <line number="245" hits="0" branch="False" />
             <line number="246" hits="0" branch="False" />
-            <line number="247" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GetAllAsync_WithEmptyDatabase_ReturnsEmptyCollection&gt;d__18" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="251" hits="0" branch="False" />
+                <line number="250" hits="0" branch="False" />
+                <line number="252" hits="0" branch="False" />
                 <line number="253" hits="0" branch="False" />
-                <line number="254" hits="0" branch="False" />
-                <line number="257" hits="0" branch="False" />
+                <line number="256" hits="0" branch="False" />
+                <line number="259" hits="0" branch="False" />
                 <line number="260" hits="0" branch="False" />
                 <line number="261" hits="0" branch="False" />
-                <line number="262" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="251" hits="0" branch="False" />
+            <line number="250" hits="0" branch="False" />
+            <line number="252" hits="0" branch="False" />
             <line number="253" hits="0" branch="False" />
-            <line number="254" hits="0" branch="False" />
-            <line number="257" hits="0" branch="False" />
+            <line number="256" hits="0" branch="False" />
+            <line number="259" hits="0" branch="False" />
             <line number="260" hits="0" branch="False" />
             <line number="261" hits="0" branch="False" />
-            <line number="262" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GetByIdAsync_WithEmptyGuid_ReturnsNull&gt;d__24" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="336" hits="0" branch="False" />
-                <line number="338" hits="0" branch="False" />
+                <line number="335" hits="0" branch="False" />
+                <line number="337" hits="0" branch="False" />
+                <line number="340" hits="0" branch="False" />
                 <line number="341" hits="0" branch="False" />
-                <line number="342" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="336" hits="0" branch="False" />
-            <line number="338" hits="0" branch="False" />
+            <line number="335" hits="0" branch="False" />
+            <line number="337" hits="0" branch="False" />
+            <line number="340" hits="0" branch="False" />
             <line number="341" hits="0" branch="False" />
-            <line number="342" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GetByIdAsync_WithInvalidId_ReturnsNull&gt;d__23" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="323" hits="0" branch="False" />
-                <line number="325" hits="0" branch="False" />
-                <line number="328" hits="0" branch="False" />
+                <line number="322" hits="0" branch="False" />
+                <line number="324" hits="0" branch="False" />
+                <line number="327" hits="0" branch="False" />
+                <line number="330" hits="0" branch="False" />
                 <line number="331" hits="0" branch="False" />
-                <line number="332" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="323" hits="0" branch="False" />
-            <line number="325" hits="0" branch="False" />
-            <line number="328" hits="0" branch="False" />
+            <line number="322" hits="0" branch="False" />
+            <line number="324" hits="0" branch="False" />
+            <line number="327" hits="0" branch="False" />
+            <line number="330" hits="0" branch="False" />
             <line number="331" hits="0" branch="False" />
-            <line number="332" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GetByIdAsync_WithValidId_ReturnsUserAddress&gt;d__22" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="309" hits="0" branch="False" />
-                <line number="311" hits="0" branch="False" />
-                <line number="314" hits="0" branch="False" />
+                <line number="308" hits="0" branch="False" />
+                <line number="310" hits="0" branch="False" />
+                <line number="313" hits="0" branch="False" />
+                <line number="316" hits="0" branch="False" />
                 <line number="317" hits="0" branch="False" />
                 <line number="318" hits="0" branch="False" />
-                <line number="319" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="309" hits="0" branch="False" />
-            <line number="311" hits="0" branch="False" />
-            <line number="314" hits="0" branch="False" />
+            <line number="308" hits="0" branch="False" />
+            <line number="310" hits="0" branch="False" />
+            <line number="313" hits="0" branch="False" />
+            <line number="316" hits="0" branch="False" />
             <line number="317" hits="0" branch="False" />
             <line number="318" hits="0" branch="False" />
-            <line number="319" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GetByUserAddressAsync_WithMatchingAddress1_ReturnsUserAddress&gt;d__14" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="197" hits="0" branch="False" />
-                <line number="199" hits="0" branch="False" />
-                <line number="202" hits="0" branch="False" />
+                <line number="196" hits="0" branch="False" />
+                <line number="198" hits="0" branch="False" />
+                <line number="201" hits="0" branch="False" />
+                <line number="204" hits="0" branch="False" />
                 <line number="205" hits="0" branch="False" />
                 <line number="206" hits="0" branch="False" />
-                <line number="207" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="197" hits="0" branch="False" />
-            <line number="199" hits="0" branch="False" />
-            <line number="202" hits="0" branch="False" />
+            <line number="196" hits="0" branch="False" />
+            <line number="198" hits="0" branch="False" />
+            <line number="201" hits="0" branch="False" />
+            <line number="204" hits="0" branch="False" />
             <line number="205" hits="0" branch="False" />
             <line number="206" hits="0" branch="False" />
-            <line number="207" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GetByUserAddressAsync_WithMatchingAddress2_ReturnsUserAddress&gt;d__15" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="211" hits="0" branch="False" />
-                <line number="213" hits="0" branch="False" />
-                <line number="216" hits="0" branch="False" />
+                <line number="210" hits="0" branch="False" />
+                <line number="212" hits="0" branch="False" />
+                <line number="215" hits="0" branch="False" />
+                <line number="218" hits="0" branch="False" />
                 <line number="219" hits="0" branch="False" />
                 <line number="220" hits="0" branch="False" />
-                <line number="221" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="211" hits="0" branch="False" />
-            <line number="213" hits="0" branch="False" />
-            <line number="216" hits="0" branch="False" />
+            <line number="210" hits="0" branch="False" />
+            <line number="212" hits="0" branch="False" />
+            <line number="215" hits="0" branch="False" />
+            <line number="218" hits="0" branch="False" />
             <line number="219" hits="0" branch="False" />
             <line number="220" hits="0" branch="False" />
-            <line number="221" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GroupByCityAsync_WithEmptyDatabase_ThrowsCityGroupingNotAvailableException&gt;d__13" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="179" hits="0" branch="False" />
+                <line number="178" hits="0" branch="False" />
+                <line number="180" hits="0" branch="False" />
                 <line number="181" hits="0" branch="False" />
-                <line number="182" hits="0" branch="False" />
-                <line number="185" hits="0" branch="False" />
+                <line number="184" hits="0" branch="False" />
+                <line number="187" hits="0" branch="False" />
                 <line number="188" hits="0" branch="False" />
-                <line number="189" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="179" hits="0" branch="False" />
+            <line number="178" hits="0" branch="False" />
+            <line number="180" hits="0" branch="False" />
             <line number="181" hits="0" branch="False" />
-            <line number="182" hits="0" branch="False" />
-            <line number="185" hits="0" branch="False" />
+            <line number="184" hits="0" branch="False" />
+            <line number="187" hits="0" branch="False" />
             <line number="188" hits="0" branch="False" />
-            <line number="189" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GroupByCityAsync_WithValidData_ReturnsGroupedByCity&gt;d__12" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="163" hits="0" branch="False" />
-                <line number="165" hits="0" branch="False" />
+                <line number="162" hits="0" branch="False" />
+                <line number="164" hits="0" branch="False" />
+                <line number="167" hits="0" branch="False" />
                 <line number="168" hits="0" branch="False" />
-                <line number="169" hits="0" branch="False" />
+                <line number="173" hits="0" branch="False" />
                 <line number="174" hits="0" branch="False" />
-                <line number="175" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="163" hits="0" branch="False" />
-            <line number="165" hits="0" branch="False" />
+            <line number="162" hits="0" branch="False" />
+            <line number="164" hits="0" branch="False" />
+            <line number="167" hits="0" branch="False" />
             <line number="168" hits="0" branch="False" />
-            <line number="169" hits="0" branch="False" />
+            <line number="173" hits="0" branch="False" />
             <line number="174" hits="0" branch="False" />
-            <line number="175" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GroupByUserStateAsync_WithEmptyDatabase_ThrowsUserStateGroupException&gt;d__9" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="0" complexity="2">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="0" complexity="2">
               <lines>
-                <line number="112" hits="0" branch="False" />
+                <line number="111" hits="0" branch="False" />
+                <line number="113" hits="0" branch="False" />
                 <line number="114" hits="0" branch="False" />
-                <line number="115" hits="0" branch="False" />
-                <line number="118" hits="0" branch="False" />
-                <line number="121" hits="0" branch="True" condition-coverage="0% (0/2)">
+                <line number="117" hits="0" branch="False" />
+                <line number="120" hits="0" branch="True" condition-coverage="0% (0/2)">
                   <conditions>
                     <condition number="203" type="jump" coverage="0%" />
                   </conditions>
                 </line>
-                <line number="122" hits="0" branch="False" />
+                <line number="121" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="112" hits="0" branch="False" />
+            <line number="111" hits="0" branch="False" />
+            <line number="113" hits="0" branch="False" />
             <line number="114" hits="0" branch="False" />
-            <line number="115" hits="0" branch="False" />
-            <line number="118" hits="0" branch="False" />
-            <line number="121" hits="0" branch="True" condition-coverage="0% (0/2)">
+            <line number="117" hits="0" branch="False" />
+            <line number="120" hits="0" branch="True" condition-coverage="0% (0/2)">
               <conditions>
                 <condition number="203" type="jump" coverage="0%" />
               </conditions>
             </line>
-            <line number="122" hits="0" branch="False" />
+            <line number="121" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GroupByUserStateAsync_WithValidData_ReturnsGroupedByState&gt;d__8" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="96" hits="0" branch="False" />
-                <line number="98" hits="0" branch="False" />
+                <line number="95" hits="0" branch="False" />
+                <line number="97" hits="0" branch="False" />
+                <line number="100" hits="0" branch="False" />
                 <line number="101" hits="0" branch="False" />
-                <line number="102" hits="0" branch="False" />
+                <line number="106" hits="0" branch="False" />
                 <line number="107" hits="0" branch="False" />
-                <line number="108" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="96" hits="0" branch="False" />
-            <line number="98" hits="0" branch="False" />
+            <line number="95" hits="0" branch="False" />
+            <line number="97" hits="0" branch="False" />
+            <line number="100" hits="0" branch="False" />
             <line number="101" hits="0" branch="False" />
-            <line number="102" hits="0" branch="False" />
+            <line number="106" hits="0" branch="False" />
             <line number="107" hits="0" branch="False" />
-            <line number="108" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GroupByZipCodeAsync_WithEmptyDatabase_ReturnsEmptyList&gt;d__11" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="144" hits="0" branch="False" />
+                <line number="143" hits="0" branch="False" />
+                <line number="145" hits="0" branch="False" />
                 <line number="146" hits="0" branch="False" />
-                <line number="147" hits="0" branch="False" />
-                <line number="150" hits="0" branch="False" />
+                <line number="149" hits="0" branch="False" />
+                <line number="152" hits="0" branch="False" />
                 <line number="153" hits="0" branch="False" />
                 <line number="154" hits="0" branch="False" />
-                <line number="155" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="144" hits="0" branch="False" />
+            <line number="143" hits="0" branch="False" />
+            <line number="145" hits="0" branch="False" />
             <line number="146" hits="0" branch="False" />
-            <line number="147" hits="0" branch="False" />
-            <line number="150" hits="0" branch="False" />
+            <line number="149" hits="0" branch="False" />
+            <line number="152" hits="0" branch="False" />
             <line number="153" hits="0" branch="False" />
             <line number="154" hits="0" branch="False" />
-            <line number="155" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;GroupByZipCodeAsync_WithValidData_ReturnsGroupedByZipCode&gt;d__10" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="126" hits="0" branch="False" />
+                <line number="125" hits="0" branch="False" />
+                <line number="127" hits="0" branch="False" />
                 <line number="128" hits="0" branch="False" />
                 <line number="129" hits="0" branch="False" />
                 <line number="130" hits="0" branch="False" />
                 <line number="131" hits="0" branch="False" />
-                <line number="132" hits="0" branch="False" />
+                <line number="134" hits="0" branch="False" />
                 <line number="135" hits="0" branch="False" />
-                <line number="136" hits="0" branch="False" />
-                <line number="140" hits="0" branch="False" />
+                <line number="139" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="126" hits="0" branch="False" />
+            <line number="125" hits="0" branch="False" />
+            <line number="127" hits="0" branch="False" />
             <line number="128" hits="0" branch="False" />
             <line number="129" hits="0" branch="False" />
             <line number="130" hits="0" branch="False" />
             <line number="131" hits="0" branch="False" />
-            <line number="132" hits="0" branch="False" />
+            <line number="134" hits="0" branch="False" />
             <line number="135" hits="0" branch="False" />
-            <line number="136" hits="0" branch="False" />
-            <line number="140" hits="0" branch="False" />
+            <line number="139" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;RemoveAsync_WithValidEntity_RemovesEntityAndSavesChanges&gt;d__31" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="450" hits="0" branch="False" />
+                <line number="449" hits="0" branch="False" />
+                <line number="451" hits="0" branch="False" />
                 <line number="452" hits="0" branch="False" />
-                <line number="453" hits="0" branch="False" />
-                <line number="456" hits="0" branch="False" />
+                <line number="455" hits="0" branch="False" />
+                <line number="458" hits="0" branch="False" />
                 <line number="459" hits="0" branch="False" />
-                <line number="460" hits="0" branch="False" />
+                <line number="461" hits="0" branch="False" />
                 <line number="462" hits="0" branch="False" />
                 <line number="463" hits="0" branch="False" />
-                <line number="464" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="450" hits="0" branch="False" />
+            <line number="449" hits="0" branch="False" />
+            <line number="451" hits="0" branch="False" />
             <line number="452" hits="0" branch="False" />
-            <line number="453" hits="0" branch="False" />
-            <line number="456" hits="0" branch="False" />
+            <line number="455" hits="0" branch="False" />
+            <line number="458" hits="0" branch="False" />
             <line number="459" hits="0" branch="False" />
-            <line number="460" hits="0" branch="False" />
+            <line number="461" hits="0" branch="False" />
             <line number="462" hits="0" branch="False" />
             <line number="463" hits="0" branch="False" />
-            <line number="464" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;Setup&gt;d__6" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="27" hits="0" branch="False" />
+                <line number="26" hits="0" branch="False" />
+                <line number="28" hits="0" branch="False" />
                 <line number="29" hits="0" branch="False" />
                 <line number="30" hits="0" branch="False" />
-                <line number="31" hits="0" branch="False" />
-                <line number="33" hits="0" branch="False" />
+                <line number="32" hits="0" branch="False" />
+                <line number="35" hits="0" branch="False" />
                 <line number="36" hits="0" branch="False" />
                 <line number="37" hits="0" branch="False" />
                 <line number="38" hits="0" branch="False" />
@@ -2220,9 +2203,9 @@
                 <line number="40" hits="0" branch="False" />
                 <line number="41" hits="0" branch="False" />
                 <line number="42" hits="0" branch="False" />
-                <line number="43" hits="0" branch="False" />
+                <line number="45" hits="0" branch="False" />
                 <line number="46" hits="0" branch="False" />
-                <line number="47" hits="0" branch="False" />
+                <line number="49" hits="0" branch="False" />
                 <line number="50" hits="0" branch="False" />
                 <line number="51" hits="0" branch="False" />
                 <line number="52" hits="0" branch="False" />
@@ -2241,24 +2224,24 @@
                 <line number="65" hits="0" branch="False" />
                 <line number="66" hits="0" branch="False" />
                 <line number="67" hits="0" branch="False" />
-                <line number="68" hits="0" branch="False" />
+                <line number="70" hits="0" branch="False" />
                 <line number="71" hits="0" branch="False" />
-                <line number="72" hits="0" branch="False" />
+                <line number="74" hits="0" branch="False" />
                 <line number="75" hits="0" branch="False" />
-                <line number="76" hits="0" branch="False" />
+                <line number="78" hits="0" branch="False" />
                 <line number="79" hits="0" branch="False" />
-                <line number="80" hits="0" branch="False" />
+                <line number="82" hits="0" branch="False" />
                 <line number="83" hits="0" branch="False" />
-                <line number="84" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="27" hits="0" branch="False" />
+            <line number="26" hits="0" branch="False" />
+            <line number="28" hits="0" branch="False" />
             <line number="29" hits="0" branch="False" />
             <line number="30" hits="0" branch="False" />
-            <line number="31" hits="0" branch="False" />
-            <line number="33" hits="0" branch="False" />
+            <line number="32" hits="0" branch="False" />
+            <line number="35" hits="0" branch="False" />
             <line number="36" hits="0" branch="False" />
             <line number="37" hits="0" branch="False" />
             <line number="38" hits="0" branch="False" />
@@ -2266,9 +2249,9 @@
             <line number="40" hits="0" branch="False" />
             <line number="41" hits="0" branch="False" />
             <line number="42" hits="0" branch="False" />
-            <line number="43" hits="0" branch="False" />
+            <line number="45" hits="0" branch="False" />
             <line number="46" hits="0" branch="False" />
-            <line number="47" hits="0" branch="False" />
+            <line number="49" hits="0" branch="False" />
             <line number="50" hits="0" branch="False" />
             <line number="51" hits="0" branch="False" />
             <line number="52" hits="0" branch="False" />
@@ -2287,52 +2270,52 @@
             <line number="65" hits="0" branch="False" />
             <line number="66" hits="0" branch="False" />
             <line number="67" hits="0" branch="False" />
-            <line number="68" hits="0" branch="False" />
+            <line number="70" hits="0" branch="False" />
             <line number="71" hits="0" branch="False" />
-            <line number="72" hits="0" branch="False" />
+            <line number="74" hits="0" branch="False" />
             <line number="75" hits="0" branch="False" />
-            <line number="76" hits="0" branch="False" />
+            <line number="78" hits="0" branch="False" />
             <line number="79" hits="0" branch="False" />
-            <line number="80" hits="0" branch="False" />
+            <line number="82" hits="0" branch="False" />
             <line number="83" hits="0" branch="False" />
-            <line number="84" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;UpdateAsync_WithValidEntity_UpdatesEntityAndSavesChanges&gt;d__29" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="420" hits="0" branch="False" />
+                <line number="419" hits="0" branch="False" />
+                <line number="421" hits="0" branch="False" />
                 <line number="422" hits="0" branch="False" />
                 <line number="423" hits="0" branch="False" />
-                <line number="424" hits="0" branch="False" />
-                <line number="427" hits="0" branch="False" />
+                <line number="426" hits="0" branch="False" />
+                <line number="429" hits="0" branch="False" />
                 <line number="430" hits="0" branch="False" />
                 <line number="431" hits="0" branch="False" />
                 <line number="432" hits="0" branch="False" />
                 <line number="433" hits="0" branch="False" />
-                <line number="434" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="420" hits="0" branch="False" />
+            <line number="419" hits="0" branch="False" />
+            <line number="421" hits="0" branch="False" />
             <line number="422" hits="0" branch="False" />
             <line number="423" hits="0" branch="False" />
-            <line number="424" hits="0" branch="False" />
-            <line number="427" hits="0" branch="False" />
+            <line number="426" hits="0" branch="False" />
+            <line number="429" hits="0" branch="False" />
             <line number="430" hits="0" branch="False" />
             <line number="431" hits="0" branch="False" />
             <line number="432" hits="0" branch="False" />
             <line number="433" hits="0" branch="False" />
-            <line number="434" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.TestProject.UserAddressServiceTests/&lt;UpdateUserAddress_WithValidRequest_UpdatesAndReturnsAddress&gt;d__33" filename="Desktop/UnknownProject/TBD/TestProject/UserAddressServiceTest.cs" line-rate="0" branch-rate="1" complexity="1">
           <methods>
             <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
               <lines>
-                <line number="480" hits="0" branch="False" />
+                <line number="479" hits="0" branch="False" />
+                <line number="481" hits="0" branch="False" />
                 <line number="482" hits="0" branch="False" />
                 <line number="483" hits="0" branch="False" />
                 <line number="484" hits="0" branch="False" />
@@ -2340,22 +2323,22 @@
                 <line number="486" hits="0" branch="False" />
                 <line number="487" hits="0" branch="False" />
                 <line number="488" hits="0" branch="False" />
-                <line number="489" hits="0" branch="False" />
+                <line number="490" hits="0" branch="False" />
                 <line number="491" hits="0" branch="False" />
-                <line number="492" hits="0" branch="False" />
-                <line number="499" hits="0" branch="False" />
+                <line number="498" hits="0" branch="False" />
+                <line number="501" hits="0" branch="False" />
                 <line number="502" hits="0" branch="False" />
                 <line number="503" hits="0" branch="False" />
-                <line number="504" hits="0" branch="False" />
+                <line number="506" hits="0" branch="False" />
                 <line number="507" hits="0" branch="False" />
                 <line number="508" hits="0" branch="False" />
                 <line number="509" hits="0" branch="False" />
-                <line number="510" hits="0" branch="False" />
               </lines>
             </method>
           </methods>
           <lines>
-            <line number="480" hits="0" branch="False" />
+            <line number="479" hits="0" branch="False" />
+            <line number="481" hits="0" branch="False" />
             <line number="482" hits="0" branch="False" />
             <line number="483" hits="0" branch="False" />
             <line number="484" hits="0" branch="False" />
@@ -2363,17 +2346,16 @@
             <line number="486" hits="0" branch="False" />
             <line number="487" hits="0" branch="False" />
             <line number="488" hits="0" branch="False" />
-            <line number="489" hits="0" branch="False" />
+            <line number="490" hits="0" branch="False" />
             <line number="491" hits="0" branch="False" />
-            <line number="492" hits="0" branch="False" />
-            <line number="499" hits="0" branch="False" />
+            <line number="498" hits="0" branch="False" />
+            <line number="501" hits="0" branch="False" />
             <line number="502" hits="0" branch="False" />
             <line number="503" hits="0" branch="False" />
-            <line number="504" hits="0" branch="False" />
+            <line number="506" hits="0" branch="False" />
             <line number="507" hits="0" branch="False" />
             <line number="508" hits="0" branch="False" />
             <line number="509" hits="0" branch="False" />
-            <line number="510" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.Shared.Utils.AuthUserMapping" filename="Desktop/UnknownProject/TBD/Shared/Utils/AuthUserMapping.cs" line-rate="0" branch-rate="1" complexity="1">
