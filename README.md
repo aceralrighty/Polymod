@@ -1,6 +1,5 @@
 # TBD Modular Monolith (.NET Learning Project)
 
-![CI](https://github.com/your-username/your-repo/actions/workflows/ci.yml/badge.svg)
 
 This is a personal project aimed at deepening my understanding of the **.NET framework**, **Entity Framework Core**, and building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application for better scalability and maintainability.
 
