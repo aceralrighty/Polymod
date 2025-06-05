@@ -1,11 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.AuthModule.Models;
+using TBD.UserModule.Models;
 
 namespace TBD.AuthModule.Data;
 
 public class AuthDbContext : DbContext
 {
     public DbSet<AuthUser> AuthUsers { get; set; }
+    public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options) { }
+    public AuthDbContext() { }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -14,6 +17,8 @@ public class AuthDbContext : DbContext
             optionsBuilder.UseInMemoryDatabase("FallbackTestDb");
         }
     }
+
+
 
     public override int SaveChanges()
     {
