@@ -7,10 +7,12 @@ for better scalability and maintainability.
 The project includes separate modules for User, Address, Schedule, and Service management—each with its own domain
 logic, DbContext, models, repositories, and services.
 
+
 🧱 Project Structure
 
 ```plaintext
 .
+
 ├── API                      # Shared DTOs and service interfaces
 │   ├── DTOs
 │   └── Interfaces
