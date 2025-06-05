@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using NUnit.Framework;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
 using TBD.UserModule.Models;
