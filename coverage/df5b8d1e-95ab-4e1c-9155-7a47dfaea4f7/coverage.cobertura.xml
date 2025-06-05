@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<coverage line-rate="0.0406" branch-rate="0.1472" version="1.9" timestamp="1749161195" lines-covered="219" lines-valid="5382" branches-covered="48" branches-valid="326">
+<coverage line-rate="0.0406" branch-rate="0.1472" version="1.9" timestamp="1749161185" lines-covered="219" lines-valid="5386" branches-covered="48" branches-valid="326">
   <sources>
     <source>/Users/adamziv/</source>
   </sources>
   <packages>
-    <package name="TBD" line-rate="0.0406" branch-rate="0.1472" complexity="679">
+    <package name="TBD" line-rate="0.0406" branch-rate="0.1472" complexity="680">
       <classes>
         <class name="Program/&lt;&lt;Main&gt;$&gt;d__0" filename="Desktop/UnknownProject/TBD/Program.cs" line-rate="0" branch-rate="0" complexity="2">
           <methods>
@@ -222,6 +222,24 @@
             <line number="81" hits="0" branch="False" />
             <line number="82" hits="0" branch="False" />
             <line number="83" hits="0" branch="False" />
+          </lines>
+        </class>
+        <class name="TBD.UserModule.Services.UserService/&lt;GetAllUsersAsync&gt;d__7" filename="Desktop/UnknownProject/TBD/UserModule/Services/UserService.cs" line-rate="0" branch-rate="1" complexity="1">
+          <methods>
+            <method name="MoveNext" signature="()" line-rate="0" branch-rate="1" complexity="1">
+              <lines>
+                <line number="50" hits="0" branch="False" />
+                <line number="51" hits="0" branch="False" />
+                <line number="52" hits="0" branch="False" />
+                <line number="53" hits="0" branch="False" />
+              </lines>
+            </method>
+          </methods>
+          <lines>
+            <line number="50" hits="0" branch="False" />
+            <line number="51" hits="0" branch="False" />
+            <line number="52" hits="0" branch="False" />
+            <line number="53" hits="0" branch="False" />
           </lines>
         </class>
         <class name="TBD.UserModule.Services.UserService/&lt;GetUserByEmailAsync&gt;d__4" filename="Desktop/UnknownProject/TBD/UserModule/Services/UserService.cs" line-rate="0" branch-rate="1" complexity="1">
@@ -634,7 +652,7 @@
             </method>
             <method name="get_Schedule" signature="()" line-rate="1" branch-rate="1" complexity="1">
               <lines>
-                <line number="20" hits="31" branch="False" />
+                <line number="20" hits="62" branch="False" />
               </lines>
             </method>
           </methods>
@@ -643,7 +661,7 @@
             <line number="14" hits="31" branch="False" />
             <line number="16" hits="61" branch="False" />
             <line number="18" hits="61" branch="False" />
-            <line number="20" hits="31" branch="False" />
+            <line number="20" hits="62" branch="False" />
           </lines>
         </class>
         <class name="TBD.UserModule.Data.UserDbContext" filename="Desktop/UnknownProject/TBD/UserModule/Data/UserDbContext.cs" line-rate="0" branch-rate="0" complexity="21">

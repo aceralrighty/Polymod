@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using NUnit.Framework;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
