@@ -96,7 +96,7 @@ public class UserController(IUserService userService) : ControllerBase
         try
         {
             await userService.CreateUserAsync(userDto);
-            
+
             // Return the created user (fetch it to get the generated ID)
             var createdUser = await userService.GetUserByEmailAsync(userDto.Email ?? string.Empty);
             return CreatedAtAction("GetUser", new { id = createdUser?.Id }, createdUser);
