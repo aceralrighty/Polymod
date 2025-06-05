@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
-using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
 using TBD.AuthModule.Models;
 
 namespace TBD.Shared.Utils;
