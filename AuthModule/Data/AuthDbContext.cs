@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.AuthModule.Models;
-using TBD.UserModule.Models;
 
 namespace TBD.AuthModule.Data;
 
@@ -17,7 +16,6 @@ public class AuthDbContext : DbContext
             optionsBuilder.UseInMemoryDatabase("FallbackTestDb");
         }
     }
-
 
 
     public override int SaveChanges()

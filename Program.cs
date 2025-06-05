@@ -41,6 +41,8 @@ if (app.Environment.IsDevelopment())
         await Task.Delay(1000);
 
         await ServiceSeeder.ReseedForTestingAsync(app.Services);
+        await Task.Delay(1000);
+        await AuthSeeder.ReseedSeedAsync(app.Services);
 
         Console.WriteLine("✅ All seeding complete!");
     }
