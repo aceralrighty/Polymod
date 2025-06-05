@@ -87,14 +87,14 @@ public sealed class Schedule : BaseTableProperties
             double overtimePay = 0;
 
             // Calculate 1.5x overtime pay (hours 41-60)
-            double regularOvertimeHours = OvertimeRegular.GetValueOrDefault();
+            var regularOvertimeHours = OvertimeRegular.GetValueOrDefault();
             if (regularOvertimeHours > 0)
             {
                 overtimePay += BasePay.Value * 1.5 * regularOvertimeHours;
             }
 
             // Calculate 2x overtime pay (hours 61+)
-            double doubleOvertimeHours = OvertimeDouble.GetValueOrDefault();
+            var doubleOvertimeHours = OvertimeDouble.GetValueOrDefault();
             if (doubleOvertimeHours > 0)
             {
                 overtimePay += BasePay.Value * 2.0 * doubleOvertimeHours;
