@@ -1,89 +1,100 @@
-# TBD Modular Monolith (.NET Learning Project)
+**TBD Modular Monolith (.NET Learning Project)**
 
-This is a personal project aimed at deepening my understanding of the **.NET framework**, **Entity Framework Core**, and building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application for better scalability and maintainability.
+This is a personal project aimed at deepening my understanding of the ```.NET framework```, ```Entity Framework Core```,
+and building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application
+for better scalability and maintainability.
 
-The project includes separate modules for User, Address, Schedule, and Service management, each with its own context, models, repositories, and services.
+The project includes separate modules for User, Address, Schedule, and Service management—each with its own domain
+logic, DbContext, models, repositories, and services.
 
----
-
-## 🧱 Project Structure
+🧱 Project Structure
 
 ```plaintext
 .
 ├── API                      # Shared DTOs and service interfaces
-├── AddressModule           # Address-specific logic (DbContext, services, etc.)
+│   ├── DTOs
+│   └── Interfaces
+├── AddressModule           # Address-specific logic (controllers, data, models, etc.)
 ├── ScheduleModule          # Schedule-specific logic
 ├── ServiceModule           # Service-specific logic
 ├── UserModule              # User-specific logic
 ├── Shared                  # Mapping profiles and shared utilities
-├── Data/Seeding            # Initial seed data setup
-├── DesignTimeFactories     # Design-time DbContext factories for migrations
-├── Migrations              # EF Core migrations by module
-├── Dockerfile              # Docker build file for app
-├── docker-compose.yml      # Orchestrates SQL Server and app
-├── TBD.http                # HTTP file for API testing
-├── TestProject             # xUnit tests for services
+│   └── Utils
+├── GenericDBProperties     # Base model interfaces and shared properties
+├── Data/Seeding            # Seeder classes per module
+├── DesignTimeFactories     # EF Core design-time context factories for migrations
+├── Migrations              # EF Core migrations organized by module
+├── TestProject             # xUnit tests for services and repositories
+├── TBD.http                # HTTP requests for manual API testing
+├── Dockerfile              # Docker build setup for API
+├── docker-compose.yml      # SQL Server and API orchestration
+├── .github/workflows/ci.yml # GitHub Actions CI pipeline
 └── Program.cs, appsettings.json, etc.
 ```
 
----
+**🔁 CI/CD Pipeline**
 
-## 🧪 Goals
+This project uses GitHub Actions to automatically build and test on every push or pull request to the main branch.
 
-- Grow fluency in **.NET** and **Entity Framework Core**
-- Practice building a backend using **modular monolith architecture**
-- Learn how to **seed data**, manage **DbContexts**, and configure **dependency injection**
-- Eventually transition this project into a **microservices** architecture to simulate real-world distributed systems
+Workflow includes:
+Restoring and building the solution
+Running all unit tests with xUnit
+Validating Docker image build
 
----
+**📄 CI configuration file: .github/workflows/ci.yml**
 
-## 🐳 Docker Setup
+You can monitor the workflow under the Actions tab on GitHub.
 
-This project depends on a running **SQL Server** instance in Docker. A `docker-compose.yml` file is included to simplify the setup process.
+🛠️ Future goals: Add deployment steps to publish Docker images to a container registry or deploy to cloud infrastructure
+like Azure or AWS.
 
-To spin everything up:
+**🧪 Goals**
 
-```bash
-docker-compose up --build
-```
+Grow fluency in .NET and Entity Framework Core
+Practice building a backend using modular monolith architecture
+Learn to seed data, manage multiple DbContexts, and configure dependency injection
+Prepare to transition into a microservices architecture:
+Define clear service boundaries
+Implement inter-service communication (REST, gRPC)
+Explore database-per-service and event-driven designs
+
+**🐳 Docker Setup**
+
+This project uses Docker to spin up a SQL Server container alongside the backend API.
+
+To get started:
+
+```docker-compose up --build```
 
 This will:
+Start a SQL Server container with the correct ports and environment variables
+Build and run the backend API
 
-- Start a SQL Server container with the correct environment variables and ports exposed
-- Build and run your backend API project (once you've connected it properly)
+⚠️ Ensure Docker is running and port ```1433``` is available on your system.
 
-> ⚠️ Make sure Docker is running on your machine and ports like `1433` are not blocked.
+**🗃️ Technologies Used**
 
----
+.NET 8 (or latest .NET version)
+Entity Framework Core
+SQL Server (via Docker)
+AutoMapper
+xUnit
+Docker + Docker Compose
+GitHub Actions (CI)
 
-## 🗃️ Technologies Used
+**📦 What's Next?**
 
-- .NET 8 (or your current target version)
-- Entity Framework Core
-- SQL Server (via Docker)
-- AutoMapper
-- xUnit (for testing)
-- Docker + Docker Compose
+Finalize business logic and validations across all modules
+Add Swagger/OpenAPI support
+Begin breaking into microservices
+Add centralized logging and configuration management
+Experiment with alternative ORMs for deeper understanding
 
----
+**🙌 Contributions**
 
-## 📦 What's Next?
+This is an educational and personal learning project. That said, feel free to fork it, open issues, or contribute ideas
+if it piques your interest.
 
-I'm still building out the full functionality for each module and service. Once the monolithic version is complete and stable, I plan to break it into **microservices** to explore:
+**📄 License**
 
-- Inter-service communication (e.g., REST, gRPC)
-- Service discovery
-- Independent scaling and deployment
-- Event-driven patterns with tools like Kafka or RabbitMQ
-
----
-
-## 🙌 Contributions
-
-This project is for educational purposes, but if you're curious or want to collaborate, feel free to fork or open an issue.
-
----
-
-## 📄 License
-
-MIT — you’re free to use, learn from, or modify this project.
+MIT — use it, learn from it, or build upon it freely.
