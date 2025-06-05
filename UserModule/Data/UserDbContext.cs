@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using TBD.ScheduleModule.Models;
 using TBD.UserModule.Models;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace TBD.UserModule.Data;
 
