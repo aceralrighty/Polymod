@@ -13,10 +13,10 @@ public static class DataSeeder
 {
     public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
-        using IServiceScope scope = serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
 
-        UserDbContext userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
-        AddressDbContext addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
+        var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+        var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
 
         // Drop everything first
         await userContext.Database.EnsureDeletedAsync();
