@@ -28,312 +28,262 @@ public static class ScheduleSeeder
         var schedules = new List<Schedule>();
 
         // Standard 40-hour work week (no overtime)
-        var schedule1 = new Schedule
+        // Add these additional test cases to your existing seed data for comprehensive edge case testing
+
+// EXACT THRESHOLD TESTS - These are critical for testing boundary conditions
+
+// Exactly 40 hours - no overtime (boundary test)
+        var scheduleExact40 = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 8 }, { "Tuesday", 8 }, { "Wednesday", 8 },
-                { "Thursday", 8 }, { "Friday", 8 }, { "Saturday", 0 }, { "Sunday", 0 }
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 8 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
             },
             BasePay = 25.00,
-            User = CreateScheduleUser("standard.worker", "StandardWorker123!", "standard@company.com")
+            User = CreateScheduleUser("exact.forty", "Exactly40!", "exact40@test.com")
         };
-        schedule1.UserId = schedule1.User.Id;
-        schedule1.RecalculateTotalHours();
 
-        // Heavy overtime - 60+ hours per week
-        var schedule2 = new Schedule
+// Exactly 40.5 hours - minimal overtime (just over threshold)
+        var scheduleJustOver40 = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 12 }, { "Tuesday", 12 }, { "Wednesday", 10 },
-                { "Thursday", 12 }, { "Friday", 10 }, { "Saturday", 8 }, { "Sunday", 6 }
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 8 },
+                { "Saturday", 0 },
+                { "Sunday", 1 } // 41 hours total
             },
             BasePay = 30.00,
-            User = CreateScheduleUser("overtime.hero", "WorkHard247!", "overtime@company.com")
+            User = CreateScheduleUser("just.over.forty", "JustOver40!", "justover40@test.com")
         };
-        schedule2.UserId = schedule2.User.Id;
-        schedule2.RecalculateTotalHours();
 
-        // Weekend warrior - mostly weekend overtime
-        var schedule3 = new Schedule
+// Exactly 60 hours - maximum 1.5x overtime, no 2x yet (critical boundary)
+        var scheduleExact60 = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 8 }, { "Tuesday", 8 }, { "Wednesday", 8 },
-                { "Thursday", 8 }, { "Friday", 8 }, { "Saturday", 12 }, { "Sunday", 10 }
-            },
-            BasePay = 28.50,
-            User = CreateScheduleUser("weekend.warrior", "SatSunWork!", "weekend@company.com")
-        };
-        schedule3.UserId = schedule3.User.Id;
-        schedule3.RecalculateTotalHours();
-
-        // Extreme overtime - 80+ hours per week
-        var schedule4 = new Schedule
-        {
-            Id = Guid.NewGuid(),
-            DaysWorked = new Dictionary<string, int>
-            {
-                { "Monday", 14 }, { "Tuesday", 14 }, { "Wednesday", 12 },
-                { "Thursday", 14 }, { "Friday", 12 }, { "Saturday", 10 }, { "Sunday", 8 }
+                { "Monday", 10 },
+                { "Tuesday", 10 },
+                { "Wednesday", 10 },
+                { "Thursday", 10 },
+                { "Friday", 10 },
+                { "Saturday", 10 },
+                { "Sunday", 0 }
             },
             BasePay = 35.00,
-            User = CreateScheduleUser("workaholic.max", "NeverStop999!", "workaholic@company.com")
+            User = CreateScheduleUser("exact.sixty", "Exactly60!", "exact60@test.com")
         };
-        schedule4.UserId = schedule4.User.Id;
-        schedule4.RecalculateTotalHours();
 
-        // Part-time with occasional overtime
-        var schedule5 = new Schedule
+// Exactly 61 hours - minimal 2x overtime (just over 60 threshold)
+        var scheduleJustOver60 = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 6 }, { "Tuesday", 8 }, { "Wednesday", 10 },
-                { "Thursday", 8 }, { "Friday", 12 }, { "Saturday", 0 }, { "Sunday", 0 }
+                { "Monday", 10 },
+                { "Tuesday", 10 },
+                { "Wednesday", 10 },
+                { "Thursday", 10 },
+                { "Friday", 10 },
+                { "Saturday", 10 },
+                { "Sunday", 1 }
             },
-            BasePay = 22.75,
-            User = CreateScheduleUser("part.timer", "PartTime456!", "parttime@company.com")
+            BasePay = 32.00,
+            User = CreateScheduleUser("just.over.sixty", "JustOver60!", "justover60@test.com")
         };
-        schedule5.UserId = schedule5.User.Id;
-        schedule5.RecalculateTotalHours();
 
-        // Shift worker with overtime
-        var schedule6 = new Schedule
+// EXTREME CASES
+
+// Zero hours worked
+        var scheduleZero = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 12 }, { "Tuesday", 0 }, { "Wednesday", 12 },
-                { "Thursday", 0 }, { "Friday", 12 }, { "Saturday", 8 }, { "Sunday", 8 }
+                { "Monday", 0 },
+                { "Tuesday", 0 },
+                { "Wednesday", 0 },
+                { "Thursday", 0 },
+                { "Friday", 0 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
             },
-            BasePay = 32.25,
-            User = CreateScheduleUser("shift.worker", "ShiftLife789!", "shift@company.com")
+            BasePay = 20.00,
+            User = CreateScheduleUser("zero.hours", "NoWork123!", "zero@test.com")
         };
-        schedule6.UserId = schedule6.User.Id;
-        schedule6.RecalculateTotalHours();
 
-        // Healthcare worker - long shifts with overtime
-        var schedule7 = new Schedule
+// Single hour worked
+        var scheduleOne = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 12 }, { "Tuesday", 12 }, { "Wednesday", 0 },
-                { "Thursday", 12 }, { "Friday", 12 }, { "Saturday", 8 }, { "Sunday", 0 }
+                { "Monday", 1 },
+                { "Tuesday", 0 },
+                { "Wednesday", 0 },
+                { "Thursday", 0 },
+                { "Friday", 0 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
             },
-            BasePay = 38.50,
-            User = CreateScheduleUser("nurse.dedicated", "HealthCare123!", "nurse@hospital.com")
+            BasePay = 15.00,
+            User = CreateScheduleUser("one.hour", "SingleHour!", "onehour@test.com")
         };
-        schedule7.UserId = schedule7.User.Id;
-        schedule7.RecalculateTotalHours();
 
-        // On-call technician - irregular overtime
-        var schedule8 = new Schedule
+// Massive overtime - 100+ hours (stress test)
+        var scheduleMassive = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 8 }, { "Tuesday", 10 }, { "Wednesday", 6 },
-                { "Thursday", 14 }, { "Friday", 8 }, { "Saturday", 4 }, { "Sunday", 12 }
-            },
-            BasePay = 29.00,
-            User = CreateScheduleUser("tech.oncall", "OnCall247!", "oncall@tech.com")
+                { "Monday", 16 },
+                { "Tuesday", 16 },
+                { "Wednesday", 16 },
+                { "Thursday", 16 },
+                { "Friday", 16 },
+                { "Saturday", 16 },
+                { "Sunday", 16 }
+            }, // 112 hours total
+            BasePay = 25.00,
+            User = CreateScheduleUser("workaholic.extreme", "Work247365!", "extreme@test.com")
         };
-        schedule8.UserId = schedule8.User.Id;
-        schedule8.RecalculateTotalHours();
 
-        // Construction worker - seasonal overtime
-        var schedule9 = new Schedule
+// FRACTIONAL BOUNDARY TESTS (if your system supports fractional hours)
+
+// 39.5 hours - just under 40
+        var scheduleJustUnder40 = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 10 }, { "Tuesday", 10 }, { "Wednesday", 10 },
-                { "Thursday", 10 }, { "Friday", 10 }, { "Saturday", 8 }, { "Sunday", 4 }
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 7 },
+                { "Saturday", 0 },
+                { "Sunday", 1 } // 40 hours (or use 7.5 + 0.5 if you support decimals)
             },
-            BasePay = 31.75,
-            User = CreateScheduleUser("construction.pro", "BuildStrong!", "builder@construction.com")
+            BasePay = 22.50,
+            User = CreateScheduleUser("just.under.forty", "AlmostForty!", "under40@test.com")
         };
-        schedule9.UserId = schedule9.User.Id;
-        schedule9.RecalculateTotalHours();
 
-        // Restaurant manager - service industry overtime
-        var schedule10 = new Schedule
+// 59.5 hours - just under 60
+        var scheduleJustUnder60 = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 8 }, { "Tuesday", 9 }, { "Wednesday", 11 },
-                { "Thursday", 12 }, { "Friday", 13 }, { "Saturday", 12 }, { "Sunday", 10 }
-            },
-            BasePay = 26.50,
-            User = CreateScheduleUser("restaurant.mgr", "ServiceFirst!", "manager@restaurant.com")
+                { "Monday", 9 },
+                { "Tuesday", 9 },
+                { "Wednesday", 9 },
+                { "Thursday", 9 },
+                { "Friday", 9 },
+                { "Saturday", 9 },
+                { "Sunday", 5 }
+            }, // 59 hours
+            BasePay = 28.00,
+            User = CreateScheduleUser("just.under.sixty", "AlmostSixty!", "under60@test.com")
         };
-        schedule10.UserId = schedule10.User.Id;
-        schedule10.RecalculateTotalHours();
 
-        // Retail supervisor - holiday overtime
-        var schedule11 = new Schedule
+// HIGH-VALUE EDGE CASES
+
+// High pay rate with exact threshold hours
+        var scheduleHighPayExact60 = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 9 }, { "Tuesday", 8 }, { "Wednesday", 10 },
-                { "Thursday", 11 }, { "Friday", 12 }, { "Saturday", 10 }, { "Sunday", 8 }
+                { "Monday", 10 },
+                { "Tuesday", 10 },
+                { "Wednesday", 10 },
+                { "Thursday", 10 },
+                { "Friday", 10 },
+                { "Saturday", 10 },
+                { "Sunday", 0 }
             },
-            BasePay = 24.25,
-            User = CreateScheduleUser("retail.super", "RetailLife!", "supervisor@retail.com")
+            BasePay = 75.00, // High rate to test large dollar calculations
+            User = CreateScheduleUser("executive.sixty", "HighPay60!", "exec60@test.com")
         };
-        schedule11.UserId = schedule11.User.Id;
-        schedule11.RecalculateTotalHours();
 
-        // Security guard - double shifts
-        var schedule12 = new Schedule
+// Low pay rate with massive overtime
+        var scheduleLowPayMassive = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 16 }, { "Tuesday", 0 }, { "Wednesday", 16 },
-                { "Thursday", 0 }, { "Friday", 16 }, { "Saturday", 8 }, { "Sunday", 8 }
-            },
-            BasePay = 27.00,
-            User = CreateScheduleUser("security.guard", "NightWatch!", "security@company.com")
+                { "Monday", 14 },
+                { "Tuesday", 14 },
+                { "Wednesday", 14 },
+                { "Thursday", 14 },
+                { "Friday", 14 },
+                { "Saturday", 12 },
+                { "Sunday", 8 }
+            }, // 90 hours
+            BasePay = 12.50, // Minimum wage scenario
+            User = CreateScheduleUser("minimum.wage.hero", "WorkHard!", "minwage@test.com")
         };
-        schedule12.UserId = schedule12.User.Id;
-        schedule12.RecalculateTotalHours();
 
-        // Delivery driver - peak season overtime
-        var schedule13 = new Schedule
+// UNUSUAL PATTERNS
+
+// All hours on one day (edge case for daily limits if you add them later)
+        var scheduleOneDay = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 9 }, { "Tuesday", 10 }, { "Wednesday", 8 },
-                { "Thursday", 11 }, { "Friday", 12 }, { "Saturday", 10 }, { "Sunday", 6 }
+                { "Monday", 65 },
+                { "Tuesday", 0 },
+                { "Wednesday", 0 },
+                { "Thursday", 0 },
+                { "Friday", 0 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
             },
-            BasePay = 23.50,
-            User = CreateScheduleUser("delivery.driver", "FastDelivery!", "driver@logistics.com")
+            BasePay = 30.00,
+            User = CreateScheduleUser("marathon.worker", "OneDay65!", "marathon@test.com")
         };
-        schedule13.UserId = schedule13.User.Id;
-        schedule13.RecalculateTotalHours();
 
-        // Factory worker - mandatory overtime
-        var schedule14 = new Schedule
+// Perfect distribution across all tiers
+        var schedulePerfectTiers = new Schedule
         {
             Id = Guid.NewGuid(),
             DaysWorked = new Dictionary<string, int>
             {
-                { "Monday", 10 }, { "Tuesday", 10 }, { "Wednesday", 10 },
-                { "Thursday", 10 }, { "Friday", 10 }, { "Saturday", 6 }, { "Sunday", 0 }
-            },
-            BasePay = 28.75,
-            User = CreateScheduleUser("factory.worker", "Production!", "worker@factory.com")
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 8 },
+                { "Saturday", 10 },
+                { "Sunday", 12 }
+            }, // 62 hours: 40 regular + 20 at 1.5x + 2 at 2x
+            BasePay = 25.00,
+            User = CreateScheduleUser("perfect.tiers", "AllTiers!", "tiers@test.com")
         };
-        schedule14.UserId = schedule14.User.Id;
-        schedule14.RecalculateTotalHours();
 
-        // IT support - emergency overtime
-        var schedule15 = new Schedule
+        schedules.AddRange([
+            scheduleExact40, scheduleJustOver40, scheduleExact60, scheduleJustOver60, scheduleZero, scheduleOne,
+            scheduleMassive, scheduleJustUnder40, scheduleJustUnder60, scheduleHighPayExact60,
+            scheduleLowPayMassive, scheduleOneDay, schedulePerfectTiers
+        ]);
+        // I'm actually prouder of this one line than I should be.
+        foreach (var calc in schedules)
         {
-            Id = Guid.NewGuid(),
-            DaysWorked = new Dictionary<string, int>
-            {
-                { "Monday", 8 }, { "Tuesday", 12 }, { "Wednesday", 8 },
-                { "Thursday", 16 }, { "Friday", 10 }, { "Saturday", 0 }, { "Sunday", 6 }
-            },
-            BasePay = 33.00,
-            User = CreateScheduleUser("it.support", "TechSupport!", "support@tech.com")
-        };
-        schedule15.UserId = schedule15.User.Id;
-        schedule15.RecalculateTotalHours();
-
-        // Minimal hours - no overtime
-        var schedule16 = new Schedule
-        {
-            Id = Guid.NewGuid(),
-            DaysWorked = new Dictionary<string, int>
-            {
-                { "Monday", 4 }, { "Tuesday", 4 }, { "Wednesday", 4 },
-                { "Thursday", 4 }, { "Friday", 4 }, { "Saturday", 0 }, { "Sunday", 0 }
-            },
-            BasePay = 18.00,
-            User = CreateScheduleUser("part.student", "Student123!", "student@university.edu")
-        };
-        schedule16.UserId = schedule16.User.Id;
-        schedule16.RecalculateTotalHours();
-
-        // Consultant - project crunch overtime
-        var schedule17 = new Schedule
-        {
-            Id = Guid.NewGuid(),
-            DaysWorked = new Dictionary<string, int>
-            {
-                { "Monday", 12 }, { "Tuesday", 14 }, { "Wednesday", 10 },
-                { "Thursday", 12 }, { "Friday", 16 }, { "Saturday", 8 }, { "Sunday", 4 }
-            },
-            BasePay = 45.00,
-            User = CreateScheduleUser("consultant.pro", "ProjectCrunch!", "consultant@firm.com")
-        };
-        schedule17.UserId = schedule17.User.Id;
-        schedule17.RecalculateTotalHours();
-
-        // Airline pilot - irregular but high overtime
-        var schedule18 = new Schedule
-        {
-            Id = Guid.NewGuid(),
-            DaysWorked = new Dictionary<string, int>
-            {
-                { "Monday", 0 }, { "Tuesday", 14 }, { "Wednesday", 0 },
-                { "Thursday", 12 }, { "Friday", 0 }, { "Saturday", 16 }, { "Sunday", 8 }
-            },
-            BasePay = 52.00,
-            User = CreateScheduleUser("pilot.captain", "FlyHigh!", "pilot@airline.com")
-        };
-        schedule18.UserId = schedule18.User.Id;
-        schedule18.RecalculateTotalHours();
-
-        // Freelancer - project-based overtime
-        var schedule19 = new Schedule
-        {
-            Id = Guid.NewGuid(),
-            DaysWorked = new Dictionary<string, int>
-            {
-                { "Monday", 6 }, { "Tuesday", 8 }, { "Wednesday", 12 },
-                { "Thursday", 10 }, { "Friday", 14 }, { "Saturday", 6 }, { "Sunday", 8 }
-            },
-            BasePay = 40.00,
-            User = CreateScheduleUser("freelancer.dev", "CodeAllNight!", "freelancer@dev.com")
-        };
-        schedule19.UserId = schedule19.User.Id;
-        schedule19.RecalculateTotalHours();
-
-        // Emergency responder - crisis overtime
-        var schedule20 = new Schedule
-        {
-            Id = Guid.NewGuid(),
-            DaysWorked = new Dictionary<string, int>
-            {
-                { "Monday", 12 }, { "Tuesday", 8 }, { "Wednesday", 16 },
-                { "Thursday", 12 }, { "Friday", 10 }, { "Saturday", 12 }, { "Sunday", 8 }
-            },
-            BasePay = 36.50,
-            User = CreateScheduleUser("emergency.responder", "FirstResponder!", "responder@emergency.gov")
-        };
-        schedule20.UserId = schedule20.User.Id;
-        schedule20.RecalculateTotalHours();
-
-        // Add all schedules to the list
-        schedules.AddRange(new[]
-        {
-            schedule1, schedule2, schedule3, schedule4, schedule5, schedule6, schedule7, schedule8, schedule9,
-            schedule10, schedule11, schedule12, schedule13, schedule14, schedule15, schedule16, schedule17,
-            schedule18, schedule19, schedule20
-        });
+            calc.RecalculateTotalHours();
+        }
 
         await scheduleContext.Schedules.AddRangeAsync(schedules);
         await scheduleContext.SaveChangesAsync();
