@@ -10,7 +10,7 @@ using TBD.API.Interfaces;
 
 namespace TBD.AddressModule.Services;
 
-internal class UserAddressService(AddressDbContext context, IMapper mapper, IUserService userService)
+public class UserAddressService(AddressDbContext context, IMapper mapper, IUserService userService)
     : IUserAddressService, IUserAddressRepository
 {
     protected readonly AddressDbContext _context = context;

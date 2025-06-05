@@ -30,9 +30,9 @@ public static class ScheduleSeeder
         // Standard 40-hour work week (no overtime)
         // Add these additional test cases to your existing seed data for comprehensive edge case testing
 
-// EXACT THRESHOLD TESTS - These are critical for testing boundary conditions
+        // EXACT THRESHOLD TESTS - These are critical for testing boundary conditions
 
-// Exactly 40 hours - no overtime (boundary test)
+        // Exactly 40 hours - no overtime (boundary test)
         var scheduleExact40 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -50,7 +50,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("exact.forty", "Exactly40!", "exact40@test.com")
         };
 
-// Exactly 40.5 hours - minimal overtime (just over threshold)
+        // Exactly 40.5 hours - minimal overtime (just over threshold)
         var scheduleJustOver40 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -68,7 +68,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("just.over.forty", "JustOver40!", "justover40@test.com")
         };
 
-// Exactly 60 hours - maximum 1.5x overtime, no 2x yet (critical boundary)
+        // Exactly 60 hours - maximum 1.5x overtime, no 2x yet (critical boundary)
         var scheduleExact60 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -86,7 +86,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("exact.sixty", "Exactly60!", "exact60@test.com")
         };
 
-// Exactly 61 hours - minimal 2x overtime (just over 60 threshold)
+        // Exactly 61 hours - minimal 2x overtime (just over 60 threshold)
         var scheduleJustOver60 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -104,9 +104,9 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("just.over.sixty", "JustOver60!", "justover60@test.com")
         };
 
-// EXTREME CASES
+        // EXTREME CASES
 
-// Zero hours worked
+        // Zero hours worked
         var scheduleZero = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -124,7 +124,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("zero.hours", "NoWork123!", "zero@test.com")
         };
 
-// Single hour worked
+        // Single-hour worked
         var scheduleOne = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -142,7 +142,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("one.hour", "SingleHour!", "onehour@test.com")
         };
 
-// Massive overtime - 100+ hours (stress test)
+        // Massive overtime - 100+ hours (stress test)
         var scheduleMassive = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -160,9 +160,9 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("workaholic.extreme", "Work247365!", "extreme@test.com")
         };
 
-// FRACTIONAL BOUNDARY TESTS (if your system supports fractional hours)
+        // FRACTIONAL BOUNDARY TESTS (if your system supports fractional hours)
 
-// 39.5 hours - just under 40
+        // 39.5 hours - just under 40
         var scheduleJustUnder40 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -180,7 +180,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("just.under.forty", "AlmostForty!", "under40@test.com")
         };
 
-// 59.5 hours - just under 60
+        // 59.5 hours - just under 60
         var scheduleJustUnder60 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -198,9 +198,9 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("just.under.sixty", "AlmostSixty!", "under60@test.com")
         };
 
-// HIGH-VALUE EDGE CASES
+        // HIGH-VALUE EDGE CASES
 
-// High pay rate with exact threshold hours
+        // High pay rate with exact threshold hours
         var scheduleHighPayExact60 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -218,7 +218,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("executive.sixty", "HighPay60!", "exec60@test.com")
         };
 
-// Low pay rate with massive overtime
+        // Low pay rate with massive overtime
         var scheduleLowPayMassive = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -236,9 +236,9 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("minimum.wage.hero", "WorkHard!", "minwage@test.com")
         };
 
-// UNUSUAL PATTERNS
+        // UNUSUAL PATTERNS
 
-// All hours on one day (edge case for daily limits if you add them later)
+        // All hours on one day (edge case for daily limits if you add them later)
         var scheduleOneDay = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -256,7 +256,7 @@ public static class ScheduleSeeder
             User = CreateScheduleUser("marathon.worker", "OneDay65!", "marathon@test.com")
         };
 
-// Perfect distribution across all tiers
+        // Perfect distribution across all tiers
         var schedulePerfectTiers = new Schedule
         {
             Id = Guid.NewGuid(),
