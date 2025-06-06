@@ -14,20 +14,23 @@ internal class AuthService : IAuthService, IAuthRepository
     private readonly DbSet<AuthUser> _dbSet;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
+    private readonly IHasher _hasher;
 
-    public AuthService(AuthDbContext dbContext, IConfiguration configuration, ILogger<AuthService> logger)
+    public AuthService(AuthDbContext dbContext, IConfiguration configuration, ILogger<AuthService> logger,
+        IHasher hasher)
     {
         _dbContext = dbContext;
         _dbSet = _dbContext.Set<AuthUser>();
         _configuration = configuration;
         _logger = logger;
+        _hasher = hasher;
     }
 
     public async Task<AuthUser?> AuthenticateAsync(string username, string password)
     {
         var authUser = await GetAuthUserByUsernameAsync(username);
         if (authUser == null) return null;
-        if (Hasher.Verify(authUser.HashedPassword, password))
+        if (_hasher.Verify(authUser.HashedPassword, password))
         {
             authUser.LastLogin = DateTime.UtcNow;
             authUser.FailedLoginAttempts = 0;
@@ -74,7 +77,7 @@ internal class AuthService : IAuthService, IAuthRepository
                 Id = Guid.NewGuid(),
                 Username = request.Username,
                 Email = request.Email,
-                HashedPassword = Hasher.HashPassword(request.Password),
+                HashedPassword = _hasher.HashPassword(request.Password),
                 FailedLoginAttempts = 0,
             };
             await _dbSet.AddAsync(createNewUser);

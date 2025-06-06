@@ -14,7 +14,7 @@ public interface IUserService
     [Obsolete("Use GetUsersAsync with pagination to avoid memory issues")]
     Task<IEnumerable<UserDto>> GetAllUsersAsync();
     
-    Task CreateUserAsync(UserDto user);
-    Task UpdateUserAsync(UserDto user);
+    Task CreateUserAsync(UserDto? user);
+    Task UpdateUserAsync(UserDto? user);
     Task DeleteUserAsync(Guid id);
 }

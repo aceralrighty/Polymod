@@ -3,7 +3,7 @@ using TBD.UserModule.Models;
 
 namespace TBD.UserModule.Repositories;
 
-internal interface IUserRepository
+public interface IUserRepository
 {
     Task<User> GetByEmailAsync(string email);
     Task<User> GetByUsernameAsync(string username);

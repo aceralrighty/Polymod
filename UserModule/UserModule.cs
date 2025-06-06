@@ -1,5 +1,3 @@
-// UserModule.cs
-
 using Microsoft.EntityFrameworkCore;
 using TBD.API.Interfaces;
 using TBD.Shared.Utils;
@@ -15,10 +13,13 @@ public static class UserModule
     {
         services.AddDbContext<UserDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("UserDb")));
+
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IHasher, Hasher>(); // ← Add this line
+
         services.AddAutoMapper(typeof(UserMapping).Assembly);
+
         return services;
     }
-
 }

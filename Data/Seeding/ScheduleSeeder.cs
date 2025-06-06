@@ -293,11 +293,12 @@ public static class ScheduleSeeder
 
     private static User CreateScheduleUser(string username, string password, string email)
     {
+        var hasher = new Hasher();
         return new User
         {
             Id = Guid.NewGuid(),
             Username = username,
-            Password = Hasher.HashPassword(password),
+            Password = hasher.HashPassword(password),
             Email = email,
             CreatedAt = DateTime.UtcNow.AddDays(-Random.Shared.Next(30, 365)),
             UpdatedAt = DateTime.UtcNow.AddDays(-Random.Shared.Next(1, 30)),

@@ -43,7 +43,7 @@ public static class DataSeeder
     private static async Task SeedUsersAsync(UserDbContext context)
     {
         var baseDate = DateTime.UtcNow;
-
+        var hasher = new Hasher();
         var users = new List<User>
         {
             // Standard users with various creation patterns
@@ -52,7 +52,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "john.doe",
                 Email = "john.doe@example.com",
-                Password = Hasher.HashPassword("SecurePass123!"),
+                Password = hasher.HashPassword("SecurePass123!"),
                 CreatedAt = baseDate.AddDays(-365), // Old user
                 UpdatedAt = baseDate.AddDays(-20),
                 Schedule = new Schedule()
@@ -62,7 +62,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "jane.smith",
                 Email = "jane.smith@gmail.com",
-                Password = Hasher.HashPassword("MyPassword456$"),
+                Password = hasher.HashPassword("MyPassword456$"),
                 CreatedAt = baseDate.AddDays(-180),
                 UpdatedAt = baseDate.AddDays(-10),
                 Schedule = new Schedule()
@@ -72,7 +72,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "admin.user",
                 Email = "admin@company.org",
-                Password = Hasher.HashPassword("AdminSecure789#"),
+                Password = hasher.HashPassword("AdminSecure789#"),
                 CreatedAt = baseDate.AddDays(-730), // Very old admin
                 UpdatedAt = baseDate.AddDays(-1), // Recently active
                 Schedule = new Schedule()
@@ -84,7 +84,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "maria.rodriguez",
                 Email = "maria.rodriguez@outlook.com",
-                Password = Hasher.HashPassword("ContraseñaSegura321"),
+                Password = hasher.HashPassword("ContraseñaSegura321"),
                 CreatedAt = baseDate.AddDays(-90),
                 UpdatedAt = baseDate.AddDays(-5),
                 Schedule = new Schedule()
@@ -94,7 +94,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "wei.zhang",
                 Email = "w.zhang@university.edu",
-                Password = Hasher.HashPassword("密码安全654"),
+                Password = hasher.HashPassword("密码安全654"),
                 CreatedAt = baseDate.AddDays(-45),
                 UpdatedAt = baseDate.AddDays(-2),
                 Schedule = new Schedule()
@@ -104,7 +104,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "ahmad.hassan",
                 Email = "ahmad.hassan@tech.ae",
-                Password = Hasher.HashPassword("SecureArabic987!"),
+                Password = hasher.HashPassword("SecureArabic987!"),
                 CreatedAt = baseDate.AddDays(-120),
                 UpdatedAt = baseDate.AddDays(-15),
                 Schedule = new Schedule()
@@ -116,7 +116,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "test.user.with.long.name",
                 Email = "very.long.email.address.for.testing@extremelylongdomainname.international",
-                Password = Hasher.HashPassword("VeryLongPasswordWithSpecialChars!@#$%^&*()"),
+                Password = hasher.HashPassword("VeryLongPasswordWithSpecialChars!@#$%^&*()"),
                 CreatedAt = baseDate.AddMinutes(-30), // Very recent user
                 UpdatedAt = baseDate.AddMinutes(-30),
                 Schedule = new Schedule()
@@ -126,7 +126,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "a", // Minimal username
                 Email = "a@b.co", // Minimal email
-                Password = Hasher.HashPassword("Short1!"),
+                Password = hasher.HashPassword("Short1!"),
                 CreatedAt = baseDate.AddDays(-1),
                 UpdatedAt = baseDate.AddDays(-1),
                 Schedule = new Schedule()
@@ -138,7 +138,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "user_2024",
                 Email = "user+tag@example-domain.com",
-                Password = Hasher.HashPassword("Password!2024"),
+                Password = hasher.HashPassword("Password!2024"),
                 CreatedAt = baseDate.AddDays(-60),
                 UpdatedAt = baseDate.AddDays(-30),
                 Schedule = new Schedule()
@@ -148,7 +148,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "test-user123",
                 Email = "test.email+filter@subdomain.example.org",
-                Password = Hasher.HashPassword("Complex@Pass#123"),
+                Password = hasher.HashPassword("Complex@Pass#123"),
                 CreatedAt = baseDate.AddDays(-15),
                 UpdatedAt = baseDate.AddDays(-7),
                 Schedule = new Schedule()
@@ -160,7 +160,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "inactive.old.user",
                 Email = "old.user@defunct-company.com",
-                Password = Hasher.HashPassword("OldPassword999"),
+                Password = hasher.HashPassword("OldPassword999"),
                 CreatedAt = baseDate.AddDays(-1095), // 3 years old
                 UpdatedAt = baseDate.AddDays(-1000), // Last updated 2.7 years ago
                 Schedule = new Schedule()
@@ -172,7 +172,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "corp.admin",
                 Email = "admin@fortune500company.com",
-                Password = Hasher.HashPassword("Corporate123!@#"),
+                Password = hasher.HashPassword("Corporate123!@#"),
                 CreatedAt = baseDate.AddDays(-200),
                 UpdatedAt = baseDate.AddHours(-6),
                 Schedule = new Schedule()
@@ -182,7 +182,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "sales.manager",
                 Email = "sales@startup.io",
-                Password = Hasher.HashPassword("SalesForce456$"),
+                Password = hasher.HashPassword("SalesForce456$"),
                 CreatedAt = baseDate.AddDays(-75),
                 UpdatedAt = baseDate.AddDays(-3),
                 Schedule = new Schedule()
@@ -194,7 +194,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "student.2024",
                 Email = "student2024@university.edu",
-                Password = Hasher.HashPassword("StudyHard789!"),
+                Password = hasher.HashPassword("StudyHard789!"),
                 CreatedAt = baseDate.AddDays(-240), // Started academic year
                 UpdatedAt = baseDate.AddDays(-12),
                 Schedule = new Schedule()
@@ -204,7 +204,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "professor.smith",
                 Email = "prof.smith@academy.edu",
-                Password = Hasher.HashPassword("Academic2024#"),
+                Password = hasher.HashPassword("Academic2024#"),
                 CreatedAt = baseDate.AddDays(-500),
                 UpdatedAt = baseDate.AddDays(-8),
                 Schedule = new Schedule()
@@ -216,7 +216,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "gov.official",
                 Email = "official@government.gov",
-                Password = Hasher.HashPassword("Official123Gov!"),
+                Password = hasher.HashPassword("Official123Gov!"),
                 CreatedAt = baseDate.AddDays(-400),
                 UpdatedAt = baseDate.AddDays(-25),
                 Schedule = new Schedule()
@@ -228,7 +228,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "dr.johnson",
                 Email = "dr.johnson@hospital.health",
-                Password = Hasher.HashPassword("Medical456!"),
+                Password = hasher.HashPassword("Medical456!"),
                 CreatedAt = baseDate.AddDays(-300),
                 UpdatedAt = baseDate.AddDays(-4),
                 Schedule = new Schedule()
@@ -240,7 +240,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "freelancer.dev",
                 Email = "contact@freelancer-portfolio.com",
-                Password = Hasher.HashPassword("FreelanceLife789$"),
+                Password = hasher.HashPassword("FreelanceLife789$"),
                 CreatedAt = baseDate.AddDays(-150),
                 UpdatedAt = baseDate.AddDays(-6),
                 Schedule = new Schedule()
@@ -252,7 +252,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "influencer_star",
                 Email = "business@influencer-agency.net",
-                Password = Hasher.HashPassword("Influence2024!"),
+                Password = hasher.HashPassword("Influence2024!"),
                 CreatedAt = baseDate.AddDays(-80),
                 UpdatedAt = baseDate.AddHours(-12),
                 Schedule = new Schedule()
@@ -264,7 +264,7 @@ public static class DataSeeder
                 Id = Guid.NewGuid(),
                 Username = "retiree.smith",
                 Email = "retirement.life@senior.com",
-                Password = Hasher.HashPassword("GoldenYears123!"),
+                Password = hasher.HashPassword("GoldenYears123!"),
                 CreatedAt = baseDate.AddDays(-600),
                 UpdatedAt = baseDate.AddDays(-45),
                 Schedule = new Schedule()
