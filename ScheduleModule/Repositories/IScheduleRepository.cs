@@ -12,7 +12,7 @@ public interface IScheduleRepository
     Task UpdateAsync(Schedule schedule);
     Task AddAsync(Schedule schedule);
     Task RemoveAsync(Schedule schedule);
-    
+
     Task<IEnumerable<Schedule>> GroupByWorkDayAsync(Schedule schedule);
-    
+
 }

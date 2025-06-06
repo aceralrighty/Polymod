@@ -22,7 +22,7 @@ public class GenericAddressRepository<T>(AddressDbContext context)
 
     public virtual async Task<T> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FindAsync(id) ?? 
+        return await _dbSet.FindAsync(id) ??
                throw new InvalidOperationException($"Entity with id {id} not found");
     }
 

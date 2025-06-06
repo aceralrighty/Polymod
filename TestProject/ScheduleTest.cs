@@ -170,7 +170,8 @@ public class ScheduleTest
     {
         var schedule = new Schedule
         {
-            TotalHoursWorked = 100, DaysWorked = new Dictionary<string, int> { { "Monday", 5 }, { "Tuesday", 5 } }
+            TotalHoursWorked = 100,
+            DaysWorked = new Dictionary<string, int> { { "Monday", 5 }, { "Tuesday", 5 } }
         };
 
         schedule.RecalculateTotalHours();
