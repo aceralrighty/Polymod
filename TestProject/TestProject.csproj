@@ -18,7 +18,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5"/>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1"/>
-    <PackageReference Include="NUnit" Version="4.3.2"/>
+    <PackageReference Include="NUnit" Version="3.14.0"/>
     <PackageReference Include="NUnit.Analyzers" Version="4.8.1"/>
     <PackageReference Include="NUnit3TestAdapter" Version="5.0.0"/>
     <PackageReference Include="coverlet.msbuild" Version="6.0.4">
@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework"/>
     <ProjectReference Include="..\TBD.csproj"/>
   </ItemGroup>
 

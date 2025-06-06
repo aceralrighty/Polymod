@@ -26,7 +26,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: dotnet test TestProject/TestProject.csproj --no-build --configuration Release --verbosity normal
 
   code-quality:
     runs-on: ubuntu-latest
