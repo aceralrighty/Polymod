@@ -7,7 +7,7 @@ using TBD.UserModule.Repositories;
 
 namespace TBD.UserModule.Services;
 
-internal class UserService(IUserRepository userRepository, IMapper mapper) : IUserService
+internal class UserService(IUserRepository userRepository, IMapper mapper, IHasher hasher) : IUserService
 {
     public async Task<UserDto?> GetUserByIdAsync(Guid id)
     {
@@ -52,25 +52,22 @@ internal class UserService(IUserRepository userRepository, IMapper mapper) : IUs
         return mapper.Map<IEnumerable<UserDto>>(users);
     }
 
-    public async Task CreateUserAsync(UserDto userDto)
+    public async Task CreateUserAsync(UserDto? userDto)
     {
+        // Add null check for userDto early if you prefer ArgumentNullException here
+        ArgumentNullException.ThrowIfNull(userDto);
+
         var user = mapper.Map<User>(userDto);
         if (string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrWhiteSpace(userDto.Password))
         {
             throw new ArgumentException("Password cannot be empty");
         }
 
-        if (Hasher.Verify(user.Password, userDto.Password))
-        {
-            return; // Passwords are the same, do not create a new user.
-        }
-
-        // Hash the password
-        user.Password = Hasher.HashPassword(userDto.Password);
+        user.Password = hasher.HashPassword(userDto.Password);
         await userRepository.AddAsync(user);
     }
 
-    public async Task UpdateUserAsync(UserDto userDto)
+    public async Task UpdateUserAsync(UserDto? userDto)
     {
         var user = mapper.Map<User>(userDto);
         await userRepository.UpdateAsync(user);

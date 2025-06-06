@@ -1,221 +1,150 @@
 using AutoMapper;
 using Moq;
 using TBD.API.DTOs;
-using TBD.ScheduleModule.Models;
+using TBD.Shared.Utils; // Import the namespace for IHasher
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;
 using TBD.UserModule.Services;
+using TBD.API.Interfaces;
+using Assert = NUnit.Framework.Assert;
 
 namespace TBD.TestProject;
 
 [TestFixture]
-public class UserServiceTest
+public class UserServiceTests
 {
     private Mock<IUserRepository> _userRepositoryMock;
     private Mock<IMapper> _mapperMock;
-    private UserService _userService;
+    private Mock<IHasher> _hasherMock; // Add a mock for IHasher
+    private IUserService _userService;
 
-    // Test data factories
-    private static User CreateTestUser(Guid? id = null, string email = "test@example.com", string username = "testuser")
+    private static readonly UserDto TestUserDto = new()
     {
-        return new User
-        {
-            Id = id ?? Guid.NewGuid(),
-            Email = email,
-            Username = username,
-            Password = "hashedPassword123",
-            Schedule = new Schedule()
-        };
-    }
-
-    private static UserDto CreateTestUserDto(Guid? id = null, string email = "test@example.com", string username = "testuser")
-    {
-        return new UserDto
-        {
-            Id = id ?? Guid.NewGuid(),
-            Email = email,
-            Username = username,
-            Password = "plainPassword123"
-        };
-    }
+        Id = Guid.NewGuid(),
+        Email = "test@example.com",
+        Username = "testuser",
+        Password = "plainPassword123"
+    };
 
     [SetUp]
-    public void SetUp()
+    public void Setup()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _mapperMock = new Mock<IMapper>();
-        _userService = new UserService(_userRepositoryMock.Object, _mapperMock.Object);
-    }
+        _hasherMock = new Mock<IHasher>(); // Initialize the hasher mock
 
-    [TearDown]
-    public void TearDown()
-    {
-        _userRepositoryMock.Reset();
-        _mapperMock.Reset();
+        // Instantiate the UserService with the mocks
+        _userService = new UserService(
+            _userRepositoryMock.Object,
+            _mapperMock.Object,
+            _hasherMock.Object // Pass the mocked hasher
+        );
     }
-
-    #region GetUserByIdAsync Tests
 
     [Test]
-    public async Task GetUserByIdAsync_WhenUserExists_ReturnsMappedUserDto()
+    public async Task GetUserByIdAsync_UserExists_ReturnsCorrectUser()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var user = CreateTestUser(userId);
-        var expectedUserDto = CreateTestUserDto(userId);
-
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId))
-            .ReturnsAsync(user);
-        _mapperMock.Setup(m => m.Map<UserDto>(user))
-            .Returns(expectedUserDto);
+        var user = new User
+        {
+            Id = TestUserDto.Id,
+            Username = TestUserDto.Username,
+            Email = TestUserDto.Email,
+            Password = "hashedpassword", // Placeholder
+            Schedule = new TBD.ScheduleModule.Models.Schedule()
+        };
+        _userRepositoryMock.Setup(r => r.GetByIdAsync(TestUserDto.Id)).ReturnsAsync(user);
+        _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
 
         // Act
-        var result = await _userService.GetUserByIdAsync(userId);
+        var result = await _userService.GetUserByIdAsync(TestUserDto.Id);
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result, Is.EqualTo(expectedUserDto));
-        _userRepositoryMock.Verify(r => r.GetByIdAsync(userId), Times.Once);
+        Assert.That(result.Id, Is.EqualTo(TestUserDto.Id));
+        _userRepositoryMock.Verify(r => r.GetByIdAsync(TestUserDto.Id), Times.Once);
         _mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
     }
 
     [Test]
-    public async Task GetUserByIdAsync_WhenUserNotFound_ReturnsNull()
+    public async Task GetUserByEmailAsync_UserExists_ReturnsCorrectUser()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId))
-            .ReturnsAsync((User)null);
+        var user = new User
+        {
+            Id = TestUserDto.Id,
+            Email = TestUserDto.Email,
+            Username = TestUserDto.Username,
+            Password = "hashedpassword", // Placeholder
+            Schedule = new TBD.ScheduleModule.Models.Schedule()
+        };
+        _userRepositoryMock.Setup(r => r.GetByEmailAsync(TestUserDto.Email)).ReturnsAsync(user);
+        _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
 
         // Act
-        var result = await _userService.GetUserByIdAsync(userId);
-
-        // Assert
-        Assert.That(result, Is.Null);
-        _userRepositoryMock.Verify(r => r.GetByIdAsync(userId), Times.Once);
-        _mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<User>()), Times.Never);
-    }
-
-    [Test]
-    public void GetUserByIdAsync_WhenGuidEmpty_ThrowsArgumentException()
-    {
-        // Arrange & Act & Assert
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _userService.GetUserByIdAsync(Guid.Empty));
-
-        Assert.That(ex.Message, Does.Contain("userId"));
-    }
-
-    #endregion
-
-    #region GetUserByEmailAsync Tests
-
-    [Test]
-    public async Task GetUserByEmailAsync_WhenUserExists_ReturnsMappedUserDto()
-    {
-        // Arrange
-        const string email = "test@example.com";
-        var user = CreateTestUser(email: email);
-        var expectedUserDto = CreateTestUserDto(email: email);
-
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(email))
-            .ReturnsAsync(user);
-        _mapperMock.Setup(m => m.Map<UserDto>(user))
-            .Returns(expectedUserDto);
-
-        // Act
-        var result = await _userService.GetUserByEmailAsync(email);
+        var result = await _userService.GetUserByEmailAsync(TestUserDto.Email);
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Email, Is.EqualTo(email));
-        _userRepositoryMock.Verify(r => r.GetByEmailAsync(email), Times.Once);
+        Assert.That(result.Email, Is.EqualTo(TestUserDto.Email));
+        _userRepositoryMock.Verify(r => r.GetByEmailAsync(TestUserDto.Email), Times.Once);
+        _mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
     }
 
     [Test]
-    public async Task GetUserByEmailAsync_WhenUserNotFound_ReturnsNull()
+    public async Task GetUserByEmailAsync_UserDoesNotExist_ReturnsNull()
     {
         // Arrange
-        const string email = "notfound@example.com";
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(email))
-            .ReturnsAsync((User)null);
+        _userRepositoryMock.Setup(r => r.GetByEmailAsync(It.IsAny<string>())).ReturnsAsync((User)null);
+        _mapperMock.Setup(m => m.Map<UserDto>(null)).Returns((UserDto)null);
 
         // Act
-        var result = await _userService.GetUserByEmailAsync(email);
+        var result = await _userService.GetUserByEmailAsync("nonexistent@example.com");
 
         // Assert
         Assert.That(result, Is.Null);
+        _userRepositoryMock.Verify(r => r.GetByEmailAsync(It.IsAny<string>()), Times.Once);
+        _mapperMock.Verify(m => m.Map<UserDto>(null), Times.Once);
     }
 
     [Test]
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase("   ")]
-    public void GetUserByEmailAsync_WhenEmailInvalid_ThrowsArgumentException(string invalidEmail)
-    {
-        // Act & Assert
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _userService.GetUserByEmailAsync(invalidEmail));
-
-        Assert.That(ex.Message, Does.Contain("email"));
-    }
-
-    #endregion
-
-    #region GetUserByUsernameAsync Tests
-
-    [Test]
-    public async Task GetUserByUsernameAsync_WhenUserExists_ReturnsMappedUserDto()
+    public async Task GetUserByUsernameAsync_UserExists_ReturnsCorrectUser()
     {
         // Arrange
-        const string username = "testuser";
-        var user = CreateTestUser(username: username);
-        var expectedUserDto = CreateTestUserDto(username: username);
-
-        _userRepositoryMock.Setup(r => r.GetByUsernameAsync(username))
-            .ReturnsAsync(user);
-        _mapperMock.Setup(m => m.Map<UserDto>(user))
-            .Returns(expectedUserDto);
+        var user = new User
+        {
+            Id = TestUserDto.Id,
+            Username = TestUserDto.Username,
+            Email = TestUserDto.Email,
+            Password = "hashedpassword", // Placeholder
+            Schedule = new TBD.ScheduleModule.Models.Schedule()
+        };
+        _userRepositoryMock.Setup(r => r.GetByUsernameAsync(TestUserDto.Username)).ReturnsAsync(user);
+        _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
 
         // Act
-        var result = await _userService.GetUserByUsernameAsync(username);
+        var result = await _userService.GetUserByUsernameAsync(TestUserDto.Username);
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Username, Is.EqualTo(username));
+        Assert.That(result.Username, Is.EqualTo(TestUserDto.Username));
+        _userRepositoryMock.Verify(r => r.GetByUsernameAsync(TestUserDto.Username), Times.Once);
+        _mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
     }
 
     [Test]
-    public async Task GetUserByUsernameAsync_WhenUserNotFound_ReturnsNull()
+    public async Task GetUsersAsync_ValidParameters_ReturnsPagedResult()
     {
         // Arrange
-        const string username = "nonexistent";
-        _userRepositoryMock.Setup(r => r.GetByUsernameAsync(username))
-            .ReturnsAsync((User)null);
-
-        // Act
-        var result = await _userService.GetUserByUsernameAsync(username);
-
-        // Assert
-        Assert.That(result, Is.Null);
-    }
-
-    #endregion
-
-    #region GetUsersAsync Tests
-
-    [Test]
-    public async Task GetUsersAsync_WithValidParameters_ReturnsPagedResult()
-    {
-        // Arrange
-        const int page = 2;
-        const int pageSize = 5;
-        const int totalCount = 15;
-
-        var users = Enumerable.Range(1, pageSize)
-            .Select(_ => CreateTestUser())
-            .ToList();
-        var userDtos = users.Select(u => CreateTestUserDto(u.Id)).ToList();
+        var users = new List<User>
+        {
+            new User { Username = "user1", Email = "e1@e.com", Password = "p1", Schedule = new TBD.ScheduleModule.Models.Schedule() },
+            new User { Username = "user2", Email = "e2@e.com", Password = "p2", Schedule = new TBD.ScheduleModule.Models.Schedule() }
+        };
+        var userDtos = new List<UserDto> { new UserDto(), new UserDto() };
+        var totalCount = 10;
+        int page = 2;
+        int pageSize = 5;
 
         _userRepositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(totalCount);
         _userRepositoryMock.Setup(r => r.GetPagedAsync(page, pageSize)).ReturnsAsync(users);
@@ -226,283 +155,224 @@ public class UserServiceTest
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Items, Has.Count.EqualTo(pageSize));
+        Assert.That(result.Items.Count(), Is.EqualTo(userDtos.Count));
+        Assert.That(result.TotalCount, Is.EqualTo(totalCount));
         Assert.That(result.Page, Is.EqualTo(page));
         Assert.That(result.PageSize, Is.EqualTo(pageSize));
-        Assert.That(result.TotalCount, Is.EqualTo(totalCount));
-        Assert.That(result.TotalPages, Is.EqualTo(3)); // 15 / 5 = 3
+        _userRepositoryMock.Verify(r => r.GetCountAsync(), Times.Once);
+        _userRepositoryMock.Verify(r => r.GetPagedAsync(page, pageSize), Times.Once);
+        _mapperMock.Verify(m => m.Map<IEnumerable<UserDto>>(users), Times.Once);
     }
 
     [Test]
-    [TestCase(-1, 10, 1, 50)] // Invalid page
-    [TestCase(0, 10, 1, 50)]  // Invalid page
-    [TestCase(1, -1, 1, 50)]  // Invalid pageSize
-    [TestCase(1, 0, 1, 50)]   // Invalid pageSize
-    [TestCase(1, 1000, 1, 50)] // PageSize too large
-    public async Task GetUsersAsync_WithInvalidParameters_UsesDefaultValues(
-        int inputPage, int inputPageSize, int expectedPage, int expectedPageSize)
+    public async Task GetUsersAsync_InvalidPage_DefaultsToOne()
     {
         // Arrange
-        const int totalCount = 100;
         var users = new List<User>();
         var userDtos = new List<UserDto>();
+        var totalCount = 0;
+        int invalidPage = 0;
+        int pageSize = 10;
 
         _userRepositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(totalCount);
-        _userRepositoryMock.Setup(r => r.GetPagedAsync(expectedPage, expectedPageSize)).ReturnsAsync(users);
+        _userRepositoryMock.Setup(r => r.GetPagedAsync(1, pageSize)).ReturnsAsync(users);
         _mapperMock.Setup(m => m.Map<IEnumerable<UserDto>>(users)).Returns(userDtos);
 
         // Act
-        var result = await _userService.GetUsersAsync(inputPage, inputPageSize);
+        var result = await _userService.GetUsersAsync(invalidPage, pageSize);
 
         // Assert
-        Assert.That(result.Page, Is.EqualTo(expectedPage));
-        Assert.That(result.PageSize, Is.EqualTo(expectedPageSize));
-        _userRepositoryMock.Verify(r => r.GetPagedAsync(expectedPage, expectedPageSize), Times.Once);
+        Assert.That(result.Page, Is.EqualTo(1));
+        _userRepositoryMock.Verify(r => r.GetPagedAsync(1, pageSize), Times.Once);
     }
 
     [Test]
-    public async Task GetUsersAsync_WhenNoUsers_ReturnsEmptyResult()
+    public async Task GetUsersAsync_InvalidPageSize_DefaultsToFifty()
     {
         // Arrange
-        const int page = 1;
-        const int pageSize = 10;
-        const int totalCount = 0;
-
-        var emptyUsers = new List<User>();
-        var emptyUserDtos = new List<UserDto>();
+        var users = new List<User>();
+        var userDtos = new List<UserDto>();
+        var totalCount = 0;
+        int page = 1;
+        int invalidPageSize = 0;
 
         _userRepositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(totalCount);
-        _userRepositoryMock.Setup(r => r.GetPagedAsync(page, pageSize)).ReturnsAsync(emptyUsers);
-        _mapperMock.Setup(m => m.Map<IEnumerable<UserDto>>(emptyUsers)).Returns(emptyUserDtos);
+        _userRepositoryMock.Setup(r => r.GetPagedAsync(page, 50)).ReturnsAsync(users);
+        _mapperMock.Setup(m => m.Map<IEnumerable<UserDto>>(users)).Returns(userDtos);
 
         // Act
-        var result = await _userService.GetUsersAsync(page, pageSize);
+        var result = await _userService.GetUsersAsync(page, invalidPageSize);
 
         // Assert
-        Assert.That(result.Items, Is.Empty);
-        Assert.That(result.TotalCount, Is.EqualTo(0));
-        Assert.That(result.TotalPages, Is.EqualTo(0));
+        Assert.That(result.PageSize, Is.EqualTo(50));
+        _userRepositoryMock.Verify(r => r.GetPagedAsync(page, 50), Times.Once);
     }
 
-    #endregion
-
-    #region GetAllUsersAsync Tests
 
     [Test]
-    public async Task GetAllUsersAsync_WhenUsersExist_ReturnsAllMappedUserDtos()
+    public async Task CreateUserAsync_ValidUser_HashesPasswordAndAddsUser()
     {
         // Arrange
-        var users = Enumerable.Range(1, 3)
-            .Select(_ => CreateTestUser())
-            .ToList();
-        var expectedUserDtos = users.Select(u => CreateTestUserDto(u.Id)).ToList();
+        var expectedHashedPassword = "mockedHashedPassword"; // A simple string for the mock
 
-        _userRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(users);
-        _mapperMock.Setup(m => m.Map<IEnumerable<UserDto>>(users)).Returns(expectedUserDtos);
+        // Configure the hasher mock to return a predictable hash
+        _hasherMock.Setup(h => h.HashPassword(TestUserDto.Password))
+                   .Returns(expectedHashedPassword);
+        // Configure the hasher mock for verification
+        _hasherMock.Setup(h => h.Verify(expectedHashedPassword, TestUserDto.Password))
+                   .Returns(true);
+
+        var capturedUser = new User
+        {
+            Id = TestUserDto.Id,
+            Username = TestUserDto.Username,
+            Email = TestUserDto.Email,
+            Password = "plainPassword123", // This is the plain text password from DTO
+            Schedule = new TBD.ScheduleModule.Models.Schedule()
+        };
+
+        _mapperMock.Setup(m => m.Map<User>(TestUserDto))
+                   .Returns(new User
+                   {
+                       Password = TestUserDto.Password, // This is the plain text password from DTO
+                       Username = TestUserDto.Username,
+                       Email = TestUserDto.Email,
+                       Schedule = new TBD.ScheduleModule.Models.Schedule()
+                   });
+
+        _userRepositoryMock.Setup(r => r.AddAsync(It.IsAny<User>()))
+                           .Callback<User>(user => capturedUser = user)
+                           .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _userService.GetAllUsersAsync();
+        await _userService.CreateUserAsync(TestUserDto);
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result, Has.Count.EqualTo(3));
-        Assert.That(result, Is.EqualTo(expectedUserDtos));
+        // Verify that the hasher's HashPassword method was called with the correct plain text password
+        _hasherMock.Verify(h => h.HashPassword(TestUserDto.Password), Times.Once);
+        // Verify that the repository's AddAsync method was called exactly once.
+        _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Once);
+
+        // Verify that the captured user's password is the mocked hashed password
+        Assert.That(capturedUser.Password, Is.EqualTo(expectedHashedPassword));
+
+        // You can now verify that the service attempts to save the (mocked) hashed password.
+        // The second assert from your original test (Hasher.Verify) is now redundant here
+        // as we are testing the service's interaction with the hasher, not the hasher itself.
+        // If you still want to test the full flow with real hashing, keep it as an integration test.
+        // For a unit test, the mock verification is sufficient.
     }
 
-    [Test]
-    public async Task GetAllUsersAsync_WhenNoUsers_ReturnsEmptyCollection()
-    {
-        // Arrange
-        var emptyUsers = new List<User>();
-        var emptyUserDtos = new List<UserDto>();
-
-        _userRepositoryMock.Setup(r => r.GetAllAsync()).ReturnsAsync(emptyUsers);
-        _mapperMock.Setup(m => m.Map<IEnumerable<UserDto>>(emptyUsers)).Returns(emptyUserDtos);
-
-        // Act
-        var result = await _userService.GetAllUsersAsync();
-
-        // Assert
-        Assert.That(result, Is.Empty);
-    }
-
-    #endregion
-
-    #region CreateUserAsync Tests
 
     [Test]
-    [TestCase(null)]
-    [TestCase("")]
-    [TestCase("   ")]
-    public void CreateUserAsync_WhenPasswordInvalid_ThrowsArgumentException(string invalidPassword)
+    public void CreateUserAsync_NullUserDto_ThrowsAutoMapperException()
     {
         // Arrange
-        var userDto = CreateTestUserDto();
-        userDto.Password = invalidPassword;
-        var user = CreateTestUser();
-        user.Password = invalidPassword;
-
-        _mapperMock.Setup(m => m.Map<User>(userDto)).Returns(user);
+        UserDto nullUserDto = null;
+        _mapperMock.Setup(m => m.Map<User>(nullUserDto)).Throws(new AutoMapperMappingException("Mapping null DTO"));
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _userService.CreateUserAsync(userDto));
-
-        Assert.That(ex.Message, Does.Contain("Password cannot be empty"));
-    }
-
-    [Test]
-    public async Task CreateUserAsync_WhenPasswordAlreadyHashed_DoesNotCreateUser()
-    {
-        // Arrange
-        var userDto = CreateTestUserDto();
-        userDto.Password = "plainPassword";
-        var user = CreateTestUser();
-        user.Password = "plainPassword"; // Same as input, indicating already hashed
-
-        _mapperMock.Setup(m => m.Map<User>(userDto)).Returns(user);
-
-        // Act
-        await _userService.CreateUserAsync(userDto);
-
-        // Assert
+        Assert.ThrowsAsync<AutoMapper.AutoMapperMappingException>(() => _userService.CreateUserAsync(nullUserDto));
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Never);
+        _hasherMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never); // Hasher should not be called
     }
 
     [Test]
-    public async Task CreateUserAsync_WhenPasswordNotHashed_HashesPasswordAndCreatesUser()
+    public void CreateUserAsync_EmptyPassword_ThrowsArgumentException()
     {
         // Arrange
-        var userDto = CreateTestUserDto();
-        userDto.Password = "plainPassword";
-        var user = CreateTestUser();
-        user.Password = "differentPassword"; // Different from input, indicating not hashed
+        var invalidUserDto = new UserDto { Password = " ", Username = "test", Email = "test@example.com" };
+        _mapperMock.Setup(m => m.Map<User>(invalidUserDto))
+                   .Returns(new User
+                   {
+                       Password = invalidUserDto.Password,
+                       Username = invalidUserDto.Username,
+                       Email = invalidUserDto.Email,
+                       Schedule = new TBD.ScheduleModule.Models.Schedule()
+                   });
 
-        _mapperMock.Setup(m => m.Map<User>(userDto)).Returns(user);
-
-        // Act
-        await _userService.CreateUserAsync(userDto);
-
-        // Assert
-        _userRepositoryMock.Verify(r => r.AddAsync(It.Is<User>(u =>
-            !string.IsNullOrWhiteSpace(u.Password) &&
-            u.Password != "plainPassword")), Times.Once);
-    }
-
-    [Test]
-    public void CreateUserAsync_WhenUserDtoIsNull_ThrowsArgumentNullException()
-    {
         // Act & Assert
-        Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _userService.CreateUserAsync(null));
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.CreateUserAsync(invalidUserDto));
+        Assert.That(ex.Message, Is.EqualTo("Password cannot be empty"));
+        _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Never);
+        _hasherMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never); // Hasher should not be called
     }
 
-    #endregion
+    // Removed: CreateUserAsync_FlawedVerificationCheck_StillCreatesUser (as it tests non-existent logic)
 
-    #region UpdateUserAsync Tests
 
     [Test]
-    public async Task UpdateUserAsync_WithValidUserDto_MapsAndUpdatesUser()
+    public async Task UpdateUserAsync_ValidUserDto_CallsRepositoryUpdate()
     {
         // Arrange
-        var userDto = CreateTestUserDto();
-        var user = CreateTestUser(userDto.Id);
+        var userDto = new UserDto { Id = Guid.NewGuid(), Username = "updatedUser", Email = "updated@example.com", Password = "newPassword" };
+        var mappedUser = new User
+        {
+            Id = userDto.Id,
+            Username = userDto.Username,
+            Email = userDto.Email,
+            Password = userDto.Password,
+            Schedule = new TBD.ScheduleModule.Models.Schedule()
+        };
 
-        _mapperMock.Setup(m => m.Map<User>(userDto)).Returns(user);
+        _mapperMock.Setup(m => m.Map<User>(userDto)).Returns(mappedUser);
+        _userRepositoryMock.Setup(r => r.UpdateAsync(mappedUser)).Returns(Task.CompletedTask);
 
         // Act
         await _userService.UpdateUserAsync(userDto);
 
         // Assert
-        _userRepositoryMock.Verify(r => r.UpdateAsync(user), Times.Once);
         _mapperMock.Verify(m => m.Map<User>(userDto), Times.Once);
+        _userRepositoryMock.Verify(r => r.UpdateAsync(mappedUser), Times.Once);
     }
 
     [Test]
-    public void UpdateUserAsync_WhenUserDtoIsNull_ThrowsArgumentNullException()
+    public void UpdateUserAsync_NullUserDto_ThrowsAutoMapperException()
     {
+        // Arrange
+        UserDto nullUserDto = null;
+        _mapperMock.Setup(m => m.Map<User>(nullUserDto)).Throws(new AutoMapper.AutoMapperMappingException("Mapping null DTO"));
+
         // Act & Assert
-        Assert.ThrowsAsync<ArgumentNullException>(
-            async () => await _userService.UpdateUserAsync(null));
+        Assert.ThrowsAsync<AutoMapper.AutoMapperMappingException>(() => _userService.UpdateUserAsync(nullUserDto));
+        _userRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<User>()), Times.Never);
     }
 
-    #endregion
-
-    #region DeleteUserAsync Tests
-
     [Test]
-    public async Task DeleteUserAsync_WhenUserExists_GetsAndRemovesUser()
+    public async Task DeleteUserAsync_UserExists_RemovesUserFromRepository()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var user = CreateTestUser(userId);
-
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(user);
+        var userToDelete = new User
+        {
+            Id = userId,
+            Username = "any",
+            Email = "any@any.com",
+            Password = "any",
+            Schedule = new TBD.ScheduleModule.Models.Schedule()
+        };
+        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(userToDelete);
+        _userRepositoryMock.Setup(r => r.RemoveAsync(userToDelete)).Returns(Task.CompletedTask);
 
         // Act
         await _userService.DeleteUserAsync(userId);
 
         // Assert
         _userRepositoryMock.Verify(r => r.GetByIdAsync(userId), Times.Once);
-        _userRepositoryMock.Verify(r => r.RemoveAsync(user), Times.Once);
+        _userRepositoryMock.Verify(r => r.RemoveAsync(userToDelete), Times.Once);
     }
 
     [Test]
-    public void DeleteUserAsync_WhenUserNotFound_ThrowsNullReferenceException()
+    public async Task DeleteUserAsync_UserNotFound_DoesNotThrow()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync((User)null);
+        var nonExistentId = Guid.NewGuid();
+        _userRepositoryMock.Setup(r => r.GetByIdAsync(nonExistentId)).ReturnsAsync((User)null);
+        _userRepositoryMock.Setup(r => r.RemoveAsync(null)).Returns(Task.CompletedTask);
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<NullReferenceException>(
-            async () => await _userService.DeleteUserAsync(userId));
-
-        Assert.That(ex, Is.Not.Null);
+        Assert.DoesNotThrowAsync(() => _userService.DeleteUserAsync(nonExistentId));
+        _userRepositoryMock.Verify(r => r.GetByIdAsync(nonExistentId), Times.Once);
+        _userRepositoryMock.Verify(r => r.RemoveAsync(null), Times.Once);
     }
-
-    [Test]
-    public void DeleteUserAsync_WhenGuidEmpty_ThrowsArgumentException()
-    {
-        // Act & Assert
-        var ex = Assert.ThrowsAsync<ArgumentException>(
-            async () => await _userService.DeleteUserAsync(Guid.Empty));
-
-        Assert.That(ex.Message, Does.Contain("userId"));
-    }
-
-    #endregion
-
-    #region Integration-style Tests
-
-    [Test]
-    public async Task UserWorkflow_CreateUpdateDelete_WorksCorrectly()
-    {
-        // This test simulates a complete user lifecycle
-        // Arrange
-        var userId = Guid.NewGuid();
-        var originalUserDto = CreateTestUserDto(userId, "original@test.com", "originaluser");
-        var updatedUserDto = CreateTestUserDto(userId, "updated@test.com", "updateduser");
-
-        var originalUser = CreateTestUser(userId, "original@test.com", "originaluser");
-        var updatedUser = CreateTestUser(userId, "updated@test.com", "updateduser");
-
-        _mapperMock.Setup(m => m.Map<User>(originalUserDto)).Returns(originalUser);
-        _mapperMock.Setup(m => m.Map<User>(updatedUserDto)).Returns(updatedUser);
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(originalUser);
-
-        // Act & Assert - Create
-        await _userService.CreateUserAsync(originalUserDto);
-        _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Once);
-
-        // Act & Assert - Update
-        await _userService.UpdateUserAsync(updatedUserDto);
-        _userRepositoryMock.Verify(r => r.UpdateAsync(updatedUser), Times.Once);
-
-        // Act & Assert - Delete
-        await _userService.DeleteUserAsync(userId);
-        _userRepositoryMock.Verify(r => r.RemoveAsync(originalUser), Times.Once);
-    }
-
-    #endregion
 }

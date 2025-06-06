@@ -67,7 +67,7 @@ public class UserController(IUserService userService) : ControllerBase
 
     // PUT: api/User/5
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutUser(Guid id, UserDto userDto)
+    public async Task<IActionResult> PutUser(Guid id, UserDto? userDto)
     {
         if (id != userDto.Id)
         {
@@ -91,7 +91,7 @@ public class UserController(IUserService userService) : ControllerBase
 
     // POST: api/User
     [HttpPost]
-    public async Task<ActionResult<UserDto>> PostUser(UserDto userDto)
+    public async Task<ActionResult<UserDto>> PostUser(UserDto? userDto)
     {
         try
         {

@@ -1,13 +1,14 @@
 using Isopoh.Cryptography.Argon2;
+using TBD.Shared.Utils; // Ensure this is present if IHasher is in this namespace
 
 namespace TBD.Shared.Utils;
 
 /**
  *<summary>
- *  this Hasher adapts the hashing algorithm to the available memory and CPU cores (based on system environment), as to not allow for GC pressure and avoid LOH allocation.
+ * this Hasher adapts the hashing algorithm to the available memory and CPU cores (based on system environment), as to not allow for GC pressure and avoid LOH allocation.
  * </summary>
  */
-public static class Hasher
+public class Hasher : IHasher // Implement the interface
 {
     private static readonly HashingConfig Config = DetermineOptimalConfig();
 
@@ -33,7 +34,8 @@ public static class Hasher
         };
     }
 
-    public static string HashPassword(string password)
+    // Now explicit implementation of interface methods
+    public string HashPassword(string password)
     {
         return Argon2.Hash(
             password,
@@ -45,7 +47,7 @@ public static class Hasher
         );
     }
 
-    public static bool Verify(string encodedHash, string password)
+    public bool Verify(string encodedHash, string password)
     {
         return Argon2.Verify(encodedHash, password);
     }

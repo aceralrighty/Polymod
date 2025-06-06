@@ -237,8 +237,9 @@ public class UserAddressServiceTests
         var result = await _userAddressService.GetAllAsync(_testUser.Id);
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(3));
+        var userAddresses = result.ToList();
+        Assert.That(userAddresses, Is.Not.Null);
+        Assert.That(userAddresses.Count(), Is.EqualTo(3));
     }
 
     [Test]
@@ -252,8 +253,9 @@ public class UserAddressServiceTests
         var result = await _userAddressService.GetAllAsync(_testUser.Id);
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(0));
+        var userAddresses = result.ToList();
+        Assert.That(userAddresses, Is.Not.Null);
+        Assert.That(userAddresses.Count(), Is.EqualTo(0));
     }
 
     #endregion
@@ -267,9 +269,10 @@ public class UserAddressServiceTests
         var result = await _userAddressService.FindAsync(ua => ua.State == "NY");
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(2));
-        Assert.That(result.All(ua => ua.State == "NY"), Is.True);
+        var userAddresses = result.ToList();
+        Assert.That(userAddresses, Is.Not.Null);
+        Assert.That(userAddresses.Count(), Is.EqualTo(2));
+        Assert.That(userAddresses.All(ua => ua.State == "NY"), Is.True);
     }
 
     [Test]
@@ -279,8 +282,9 @@ public class UserAddressServiceTests
         var result = await _userAddressService.FindAsync(ua => ua.State == "TX");
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(0));
+        var userAddresses = result.ToList();
+        Assert.That(userAddresses, Is.Not.Null);
+        Assert.That(userAddresses.Count(), Is.EqualTo(0));
     }
 
     [Test]
@@ -290,9 +294,10 @@ public class UserAddressServiceTests
         var result = await _userAddressService.FindAsync(ua => ua.City == "New York" && ua.ZipCode > 10001);
 
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count(), Is.EqualTo(1));
-        Assert.That(result.First().ZipCode, Is.EqualTo(10002));
+        var userAddresses = result.ToList();
+        Assert.That(userAddresses, Is.Not.Null);
+        Assert.That(userAddresses.Count(), Is.EqualTo(1));
+        Assert.That(userAddresses.First().ZipCode, Is.EqualTo(10002));
     }
 
     #endregion
@@ -310,7 +315,7 @@ public class UserAddressServiceTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo(addressId));
+        Assert.That(result?.Id, Is.EqualTo(addressId));
     }
 
     [Test]
@@ -354,8 +359,8 @@ public class UserAddressServiceTests
         // Assert
         var addedAddress = await _context.Set<UserAddress>().FindAsync(newAddress.Id);
         Assert.That(addedAddress, Is.Not.Null);
-        Assert.That(addedAddress.Address1, Is.EqualTo("999 New St"));
-        Assert.That(addedAddress.City, Is.EqualTo("Chicago"));
+        Assert.That(addedAddress?.Address1, Is.EqualTo("999 New St"));
+        Assert.That(addedAddress?.City, Is.EqualTo("Chicago"));
     }
 
     [Test]
@@ -421,8 +426,8 @@ public class UserAddressServiceTests
         // Assert
         var updatedAddress = await _context.Set<UserAddress>().FindAsync(addressToUpdate.Id);
         Assert.That(updatedAddress, Is.Not.Null);
-        Assert.That(updatedAddress.City, Is.EqualTo("Updated City"));
-        Assert.That(updatedAddress.City, Is.Not.EqualTo(originalCity));
+        Assert.That(updatedAddress?.City, Is.EqualTo("Updated City"));
+        Assert.That(updatedAddress?.City, Is.Not.EqualTo(originalCity));
     }
 
     [Test]
@@ -478,7 +483,7 @@ public class UserAddressServiceTests
         _mockMapper.Setup(m => m.Map(It.IsAny<UserAddressRequest>(), It.IsAny<UserAddress>()))
             .Callback<UserAddressRequest, UserAddress>((src, dest) =>
             {
-                dest.Address1 = src.Address1;
+                dest.Address1 = src.Address1 ?? string.Empty;
                 dest.City = src.City;
             });
 
@@ -492,8 +497,8 @@ public class UserAddressServiceTests
 
         // Verify the address was actually updated in the database
         var updatedAddress = await _context.Set<UserAddress>().FindAsync(existingAddress.Id);
-        Assert.That(updatedAddress.Address1, Is.EqualTo("Updated Address"));
-        Assert.That(updatedAddress.City, Is.EqualTo("Updated City"));
+        Assert.That(updatedAddress?.Address1, Is.EqualTo("Updated Address"));
+        Assert.That(updatedAddress?.City, Is.EqualTo("Updated City"));
     }
 
     [Test]
@@ -513,7 +518,7 @@ public class UserAddressServiceTests
             Assert.ThrowsAsync<ArgumentException>(async () =>
                 await _userAddressService.UpdateUserAddress(updateRequest));
 
-        Assert.That(exception.Message, Is.EqualTo("User not found, cannot update address."));
+        Assert.That(exception?.Message, Is.EqualTo("User not found, cannot update address."));
     }
 
     [Test]
@@ -530,8 +535,8 @@ public class UserAddressServiceTests
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await _userAddressService.UpdateUserAddress(updateRequest));
 
-        Assert.That(exception.ParamName, Is.EqualTo("existingAddress"));
-        Assert.That(exception.Message, Does.Contain("User Address does not exist"));
+        Assert.That(exception?.ParamName, Is.EqualTo("existingAddress"));
+        Assert.That(exception?.Message, Does.Contain("User Address does not exist"));
     }
 
     [Test]
@@ -548,7 +553,7 @@ public class UserAddressServiceTests
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
                 await _userAddressService.UpdateUserAddress(updateRequest));
 
-        Assert.That(exception.ParamName, Is.EqualTo("existingAddress"));
+        Assert.That(exception?.ParamName, Is.EqualTo("existingAddress"));
     }
 
     #endregion
@@ -575,13 +580,21 @@ public class UserAddressServiceTests
         Assert.That(foundAddresses.Count(), Is.EqualTo(1));
 
         // Update
-        addedAddress.City = "Updated Test City";
-        await _userAddressService.UpdateAsync(addedAddress);
+        if (addedAddress != null)
+        {
+            addedAddress.City = "Updated Test City";
+            await _userAddressService.UpdateAsync(addedAddress);
+        }
+
         var updatedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
-        Assert.That(updatedAddress.City, Is.EqualTo("Updated Test City"));
+        Assert.That(updatedAddress?.City, Is.EqualTo("Updated Test City"));
 
         // Remove
-        await _userAddressService.RemoveAsync(updatedAddress);
+        if (updatedAddress != null)
+        {
+            await _userAddressService.RemoveAsync(updatedAddress);
+        }
+
         var removedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
         Assert.That(removedAddress, Is.Null);
     }
