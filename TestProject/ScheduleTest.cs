@@ -4,8 +4,8 @@ using TBD.UserModule.Models;
 
 namespace TBD.TestProject;
 
-[TestFixture]
 [TestOf(typeof(Schedule))]
+[TestFixture]
 public class ScheduleTest
 {
     private ScheduleDbContext _context;

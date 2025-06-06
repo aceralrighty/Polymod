@@ -1,6 +1,5 @@
 using Isopoh.Cryptography.Argon2;
 
-
 namespace TBD.Shared.Utils;
 
 /**
@@ -22,8 +21,8 @@ public class Hasher : IHasher
     private static HashingConfig DetermineOptimalConfig()
     {
         // Determine available memory and CPU cores
-        long availableMemoryMb = GC.GetTotalMemory(false) / (1024 * 1024);
-        int processorCount = Environment.ProcessorCount;
+        var availableMemoryMb = GC.GetTotalMemory(false) / (1024 * 1024);
+        var processorCount = Environment.ProcessorCount;
 
         // Conservative settings that avoid LOH
         return new HashingConfig
