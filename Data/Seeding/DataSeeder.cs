@@ -476,7 +476,8 @@ public static class DataSeeder
                 address2: addressInfo.Address2,
                 city: addressInfo.City,
                 state: addressInfo.State,
-                zipCode: addressInfo.ZipCode) { Id = Guid.NewGuid() };
+                zipCode: addressInfo.ZipCode)
+            { Id = Guid.NewGuid() };
 
             addresses.Add(address);
         }
@@ -495,7 +496,8 @@ public static class DataSeeder
                     address2: $"Office {Random.Shared.Next(100, 999)}",
                     city: "Business City",
                     state: "CA",
-                    zipCode: 90210) { Id = Guid.NewGuid() });
+                    zipCode: 90210)
+                { Id = Guid.NewGuid() });
 
                 // Add home address
                 addresses.Add(new UserAddress(
@@ -505,7 +507,8 @@ public static class DataSeeder
                     address2: Random.Shared.Next(0, 2) == 0 ? null : $"Unit {Random.Shared.Next(1, 50)}",
                     city: "Suburbia",
                     state: "TX",
-                    zipCode: 75001) { Id = Guid.NewGuid() });
+                    zipCode: 75001)
+                { Id = Guid.NewGuid() });
             }
         }
 

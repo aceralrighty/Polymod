@@ -1,6 +1,6 @@
 namespace TBD.AddressModule.Exceptions;
 
-public class CityGroupingNotAvailableException: Exception
+public class CityGroupingNotAvailableException : Exception
 {
     public CityGroupingNotAvailableException() : base("City Grouping is not available")
     {

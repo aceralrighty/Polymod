@@ -62,7 +62,8 @@ internal class AuthService : IAuthService, IAuthRepository
             {
                 return new AuthResponse
                 {
-                    isSuccessful = false, Message = $"Username {request.Username} already exists"
+                    isSuccessful = false,
+                    Message = $"Username {request.Username} already exists"
                 };
             }
 

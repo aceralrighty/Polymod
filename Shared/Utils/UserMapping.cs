@@ -4,7 +4,7 @@ using TBD.UserModule.Models;
 
 namespace TBD.Shared.Utils;
 
-public class UserMapping:Profile
+public class UserMapping : Profile
 {
     public UserMapping()
     {

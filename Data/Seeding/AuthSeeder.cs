@@ -22,7 +22,7 @@ public static class AuthSeeder
     {
         var auths = new List<AuthUser>();
 
-         var hasher = new Hasher();
+        var hasher = new Hasher();
 
         var auth1 = new AuthUser
         {
