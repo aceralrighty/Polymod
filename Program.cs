@@ -17,7 +17,6 @@ builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddSingleton<JwtTokenGenerator>();
-builder.Services.AddScoped<IHasher, Hasher>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Repositories;
 using TBD.AuthModule.Services;
+using TBD.Shared.Utils;
 
 namespace TBD.AuthModule;
 
@@ -13,6 +14,7 @@ public static class AuthModule
             configuration.GetConnectionString("AuthDb")));
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IHasher, Hasher>();
         services.AddAutoMapper(typeof(AuthModule).Assembly);
         return services;
     }

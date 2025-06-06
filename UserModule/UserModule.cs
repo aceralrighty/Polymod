@@ -16,8 +16,7 @@ public static class UserModule
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IHasher, Hasher>(); // ← Add this line
-
+        services.AddScoped<IHasher, Hasher>();
         services.AddAutoMapper(typeof(UserMapping).Assembly);
 
         return services;
