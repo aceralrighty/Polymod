@@ -7,7 +7,6 @@ using TBD.Shared.Utils;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;
 using TBD.UserModule.Services;
-// Import the namespace for IHasher
 using Assert = NUnit.Framework.Assert;
 
 namespace TBD.TestProject;
@@ -271,7 +270,7 @@ public class UserServiceTests
         _mapperMock.Setup(m => m.Map<User>(nullUserDto)).Throws(new AutoMapperMappingException("Mapping null DTO"));
 
         // Act & Assert
-        Assert.ThrowsAsync<AutoMapperMappingException>(() => _userService.CreateUserAsync(nullUserDto));
+        Assert.ThrowsAsync<ArgumentNullException>(() => _userService.CreateUserAsync(nullUserDto));
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Never);
         _hasherMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never); // Hasher should not be called
     }
