@@ -1,5 +1,5 @@
 using Isopoh.Cryptography.Argon2;
-using TBD.Shared.Utils; // Ensure this is present if IHasher is in this namespace
+
 
 namespace TBD.Shared.Utils;
 
@@ -8,7 +8,7 @@ namespace TBD.Shared.Utils;
  * this Hasher adapts the hashing algorithm to the available memory and CPU cores (based on system environment), as to not allow for GC pressure and avoid LOH allocation.
  * </summary>
  */
-public class Hasher : IHasher // Implement the interface
+public class Hasher : IHasher
 {
     private static readonly HashingConfig Config = DetermineOptimalConfig();
 
