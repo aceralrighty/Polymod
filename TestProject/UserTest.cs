@@ -1,5 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using Moq;
+using NUnit.Framework;
 using TBD.API.DTOs;
 using TBD.API.Interfaces;
 using TBD.ScheduleModule.Models;

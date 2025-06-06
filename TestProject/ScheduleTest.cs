@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
 using TBD.UserModule.Models;
@@ -155,10 +158,7 @@ public class ScheduleTest
     [Test]
     public void RecalculateTotalHours_CalculatesCorrectly()
     {
-        var schedule = new Schedule
-        {
-            DaysWorked = new Dictionary<string, int> { { "Monday", 8 }, { "Tuesday", 9 } }
-        };
+        var schedule = new Schedule { DaysWorked = new Dictionary<string, int> { { "Monday", 8 }, { "Tuesday", 9 } } };
 
         schedule.RecalculateTotalHours();
 
@@ -170,8 +170,7 @@ public class ScheduleTest
     {
         var schedule = new Schedule
         {
-            TotalHoursWorked = 100,
-            DaysWorked = new Dictionary<string, int> { { "Monday", 5 }, { "Tuesday", 5 } }
+            TotalHoursWorked = 100, DaysWorked = new Dictionary<string, int> { { "Monday", 5 }, { "Tuesday", 5 } }
         };
 
         schedule.RecalculateTotalHours();
