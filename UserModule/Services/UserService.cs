@@ -7,7 +7,7 @@ using TBD.UserModule.Repositories;
 
 namespace TBD.UserModule.Services;
 
-internal class UserService(IUserRepository userRepository, IMapper mapper, IHasher hasher) : IUserService
+public class UserService(IUserRepository userRepository, IMapper mapper, IHasher hasher) : IUserService
 {
     public async Task<UserDto?> GetUserByIdAsync(Guid id)
     {
