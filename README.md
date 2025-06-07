@@ -8,7 +8,7 @@ The project includes separate modules for User, Address, Schedule, and Service m
 logic, DbContext, models, repositories, and services.
 
 
-🧱 Project Structure
+**🧱 Project Structure**
 
 ```plaintext
 .
@@ -81,7 +81,7 @@ Entity Framework Core\
 SQL Server (via Docker)\
 AutoMapper\
 xUnit\
-Docker + Docker Compose\
+Docker and Docker Compose\
 GitHub Actions (CI)
 
 **📦 What's Next?**
