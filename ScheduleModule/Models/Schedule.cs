@@ -24,7 +24,7 @@ public sealed class Schedule : BaseTableProperties
     public Guid UserId { get; set; }
 
     // Navigation property with ForeignKey attribute referencing the property name
-    [ForeignKey("UserId")][Required] public User User { get; set; }
+    [ForeignKey("UserId")] [Required] public User User { get; set; }
 
     public double? BasePay { get; set; }
 
