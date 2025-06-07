@@ -3,7 +3,7 @@ using TBD.ScheduleModule.Repositories;
 
 namespace TBD.ScheduleModule.Services;
 
-public class ScheduleService(IScheduleRepository repository) : IScheduleService
+internal class ScheduleService(IScheduleRepository repository) : IScheduleService
 {
     public async Task<IEnumerable<Schedule>> GroupAllUsersByWorkDayAsync(Schedule schedule)
     {

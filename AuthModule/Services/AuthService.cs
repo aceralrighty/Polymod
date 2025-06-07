@@ -8,44 +8,37 @@ using TBD.Shared.Utils;
 
 namespace TBD.AuthModule.Services;
 
-internal class AuthService : IAuthService, IAuthRepository
+internal class AuthService(
+    AuthRepository repository,
+    AuthDbContext dbContext,
+    IConfiguration configuration,
+    ILogger<AuthService> logger,
+    IHasher hasher)
+    : IAuthService
 {
-    private readonly AuthDbContext _dbContext;
-    private readonly DbSet<AuthUser> _dbSet;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<AuthService> _logger;
-    private readonly IHasher _hasher;
-
-    public AuthService(AuthDbContext dbContext, IConfiguration configuration, ILogger<AuthService> logger,
-        IHasher hasher)
-    {
-        _dbContext = dbContext;
-        _dbSet = _dbContext.Set<AuthUser>();
-        _configuration = configuration;
-        _logger = logger;
-        _hasher = hasher;
-    }
-
     public async Task<AuthUser?> AuthenticateAsync(string username, string password)
     {
-        var authUser = await GetAuthUserByUsernameAsync(username);
-        if (authUser == null) return null;
-        if (_hasher.Verify(authUser.HashedPassword, password))
+        var authUser = await repository.GetUserByUsername(username);
+        if (authUser == null)
+            return null;
+
+        if (!hasher.Verify(authUser.HashedPassword, password))
         {
-            authUser.LastLogin = DateTime.UtcNow;
-            authUser.FailedLoginAttempts = 0;
-            await _dbContext.SaveChangesAsync();
-            return authUser;
+            authUser.FailedLoginAttempts++;
+            await repository.UpdateAsync(authUser);
+            return null;
         }
 
-        authUser.FailedLoginAttempts++;
-        await _dbContext.SaveChangesAsync();
-        return null;
+        // Successful authentication
+        authUser.LastLogin = DateTime.UtcNow;
+        authUser.FailedLoginAttempts = 0;
+        await repository.UpdateAsync(authUser);
+        return authUser;
     }
 
     public async Task<AuthUser?> GetAuthUserByUsernameAsync(string username)
     {
-        return await _dbSet.FirstOrDefaultAsync(au => au.Username == username);
+        return await repository.GetUserByUsername(username);
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -57,13 +50,12 @@ internal class AuthService : IAuthService, IAuthRepository
                 return new AuthResponse { isSuccessful = false, Message = $"All fields are required to be filled in" };
             }
 
-            var existingUser = await _dbSet.FirstOrDefaultAsync(au => au.Username == request.Username);
+            var existingUser = await dbContext.AuthUsers.FirstOrDefaultAsync(u => u.Username == request.Username);
             if (existingUser != null)
             {
                 return new AuthResponse
                 {
-                    isSuccessful = false,
-                    Message = $"Username {request.Username} already exists"
+                    isSuccessful = false, Message = $"Username {request.Username} already exists"
                 };
             }
 
@@ -78,12 +70,12 @@ internal class AuthService : IAuthService, IAuthRepository
                 Id = Guid.NewGuid(),
                 Username = request.Username,
                 Email = request.Email,
-                HashedPassword = _hasher.HashPassword(request.Password),
+                HashedPassword = hasher.HashPassword(request.Password),
                 FailedLoginAttempts = 0,
             };
-            await _dbSet.AddAsync(createNewUser);
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("User {Username} created", createNewUser.Username);
+            await dbContext.AddAsync(createNewUser);
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("User {Username} created", createNewUser.Username);
             return new AuthResponse
             {
                 isSuccessful = true,
@@ -94,7 +86,7 @@ internal class AuthService : IAuthService, IAuthRepository
         }
         catch (ErrorDuringUserRegistrationException ex)
         {
-            _logger.LogError("Error during registration: {ExMessage}", ex.Message);
+            logger.LogError("Error during registration: {ExMessage}", ex.Message);
             return new AuthResponse { isSuccessful = false, Message = ex.Message };
         }
     }
@@ -113,7 +105,7 @@ internal class AuthService : IAuthService, IAuthRepository
 
             if (authUser == null)
             {
-                _logger.LogWarning("Failed login attempt for user {Username}", request.Username);
+                logger.LogWarning("Failed login attempt for user {Username}", request.Username);
                 return new AuthResponse { isSuccessful = false, Message = "Invalid username or password" };
             }
 
@@ -134,9 +126,9 @@ internal class AuthService : IAuthService, IAuthRepository
             // Update user with refresh token
             authUser.RefreshToken = refreshToken;
             authUser.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7); // 7 days
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
 
-            _logger.LogInformation("User {Username} logged in successfully", authUser.Username);
+            logger.LogInformation("User {Username} logged in successfully", authUser.Username);
 
             return new AuthResponse
             {
@@ -148,7 +140,7 @@ internal class AuthService : IAuthService, IAuthRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during login for {Username}", request.Username);
+            logger.LogError(ex, "Error during login for {Username}", request.Username);
             return new AuthResponse { isSuccessful = false, Message = "Login failed due to an internal error" };
         }
     }
@@ -157,7 +149,7 @@ internal class AuthService : IAuthService, IAuthRepository
     {
         try
         {
-            var user = await _dbSet
+            var user = await dbContext.AuthUsers
                 .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
             if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
@@ -171,7 +163,7 @@ internal class AuthService : IAuthService, IAuthRepository
 
             user.RefreshToken = newRefreshToken;
             user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
 
             return new AuthResponse
             {
@@ -183,19 +175,19 @@ internal class AuthService : IAuthService, IAuthRepository
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during token refresh");
+            logger.LogError(ex, "Error during token refresh");
             return new AuthResponse { isSuccessful = false, Message = "Token refresh failed" };
         }
     }
 
     public async Task InvalidateRefreshTokenAsync(Guid userId)
     {
-        var user = await _dbSet.FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await dbContext.AuthUsers.FirstOrDefaultAsync(u => u.Id == userId);
         if (user != null)
         {
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
         }
     }
 
@@ -206,7 +198,7 @@ internal class AuthService : IAuthService, IAuthRepository
 
     private string GenerateJwtToken(AuthUser user)
     {
-        return JwtTokenGenerator.GenerateJwtToken(user, _configuration);
+        return JwtTokenGenerator.GenerateJwtToken(user, configuration);
     }
 
     private string GenerateRefreshToken()
