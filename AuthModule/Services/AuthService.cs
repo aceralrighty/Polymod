@@ -9,7 +9,7 @@ using TBD.Shared.Utils;
 namespace TBD.AuthModule.Services;
 
 internal class AuthService(
-    AuthRepository repository,
+    IAuthRepository repository,
     AuthDbContext dbContext,
     IConfiguration configuration,
     ILogger<AuthService> logger,
@@ -50,7 +50,7 @@ internal class AuthService(
                 return new AuthResponse { isSuccessful = false, Message = $"All fields are required to be filled in" };
             }
 
-            var existingUser = await dbContext.AuthUsers.FirstOrDefaultAsync(u => u.Username == request.Username);
+            var existingUser = await repository.GetUserByUsername(request.Username);
             if (existingUser != null)
             {
                 return new AuthResponse
@@ -73,8 +73,7 @@ internal class AuthService(
                 HashedPassword = hasher.HashPassword(request.Password),
                 FailedLoginAttempts = 0,
             };
-            await dbContext.AddAsync(createNewUser);
-            await dbContext.SaveChangesAsync();
+            await repository.AddAsync(createNewUser);
             logger.LogInformation("User {Username} created", createNewUser.Username);
             return new AuthResponse
             {
@@ -115,18 +114,18 @@ internal class AuthService(
                 return new AuthResponse
                 {
                     isSuccessful = false,
-                    Message = $"Account is locked due to too many failed attempts. Try again later."
+                    Message = "Account is locked due to too many failed attempts. Try again later."
                 };
             }
 
-            // Generate access token (your DTOs use a single Token field)
+            // Generate tokens
             var accessToken = GenerateJwtToken(authUser);
             var refreshToken = GenerateRefreshToken();
 
             // Update user with refresh token
             authUser.RefreshToken = refreshToken;
-            authUser.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7); // 7 days
-            await dbContext.SaveChangesAsync();
+            authUser.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await repository.UpdateAsync(authUser);
 
             logger.LogInformation("User {Username} logged in successfully", authUser.Username);
 
@@ -135,7 +134,8 @@ internal class AuthService(
                 isSuccessful = true,
                 Message = "Login successful",
                 Username = authUser.Username,
-                Token = accessToken // Using your DTO structure
+                Token = accessToken,
+                RefreshToken = refreshToken
             };
         }
         catch (Exception ex)
