@@ -9,7 +9,7 @@ using TBD.Shared.Utils;
 namespace TBD.AuthModule.Services;
 
 internal class AuthService(
-    AuthRepository repository,
+    IAuthRepository repository,
     AuthDbContext dbContext,
     IConfiguration configuration,
     ILogger<AuthService> logger,
