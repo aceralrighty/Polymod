@@ -184,7 +184,7 @@ public class UserAddressServiceTests
             Assert.ThrowsAsync<CityGroupingNotAvailableException>(async () =>
                 await _userAddressService.GroupByCityAsync());
 
-        Assert.That(exception.Message, Is.EqualTo("There are no cities to group in the database"));
+        Assert.That(exception?.Message, Is.EqualTo("There are no cities to group in the database"));
     }
 
     #endregion

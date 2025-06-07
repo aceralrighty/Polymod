@@ -48,5 +48,9 @@
     <Content Include=".github\dependabot.yml" />
     <Content Include=".github\workflows\ci.yaml"/>
   </ItemGroup>
+
+<!--  <ItemGroup>-->
+<!--    <Compile Include="obj\Debug\net9.0\AssemblyInfo.cs" />-->
+<!--  </ItemGroup>-->
   
 </Project>

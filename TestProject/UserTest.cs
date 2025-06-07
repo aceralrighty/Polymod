@@ -21,7 +21,7 @@ public class UserServiceTests
 {
     private Mock<IUserRepository> _userRepositoryMock;
     private Mock<IMapper> _mapperMock;
-    private Mock<IHasher> _hasherMock; // Add a mock for IHasher
+    private Mock<IHasher> _hasherMock;
     private IUserService _userService;
 
     private static readonly UserDto TestUserDto = new()
