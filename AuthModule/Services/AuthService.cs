@@ -149,15 +149,14 @@ internal class AuthService(
     {
         try
         {
-            var user = await dbContext.AuthUsers
-                .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var user = await repository.GetUserByRefreshToken(refreshToken);
 
             if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
             {
                 return new AuthResponse { isSuccessful = false, Message = "Invalid or expired refresh token" };
             }
 
-            // Generate new access token
+            // Generate a new access token
             var newAccessToken = GenerateJwtToken(user);
             var newRefreshToken = GenerateRefreshToken();
 
@@ -180,6 +179,7 @@ internal class AuthService(
         }
     }
 
+
     public async Task InvalidateRefreshTokenAsync(Guid userId)
     {
         var user = await dbContext.AuthUsers.FirstOrDefaultAsync(u => u.Id == userId);
@@ -191,6 +191,7 @@ internal class AuthService(
         }
     }
 
+
     private bool IsAccountLocked(AuthUser user)
     {
         return user.FailedLoginAttempts > 5;
@@ -200,6 +201,7 @@ internal class AuthService(
     {
         return JwtTokenGenerator.GenerateJwtToken(user, configuration);
     }
+
 
     private string GenerateRefreshToken()
     {
