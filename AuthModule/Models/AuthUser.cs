@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using TBD.GenericDBProperties;
-using TBD.UserModule.Models;
 
 namespace TBD.AuthModule.Models;
 

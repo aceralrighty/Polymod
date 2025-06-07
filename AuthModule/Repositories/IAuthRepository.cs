@@ -3,7 +3,7 @@ using TBD.AuthModule.Models;
 
 namespace TBD.AuthModule.Repositories;
 
-internal interface IAuthRepository
+public interface IAuthRepository
 {
     Task<IEnumerable<AuthUser>> GetAllUsers();
     Task<AuthUser?> GetUserById(Guid id);
