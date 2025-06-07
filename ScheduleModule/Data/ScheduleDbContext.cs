@@ -36,12 +36,12 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
                 "WHEN [TotalHoursWorked] <= 40 THEN [BasePay] * [TotalHoursWorked] " +
                 // Regular overtime only (41-60 hours): 1.5x rate
                 "WHEN [TotalHoursWorked] <= 60 THEN " +
-                "([BasePay] * 40) + " + // Regular pay for first 40 hours
+                "([BasePay] * 40) + " + // Regular pay for the first 40 hours
                 "(([BasePay] * 1.5) * ([TotalHoursWorked] - 40)) " + // 1.5x for hours 41-60
-                                                                     // Double overtime (61+ hours): 1.5x for 41-60, 2x for 61+
+                // Double overtime (61+ hours): 1.5x for 41-60, 2x for 61+
                 "ELSE " +
-                "([BasePay] * 40) + " + // Regular pay for first 40 hours
-                "(([BasePay] * 1.5) * 20) + " + // 1.5x for hours 41-60 (20 hours max)
+                "([BasePay] * 40) + " + // Regular pay for the first 40 hours
+                "(([BasePay] * 1.5) * 20) + " + // 1.5x for hours 41-60 (20-hour max)
                 "(([BasePay] * 2.0) * ([TotalHoursWorked] - 60)) " + // 2x for hours 61+
                 "END"
             );
