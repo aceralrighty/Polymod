@@ -356,8 +356,7 @@ public class UserAddressServiceTests
         // Arrange
         var newAddress =
             new UserAddress(_testUser.Id, _testUser, "999 New St", null, "Chicago", "IL",
-                60601)
-            { Id = Guid.NewGuid() };
+                60601) { Id = Guid.NewGuid() };
 
         // Act
         await _userAddressService.AddAsync(newAddress);
@@ -483,10 +482,7 @@ public class UserAddressServiceTests
         var existingAddress = _testAddresses.First();
         var updateRequest = new UserAddressRequest
         {
-            Id = existingAddress.Id,
-            UserId = _testUser.Id,
-            Address1 = "Updated Address",
-            City = "Updated City"
+            Id = existingAddress.Id, UserId = _testUser.Id, Address1 = "Updated Address", City = "Updated City"
         };
 
         _mockMapper.Setup(m => m.Map(It.IsAny<UserAddressRequest>(), It.IsAny<UserAddress>()))
@@ -519,9 +515,7 @@ public class UserAddressServiceTests
 
         var updateRequest = new UserAddressRequest
         {
-            Id = _testAddresses.First().Id,
-            UserId = Guid.NewGuid(),
-            Address1 = "Some Address"
+            Id = _testAddresses.First().Id, UserId = Guid.NewGuid(), Address1 = "Some Address"
         };
 
         // Act & Assert
@@ -538,9 +532,7 @@ public class UserAddressServiceTests
         // Arrange
         var updateRequest = new UserAddressRequest
         {
-            Id = Guid.NewGuid(),
-            UserId = _testUser.Id,
-            Address1 = "Some Address"
+            Id = Guid.NewGuid(), UserId = _testUser.Id, Address1 = "Some Address"
         };
 
         // Act & Assert
@@ -558,9 +550,7 @@ public class UserAddressServiceTests
         // Arrange
         var updateRequest = new UserAddressRequest
         {
-            Id = Guid.Empty,
-            UserId = _testUser.Id,
-            Address1 = "Some Address"
+            Id = Guid.Empty, UserId = _testUser.Id, Address1 = "Some Address"
         };
 
         // Act & Assert

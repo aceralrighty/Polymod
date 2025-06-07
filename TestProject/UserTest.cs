@@ -26,10 +26,7 @@ public class UserServiceTests
 
     private static readonly UserDto TestUserDto = new()
     {
-        Id = Guid.NewGuid(),
-        Email = "test@example.com",
-        Username = "testuser",
-        Password = "plainPassword123"
+        Id = Guid.NewGuid(), Email = "test@example.com", Username = "testuser", Password = "plainPassword123"
     };
 
     [SetUp]
@@ -313,10 +310,7 @@ public class UserServiceTests
         // Arrange
         var userDto = new UserDto
         {
-            Id = Guid.NewGuid(),
-            Username = "updatedUser",
-            Email = "updated@example.com",
-            Password = "newPassword"
+            Id = Guid.NewGuid(), Username = "updatedUser", Email = "updated@example.com", Password = "newPassword"
         };
         var mappedUser = new User
         {
