@@ -38,7 +38,7 @@ logic, DbContext, models, repositories, and services.
 
 This project uses GitHub Actions to automatically build and test on every push or pull request to the main branch.
 
-Workflow includes:
+Workflow includes:\
 Restoring and building the solution\
 Running all unit tests with xUnit\
 Validating Docker image build
