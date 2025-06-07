@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1"/>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="Dapper" Version="2.1.66"/>
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0"/>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5"/>
