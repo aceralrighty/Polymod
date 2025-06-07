@@ -64,5 +64,15 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Security vulnerability scan
+      - name: Vulnerability scan
         run: dotnet list package --vulnerable --include-transitive
+
+      - name: Install dotnet-outdated
+        run: dotnet tool install --global dotnet-outdated-tool
+
+      - name: Check for outdated packages
+        run: |
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet outdated --include-auto-references --fail-on-major-updates --fail-on-updates --upgrade-allowed Minor
+
+
