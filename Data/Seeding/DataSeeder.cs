@@ -18,20 +18,18 @@ public static class DataSeeder
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
 
-        // Drop everything first
+        // Clean DB
         await userContext.Database.EnsureDeletedAsync();
         await addressContext.Database.EnsureDeletedAsync();
 
-        // Create in order - user context first, then address
+        // Migrate in order
         await userContext.Database.MigrateAsync();
 
-        // Only migrate address context if it has unique tables
-        // Skip if it shares tables with UserDbContext
         try
         {
             await addressContext.Database.MigrateAsync();
         }
-        catch (SqlException ex) when (ex.Number == 2714) // Object already exists
+        catch (SqlException ex) when (ex.Number == 2714)
         {
             Console.WriteLine("Address context tables already exist, skipping migration");
         }
@@ -39,6 +37,7 @@ public static class DataSeeder
         await SeedUsersAsync(userContext);
         await SeedUserAddressesAsync(addressContext, userContext);
     }
+
 
     private static async Task SeedUsersAsync(UserDbContext context)
     {
@@ -476,8 +475,7 @@ public static class DataSeeder
                 address2: addressInfo.Address2,
                 city: addressInfo.City,
                 state: addressInfo.State,
-                zipCode: addressInfo.ZipCode)
-            { Id = Guid.NewGuid() };
+                zipCode: addressInfo.ZipCode) { Id = Guid.NewGuid() };
 
             addresses.Add(address);
         }
@@ -496,8 +494,7 @@ public static class DataSeeder
                     address2: $"Office {Random.Shared.Next(100, 999)}",
                     city: "Business City",
                     state: "CA",
-                    zipCode: 90210)
-                { Id = Guid.NewGuid() });
+                    zipCode: 90210) { Id = Guid.NewGuid() });
 
                 // Add home address
                 addresses.Add(new UserAddress(
@@ -507,8 +504,7 @@ public static class DataSeeder
                     address2: Random.Shared.Next(0, 2) == 0 ? null : $"Unit {Random.Shared.Next(1, 50)}",
                     city: "Suburbia",
                     state: "TX",
-                    zipCode: 75001)
-                { Id = Guid.NewGuid() });
+                    zipCode: 75001) { Id = Guid.NewGuid() });
             }
         }
 
