@@ -1,16 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
+using TBD.Shared.Repositories;
 
 namespace TBD.ScheduleModule.Repositories;
 
 public class ScheduleRepository(ScheduleDbContext context)
-    : GenericScheduleRepository<Schedule>(context), IScheduleRepository
+    : GenericRepository<Schedule>(context), IScheduleRepository
 {
     public async Task<Schedule> GetByWorkDayAsync(Schedule schedule)
     {
         return await _dbSet.FirstOrDefaultAsync(u => u.DaysWorkedJson == schedule.DaysWorkedJson) ??
                throw new InvalidOperationException();
+    }
+
+    public async Task RemoveAsync(Schedule schedule)
+    {
+        context.Remove(schedule);
+        await context.SaveChangesAsync();
     }
 
     public async Task<IEnumerable<Schedule>> GroupByWorkDayAsync(Schedule schedule)

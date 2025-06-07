@@ -9,7 +9,7 @@ public interface IUserRepository
     Task<User> GetByUsernameAsync(string username);
     Task<IEnumerable<User>> GetAllAsync();
     Task<IEnumerable<User>> FindAsync(Expression<Func<User, bool>> expression);
-    Task<User> GetByIdAsync(Guid id);
+    Task<User?> GetByIdAsync(Guid id);
     Task AddAsync(User entity);
     Task AddRangeAsync(IEnumerable<User> entities);
     Task UpdateAsync(User entity);

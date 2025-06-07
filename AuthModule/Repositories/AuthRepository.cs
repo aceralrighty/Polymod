@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
+using TBD.Shared.Repositories;
 
 namespace TBD.AuthModule.Repositories;
 
-public class AuthRepository(AuthDbContext context) : GenericAuthRepository<AuthUser>(context), IAuthRepository
+public class AuthRepository(AuthDbContext context) : GenericRepository<AuthUser>(context), IAuthRepository
 {
     private readonly AuthDbContext _context = context;
 
