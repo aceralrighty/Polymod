@@ -13,7 +13,7 @@ public static class ServiceModule
         services.AddDbContext<ServiceDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("ServiceDb")));
         services.AddScoped<IServiceRepository, ServiceRepository>();
-        services.AddScoped<IServicesService, ServiceManager>();
+        services.AddScoped<IServicesService, ServicesService>();
         services.AddAutoMapper(typeof(ServiceMapping).Assembly);
         return services;
     }
