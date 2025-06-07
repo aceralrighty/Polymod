@@ -23,7 +23,6 @@ public class AuthRepository(AuthDbContext context) : GenericAuthRepository<AuthU
     {
         var found = await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
         return found;
-
     }
 
     public async Task<AuthUser?> GetUserByEmail(string email)
@@ -35,5 +34,21 @@ public class AuthRepository(AuthDbContext context) : GenericAuthRepository<AuthU
     {
         var foundByAttempts = _dbSet.FirstOrDefaultAsync(ua => ua.FailedLoginAttempts == loginAttempts);
         return await _dbSet.ToListAsync();
+    }
+
+    public async Task<AuthUser?> GetUserByRefreshToken(string refreshToken)
+    {
+        return await _dbSet.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+    }
+
+    public async Task InvalidateRefreshTokenAsync(Guid userId)
+    {
+        var user = await _context.AuthUsers.FirstOrDefaultAsync(id => id.Id == userId);
+        if (user != null)
+        {
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            await _context.SaveChangesAsync();
+        }
     }
 }
