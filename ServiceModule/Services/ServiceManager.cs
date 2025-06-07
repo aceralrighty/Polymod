@@ -5,7 +5,7 @@ using TBD.ServiceModule.Repositories;
 
 namespace TBD.ServiceModule.Services;
 
-internal class ServicesService(IServiceRepository repository, IMapper mapper) : IServicesService
+internal class ServiceManager(IServiceRepository repository, IMapper mapper) : IServicesService
 {
     public async Task<IEnumerable<ServiceDTO>> GetAllServicesAsync()
     {
