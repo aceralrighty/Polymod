@@ -73,6 +73,6 @@ jobs:
       - name: Check for outdated packages
         run: |
           export PATH="$PATH:$HOME/.dotnet/tools"
-          dotnet outdated --include-auto-references --fail-on-major-updates --fail-on-updates --upgrade-allowed Minor
+          dotnet outdated --include-auto-references --fail-on-updates --upgrade-allowed Minor
 
 
