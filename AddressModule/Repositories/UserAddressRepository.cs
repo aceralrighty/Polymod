@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
+using TBD.Shared.Repositories;
 
 namespace TBD.AddressModule.Repositories;
 
 internal class UserAddressRepository(AddressDbContext context)
-    : GenericAddressRepository<UserAddress>(context), IUserAddressRepository
+    : GenericRepository<UserAddress>(context), IUserAddressRepository
 {
     public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)
     {
@@ -13,7 +14,7 @@ internal class UserAddressRepository(AddressDbContext context)
             u.Address1 == userAddress.Address1 && u.ZipCode == userAddress.ZipCode) ?? throw new Exception();
     }
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByUserStateAsync()
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync()
     {
         return (await _dbSet.GroupBy(ua => ua.State).ToListAsync())!;
     }
@@ -23,7 +24,7 @@ internal class UserAddressRepository(AddressDbContext context)
         return await _dbSet.GroupBy(ua => ua.ZipCode).ToListAsync();
     }
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByCityAsync()
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync()
     {
         return await _dbSet.GroupBy(ua => ua.City).ToListAsync();
     }
