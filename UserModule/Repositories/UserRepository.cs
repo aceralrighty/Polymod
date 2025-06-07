@@ -7,11 +7,11 @@ namespace TBD.UserModule.Repositories;
 
 internal class UserRepository(UserDbContext context) : GenericRepository<User>(context), IUserRepository
 {
-    public override async Task<User?> GetByIdAsync(Guid id)
+    public override async Task<User> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.Id == id) ??
-               throw new InvalidOperationException($"User with id {id} not found");
+        return await _dbSet.FirstOrDefaultAsync(u => u.Id == id) ?? throw new NullReferenceException();
     }
+
 
     public async Task<User> GetByEmailAsync(string email)
     {
