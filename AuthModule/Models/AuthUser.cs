@@ -5,8 +5,6 @@ namespace TBD.AuthModule.Models;
 
 public class AuthUser : BaseTableProperties
 {
-    public Guid AuthId { get; set; }
-
     // Core user info (duplicated for auth context)
     public required string Username { get; set; }
     public required string Email { get; set; }

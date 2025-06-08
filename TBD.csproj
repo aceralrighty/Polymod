@@ -57,6 +57,14 @@
     <_ContentIncludedByDefault Remove="Views\Address\Index.cshtml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Address\Create.cshtml" />
+    <UpToDateCheckInput Remove="Views\Address\Delete.cshtml" />
+    <UpToDateCheckInput Remove="Views\Address\Details.cshtml" />
+    <UpToDateCheckInput Remove="Views\Address\Edit.cshtml" />
+    <UpToDateCheckInput Remove="Views\Address\Index.cshtml" />
+  </ItemGroup>
+
 <!--  <ItemGroup>-->
 <!--    <Compile Include="obj\Debug\net9.0\AssemblyInfo.cs" />-->
 <!--  </ItemGroup>-->

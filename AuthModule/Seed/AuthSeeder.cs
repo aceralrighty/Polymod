@@ -27,7 +27,6 @@ public static class AuthSeeder
         var auth1 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "joe.rogan@example.com",
             HashedPassword = hasher.HashPassword("DMTBears"),
             Username = "freakBitches",
@@ -42,7 +41,6 @@ public static class AuthSeeder
         var auth2 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "Ari-the-jew@cabal.com",
             HashedPassword = hasher.HashPassword("PissInBottles"),
             Username = "SalviaLoser",
@@ -57,7 +55,6 @@ public static class AuthSeeder
         var auth3 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "Shane.Downey_gillis@drunk.com",
             HashedPassword = hasher.HashPassword("BudLightSucks"),
             Username = "FootballIsLife",
@@ -72,7 +69,6 @@ public static class AuthSeeder
         var auth4 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "bryan.callen@suspicion.com",
             HashedPassword = hasher.HashPassword("ItsEntirelyPossible"),
             Username = "TheFighter",
@@ -87,7 +83,6 @@ public static class AuthSeeder
         var auth5 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "brendan.schaub@redacted.com",
             HashedPassword = hasher.HashPassword("GadooshBapa"),
             Username = "ThickBoy",
@@ -102,7 +97,6 @@ public static class AuthSeeder
         var auth6 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "eddie.bravo@flatearth.com",
             HashedPassword = hasher.HashPassword("JiuJitsuTruth"),
             Username = "10thPlanet",
@@ -117,7 +111,6 @@ public static class AuthSeeder
         var auth7 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "joey.diaz@coco.com",
             HashedPassword = hasher.HashPassword("TremendousStars"),
             Username = "UncleJoey",
@@ -132,7 +125,6 @@ public static class AuthSeeder
         var auth8 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "tom.segura@ymh.com",
             HashedPassword = hasher.HashPassword("MommyJeans"),
             Username = "TopDog",
@@ -147,7 +139,6 @@ public static class AuthSeeder
         var auth9 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "christina.p@watermom.com",
             HashedPassword = hasher.HashPassword("HighAndTight"),
             Username = "MainMommy",
@@ -162,7 +153,6 @@ public static class AuthSeeder
         var auth10 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "bert.kreischer@machine.com",
             HashedPassword = hasher.HashPassword("ShirtlessComedy"),
             Username = "TheMachine",
@@ -178,7 +168,6 @@ public static class AuthSeeder
         var auth11 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "duncan.trussell@midnight.com",
             HashedPassword = hasher.HashPassword("CosmicLove"),
             Username = "MidnightGospel",
@@ -193,7 +182,6 @@ public static class AuthSeeder
         var auth12 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "andrew.santino@redhair.com",
             HashedPassword = hasher.HashPassword("CheetoFingers"),
             Username = "RedRocket",
@@ -208,7 +196,6 @@ public static class AuthSeeder
         var auth13 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "bobby.lee@tigerbelly.com",
             HashedPassword = hasher.HashPassword("BadFriends"),
             Username = "Nosotros",
@@ -223,7 +210,6 @@ public static class AuthSeeder
         var auth14 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "theo.von@rat.com",
             HashedPassword = hasher.HashPassword("DarkArts"),
             Username = "KingRat",
@@ -238,7 +224,6 @@ public static class AuthSeeder
         var auth15 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "whitney.cummings@robot.com",
             HashedPassword = hasher.HashPassword("GoodForYou"),
             Username = "Robutney",
@@ -253,7 +238,6 @@ public static class AuthSeeder
         var auth16 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "tim.dillon@pigpen.com",
             HashedPassword = hasher.HashPassword("FakeNews"),
             Username = "PigKing",
@@ -268,7 +252,6 @@ public static class AuthSeeder
         var auth17 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "dave.smith@komedy.com",
             HashedPassword = hasher.HashPassword("PartOfTheProblem"),
             Username = "BigJayOakerson",
@@ -283,7 +266,6 @@ public static class AuthSeeder
         var auth18 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "mark.normand@tuesdays.com",
             HashedPassword = hasher.HashPassword("WeAreGay"),
             Username = "Queef",
@@ -298,7 +280,6 @@ public static class AuthSeeder
         var auth19 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "sam.tripoli@tinfoil.com",
             HashedPassword = hasher.HashPassword("BrokenSimulation"),
             Username = "TinfoilHat",
@@ -313,7 +294,6 @@ public static class AuthSeeder
         var auth20 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            AuthId = Guid.NewGuid(),
             Email = "alex.jones@infowars.com",
             HashedPassword = hasher.HashPassword("TurningFrogsGay"),
             Username = "InfoWarrior",

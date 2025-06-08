@@ -17,7 +17,6 @@ public class ServiceDbContext(DbContextOptions<ServiceDbContext> options) : DbCo
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Service>().HasIndex(u => u.Id).IsUnique();
         modelBuilder.Entity<Service>()
             .Property(s => s.TotalPrice)
             .HasComputedColumnSql(
