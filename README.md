@@ -59,7 +59,7 @@ This project uses GitHub Actions to automatically build and test on every push o
 
 Workflow includes:
 - Restoring and building the solution
-- Running all unit tests with xUnit
+- Running all unit tests with NUnit
 - Validating Docker image build
 
 **📄 CI configuration file: .github/workflows/ci.yml**
