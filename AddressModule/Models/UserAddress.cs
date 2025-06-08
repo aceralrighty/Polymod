@@ -12,7 +12,7 @@ public class UserAddress
 
     [Required]
     [ForeignKey(nameof(UserId))]
-    public User User { get; set; }
+    public User User { get; init; }
 
     [Required][MaxLength(255)] public string Address1 { get; set; }
     [MaxLength(255)] public string? Address2 { get; set; }
@@ -20,11 +20,11 @@ public class UserAddress
     [Required][MaxLength(255)] public string? State { get; set; }
 
     [Required]
-    [RegularExpression(@"^\d{5}(-\d{4})?$", ErrorMessage = "Invalid ZIP code")]
-    public int ZipCode { get; set; }
+    [RegularExpression(@"^[0-9]{5}(?:-[0-9]{4})?$", ErrorMessage = "Invalid ZIP code format. Use 12345 or 12345-6789.")]
+    public string ZipCode { get; set; }
 
     public UserAddress(Guid userId, User user, string? address1, string? address2, string? city, string? state,
-        int? zipCode)
+        string? zipCode)
     {
         UserId = userId;
         User = user;

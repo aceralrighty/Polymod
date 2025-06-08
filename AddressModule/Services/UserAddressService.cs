@@ -29,7 +29,7 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
         return groupedAddress;
     }
 
-    public async Task<List<IGrouping<int, UserAddress>>> GroupByZipCodeAsync()
+    public async Task<List<IGrouping<string, UserAddress>>> GroupByZipCodeAsync()
     {
         List<UserAddress> allAddresses = await _dbSet.ToListAsync();
         var grouped = allAddresses.GroupBy(ua => ua.ZipCode).ToList();

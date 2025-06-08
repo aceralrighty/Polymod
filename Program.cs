@@ -5,6 +5,7 @@ using TBD.ScheduleModule;
 using TBD.ServiceModule;
 using TBD.Shared.Utils;
 using TBD.UserModule;
+using TBD.UserModule.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 

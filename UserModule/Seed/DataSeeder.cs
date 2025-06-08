@@ -7,7 +7,7 @@ using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
-namespace TBD.Data.Seeding;
+namespace TBD.UserModule.Seed;
 
 public static class DataSeeder
 {
@@ -287,7 +287,7 @@ public static class DataSeeder
 
         var addresses = new List<UserAddress>();
 
-        // Comprehensive address variations
+        // Comprehensive address variations - ALL ZIP CODES AS STRINGS
         var addressData = new[]
         {
             // Standard US addresses
@@ -297,7 +297,7 @@ public static class DataSeeder
                 Address2 = "Apt 101",
                 City = "Seattle",
                 State = "WA",
-                ZipCode = 98101
+                ZipCode = "98101"
             },
             new
             {
@@ -305,7 +305,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "San Francisco",
                 State = "CA",
-                ZipCode = 94103
+                ZipCode = "94103"
             },
             new
             {
@@ -313,7 +313,7 @@ public static class DataSeeder
                 Address2 = "Suite 200",
                 City = "New York",
                 State = "NY",
-                ZipCode = 10001
+                ZipCode = "10001"
             },
 
             // Diverse US locations
@@ -323,7 +323,7 @@ public static class DataSeeder
                 Address2 = "Unit 15B",
                 City = "Atlanta",
                 State = "GA",
-                ZipCode = 30309
+                ZipCode = "30309"
             },
             new
             {
@@ -331,7 +331,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Los Angeles",
                 State = "CA",
-                ZipCode = 90069
+                ZipCode = "90069"
             },
             new
             {
@@ -339,7 +339,7 @@ public static class DataSeeder
                 Address2 = "Floor 23",
                 City = "Chicago",
                 State = "IL",
-                ZipCode = 60605
+                ZipCode = "60605"
             },
             new
             {
@@ -347,7 +347,7 @@ public static class DataSeeder
                 Address2 = "Penthouse",
                 City = "Miami",
                 State = "FL",
-                ZipCode = 33139
+                ZipCode = "33139"
             },
             new
             {
@@ -355,7 +355,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Austin",
                 State = "TX",
-                ZipCode = 78701
+                ZipCode = "78701"
             },
 
             // Rural addresses
@@ -365,7 +365,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Smalltown",
                 State = "IA",
-                ZipCode = 50001
+                ZipCode = "50001"
             },
             new
             {
@@ -373,7 +373,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Mountain View",
                 State = "WY",
-                ZipCode = 82414
+                ZipCode = "82414"
             },
 
             // PO Box addresses
@@ -383,7 +383,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Phoenix",
                 State = "AZ",
-                ZipCode = 85001
+                ZipCode = "85001"
             },
             new
             {
@@ -391,7 +391,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Portland",
                 State = "OR",
-                ZipCode = 97201
+                ZipCode = "97201"
             },
 
             // University addresses
@@ -401,7 +401,7 @@ public static class DataSeeder
                 Address2 = "Dormitory Hall Room 201",
                 City = "College Station",
                 State = "TX",
-                ZipCode = 77843
+                ZipCode = "77843"
             },
             new
             {
@@ -409,7 +409,7 @@ public static class DataSeeder
                 Address2 = "Building C, Apt 4",
                 City = "Berkeley",
                 State = "CA",
-                ZipCode = 94720
+                ZipCode = "94720"
             },
 
             // Military/Government
@@ -419,7 +419,7 @@ public static class DataSeeder
                 Address2 = "Room 567",
                 City = "Fort Knox",
                 State = "KY",
-                ZipCode = 40121
+                ZipCode = "40121"
             },
             new
             {
@@ -427,7 +427,7 @@ public static class DataSeeder
                 Address2 = "Suite 890",
                 City = "Washington",
                 State = "DC",
-                ZipCode = 20001
+                ZipCode = "20001"
             },
 
             // Unique/Special addresses
@@ -437,7 +437,7 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Menlo Park",
                 State = "CA",
-                ZipCode = 94025
+                ZipCode = "94025"
             },
             new
             {
@@ -445,7 +445,7 @@ public static class DataSeeder
                 Address2 = "Observation Deck",
                 City = "Seattle",
                 State = "WA",
-                ZipCode = 98109
+                ZipCode = "98109"
             },
             new
             {
@@ -453,7 +453,7 @@ public static class DataSeeder
                 Address2 = "Billboard Location",
                 City = "New York",
                 State = "NY",
-                ZipCode = 10036
+                ZipCode = "10036"
             },
             new
             {
@@ -461,7 +461,51 @@ public static class DataSeeder
                 Address2 = (string)null,
                 City = "Hometown",
                 State = "OH",
-                ZipCode = 44001
+                ZipCode = "44001"
+            },
+
+            // ZIP codes that need leading zeros (common problem areas)
+            new
+            {
+                Address1 = "100 State Street",
+                Address2 = (string)null,
+                City = "Boston",
+                State = "MA",
+                ZipCode = "02101" // Leading zero important
+            },
+            new
+            {
+                Address1 = "200 Liberty Street",
+                Address2 = (string)null,
+                City = "Hartford",
+                State = "CT",
+                ZipCode = "06101" // Leading zero important
+            },
+            new
+            {
+                Address1 = "300 Washington Ave",
+                Address2 = (string)null,
+                City = "Newark",
+                State = "NJ",
+                ZipCode = "07101" // Leading zero important
+            },
+
+            // ZIP+4 examples
+            new
+            {
+                Address1 = "1600 Pennsylvania Avenue NW",
+                Address2 = (string)null,
+                City = "Washington",
+                State = "DC",
+                ZipCode = "20500-0003" // ZIP+4 format
+            },
+            new
+            {
+                Address1 = "350 Fifth Avenue",
+                Address2 = (string)null,
+                City = "New York",
+                State = "NY",
+                ZipCode = "10118-0110" // ZIP+4 format
             }
         };
 
@@ -494,7 +538,7 @@ public static class DataSeeder
                     address2: $"Office {Random.Shared.Next(100, 999)}",
                     city: "Business City",
                     state: "CA",
-                    zipCode: 90210) { Id = Guid.NewGuid() });
+                    zipCode: "90210") { Id = Guid.NewGuid() });
 
                 // Add home address
                 addresses.Add(new UserAddress(
@@ -504,7 +548,7 @@ public static class DataSeeder
                     address2: Random.Shared.Next(0, 2) == 0 ? null : $"Unit {Random.Shared.Next(1, 50)}",
                     city: "Suburbia",
                     state: "TX",
-                    zipCode: 75001) { Id = Guid.NewGuid() });
+                    zipCode: "75001") { Id = Guid.NewGuid() });
             }
         }
 
