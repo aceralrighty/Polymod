@@ -18,7 +18,7 @@ public class ScheduleTest
     [Test]
     public void Constructor_Default_SetsDefaults()
     {
-        var schedule = new Schedule();
+        var schedule = new Schedule();;
 
         Assert.That(schedule.TotalHoursWorked, Is.Null);
         Assert.That(schedule.BasePay, Is.Null);
@@ -34,7 +34,7 @@ public class ScheduleTest
             Username = "User1",
             Password = "<PASSWORD>",
             Email = "user1@example.com",
-            Schedule = new Schedule()
+            Schedule = null
         };
 
         var schedule = new Schedule(userMock);

@@ -6,7 +6,6 @@ using TBD.ScheduleModule.Models;
 
 namespace TBD.UserModule.Models;
 
-[Table("Users")]
 public class User : BaseTableProperties
 {
     [Key] public new Guid Id { get; set; }
