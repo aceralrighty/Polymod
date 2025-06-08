@@ -105,7 +105,7 @@ This will:
 - SQL Server (via Docker)
 - AutoMapper
 - JWT Authentication
-- xUnit
+- NUnit
 - Docker and Docker Compose
 - GitHub Actions (CI)
 
