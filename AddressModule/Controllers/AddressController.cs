@@ -1,14 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
+using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
 namespace TBD.AddressModule.Controllers;
 
-public class AddressController(AddressDbContext context) : Controller
+public class AddressController(AddressDbContext context, UserDbContext userContext) : Controller
 {
+    private readonly UserDbContext _userContext = userContext;
+
     // GET: Address
     public async Task<IActionResult> Index()
     {

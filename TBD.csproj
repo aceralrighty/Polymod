@@ -49,6 +49,14 @@
     <Content Include=".github\workflows\ci.yaml"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\Address\Create.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Address\Delete.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Address\Details.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Address\Edit.cshtml" />
+    <_ContentIncludedByDefault Remove="Views\Address\Index.cshtml" />
+  </ItemGroup>
+
 <!--  <ItemGroup>-->
 <!--    <Compile Include="obj\Debug\net9.0\AssemblyInfo.cs" />-->
 <!--  </ItemGroup>-->

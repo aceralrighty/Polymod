@@ -5,85 +5,147 @@ using TBD.AuthModule.Models;
 
 namespace TBD.AuthModule.Controllers;
 
-[Route("api/[controller]")]
-[ApiController]
-public class AuthController(AuthDbContext context) : ControllerBase
+public class AuthController(AuthDbContext context) : Controller
 {
-    // GET: api/Auth
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<AuthUser>>> GetAuthUsers()
+    // GET: Auth
+    public async Task<IActionResult> Index()
     {
-        return await context.AuthUsers.ToListAsync();
+        return View(await context.AuthUsers.ToListAsync());
     }
 
-    // GET: api/Auth/5
-    [HttpGet("{id:guid}")]
-    public async Task<ActionResult<AuthUser>> GetAuthUser(Guid id)
+    // GET: Auth/Details/5
+    public async Task<IActionResult> Details(Guid? id)
     {
-        var authUser = await context.AuthUsers.FindAsync(id);
+        if (id == null)
+        {
+            return NotFound();
+        }
 
+        var authUser = await context.AuthUsers
+            .FirstOrDefaultAsync(m => m.Id == id);
         if (authUser == null)
         {
             return NotFound();
         }
 
-        return authUser;
+        return View(authUser);
     }
 
-    // PUT: api/Auth/5
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> PutAuthUser(Guid id, AuthUser authUser)
+    // GET: Auth/Create
+    public IActionResult Create()
+    {
+        return View();
+    }
+
+    // POST: Auth/Create
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(
+        [Bind(
+            "AuthId,Username,Email,HashedPassword,RefreshToken,RefreshTokenExpiry,LastLogin,FailedLoginAttempts,Id,CreatedAt,UpdatedAt,DeletedAt")]
+        AuthUser authUser)
+    {
+        if (ModelState.IsValid)
+        {
+            authUser.Id = Guid.NewGuid();
+            context.Add(authUser);
+            await context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        return View(authUser);
+    }
+
+    // GET: Auth/Edit/5
+    public async Task<IActionResult> Edit(Guid? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var authUser = await context.AuthUsers.FindAsync(id);
+        if (authUser == null)
+        {
+            return NotFound();
+        }
+
+        return View(authUser);
+    }
+
+    // POST: Auth/Edit/5
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id,
+        [Bind(
+            "AuthId,Username,Email,HashedPassword,RefreshToken,RefreshTokenExpiry,LastLogin,FailedLoginAttempts,Id,CreatedAt,UpdatedAt,DeletedAt")]
+        AuthUser authUser)
     {
         if (id != authUser.Id)
         {
-            return BadRequest();
+            return NotFound();
         }
 
-        context.Entry(authUser).State = EntityState.Modified;
-
-        try
+        if (ModelState.IsValid)
         {
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!AuthUserExists(id))
+            try
             {
-                return NotFound();
+                context.Update(authUser);
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!AuthUserExists(authUser.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
             }
 
-            throw;
+            return RedirectToAction(nameof(Index));
         }
 
-        return NoContent();
+        return View(authUser);
     }
 
-    // POST: api/Auth
-    // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    [HttpPost]
-    public async Task<ActionResult<AuthUser>> PostAuthUser(AuthUser authUser)
+    // GET: Auth/Delete/5
+    public async Task<IActionResult> Delete(Guid? id)
     {
-        context.AuthUsers.Add(authUser);
-        await context.SaveChangesAsync();
+        if (id == null)
+        {
+            return NotFound();
+        }
 
-        return CreatedAtAction("GetAuthUser", new { id = authUser.Id }, authUser);
-    }
-
-    // DELETE: api/Auth/5
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteAuthUser(Guid id)
-    {
-        var authUser = await context.AuthUsers.FindAsync(id);
+        var authUser = await context.AuthUsers
+            .FirstOrDefaultAsync(m => m.Id == id);
         if (authUser == null)
         {
             return NotFound();
         }
 
-        context.AuthUsers.Remove(authUser);
-        await context.SaveChangesAsync();
+        return View(authUser);
+    }
 
-        return NoContent();
+    // POST: Auth/Delete/5
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    {
+        var authUser = await context.AuthUsers.FindAsync(id);
+        if (authUser != null)
+        {
+            context.AuthUsers.Remove(authUser);
+        }
+
+        await context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
     }
 
     private bool AuthUserExists(Guid id)

@@ -19,7 +19,7 @@ builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddSingleton<JwtTokenGenerator>();
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
 builder.Services.AddAutoMapper(typeof(ServiceMapping));
 builder.Services.AddAutoMapper(typeof(UserAddressMapping));
@@ -55,7 +55,11 @@ if (app.Environment.IsDevelopment())
 
     app.MapOpenApi();
 }
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
 
