@@ -7,8 +7,6 @@ namespace TBD.UserModule.Models;
 
 public class User : BaseTableProperties
 {
-    [Key] public new Guid Id { get; set; }
-
     [Column(TypeName = "varchar(255)")] public required string? Username { get; set; }
 
     [Column(TypeName = "varchar(255)")] public required string? Email { get; set; }

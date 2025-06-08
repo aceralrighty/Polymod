@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace TBD.GenericDBProperties;
 
 public abstract class BaseTableProperties : DateableObject, IWithId
 {
-    public Guid Id { get; set; }
+    [Key] public Guid Id { get; set; }
 }
