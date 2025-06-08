@@ -17,7 +17,7 @@ public class AuthController(AuthDbContext context) : ControllerBase
     }
 
     // GET: api/Auth/5
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<AuthUser>> GetAuthUser(Guid id)
     {
         var authUser = await context.AuthUsers.FindAsync(id);
@@ -32,7 +32,7 @@ public class AuthController(AuthDbContext context) : ControllerBase
 
     // PUT: api/Auth/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<IActionResult> PutAuthUser(Guid id, AuthUser authUser)
     {
         if (id != authUser.Id)
@@ -71,7 +71,7 @@ public class AuthController(AuthDbContext context) : ControllerBase
     }
 
     // DELETE: api/Auth/5
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteAuthUser(Guid id)
     {
         var authUser = await context.AuthUsers.FindAsync(id);
