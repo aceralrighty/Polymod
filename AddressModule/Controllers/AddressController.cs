@@ -1,110 +1,169 @@
-using AutoMapper;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
-using TBD.AddressModule.Services;
-using TBD.API.DTOs;
+using TBD.UserModule.Data;
+using TBD.UserModule.Models;
 
-namespace TBD.AddressModule.Controllers
+namespace TBD.AddressModule.Controllers;
+
+public class AddressController(AddressDbContext context, UserDbContext userContext) : Controller
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class AddressController(IUserAddressService userAddressService, IMapper mapper, AddressDbContext context)
-        : ControllerBase
+    private readonly UserDbContext _userContext = userContext;
+
+    // GET: Address
+    public async Task<IActionResult> Index()
     {
-        // GET: api/Address
-        [Route("api/[controller]/{id}")]
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserAddressResponse>>> GetUserAddresses(Guid id,
-            [FromBody] UserAddressRequest request)
+        var addressDbContext = context.UserAddress.Include(u => u.User);
+        return View(await addressDbContext.ToListAsync());
+    }
+
+    // GET: Address/Details/5
+    public async Task<IActionResult> Details(Guid? id)
+    {
+        if (id == null)
         {
-            var addresses = await userAddressService.GetAllAsync(id);
-            var result = mapper.Map<IEnumerable<UserAddressResponse>>(addresses);
-            return Ok(result);
+            return NotFound();
         }
 
-        // GET: api/Address/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserAddressResponse>> GetUserAddress(Guid id)
+        var userAddress = await context.UserAddress
+            .Include(u => u.User)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (userAddress == null)
         {
-            var address = await userAddressService.GetByIdAsync(id);
-            if (address == null)
-            {
-                return NotFound();
-            }
-
-            var result = mapper.Map<UserAddressResponse>(address);
-            return Ok(result);
+            return NotFound();
         }
 
-        // POST: api/Address
-        [HttpPost]
-        public async Task<ActionResult<UserAddressResponse>> PostUserAddress([FromBody] UserAddressRequest request)
+        return View(userAddress);
+    }
+
+    // GET: Address/Create
+    public IActionResult Create()
+    {
+        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id");
+        return View();
+    }
+
+    // POST: Address/Create
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(
+        [Bind("UserId,Address1,Address2,City,State,ZipCode,Id,CreatedAt,UpdatedAt,DeletedAt")]
+        UserAddress userAddress)
+    {
+        if (ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var entity = mapper.Map<UserAddress>(request);
-            await userAddressService.AddAsync(entity);
-
-            var responseDto = mapper.Map<UserAddressResponse>(entity);
-            return CreatedAtAction(nameof(GetUserAddress), new { id = entity.Id }, responseDto);
-        }
-
-        // PUT: api/Address/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserAddress(Guid id, [FromBody] UserAddressRequest request)
-        {
-            if (id != request.Id)
-                return BadRequest("ID in URL and body must match");
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var existingAddress = await userAddressService.GetByIdAsync(id);
-            if (existingAddress == null)
-                return NotFound();
-
-            // Map the updated values from DTO to existing entity
-            mapper.Map(request, existingAddress);
-            await userAddressService.UpdateAsync(existingAddress);
-
-            return NoContent();
-        }
-
-        // DELETE: api/Address/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserAddress(Guid id)
-        {
-            var address = await context.UserAddress.Where(u => u.DeletedAt == null)
-                .FirstOrDefaultAsync(u => u.Id == id);
-            if (address == null)
-            {
-                return NotFound();
-            }
-
-            // Soft delete: set DeletedAt timestamp instead of removing
-            address.DeletedAt = DateTime.UtcNow;
-            address.UpdatedAt = DateTime.UtcNow;
-
-            context.Entry(address).State = EntityState.Modified;
+            userAddress.Id = Guid.NewGuid();
+            context.Add(userAddress);
             await context.SaveChangesAsync();
-            return NoContent();
+            return RedirectToAction(nameof(Index));
         }
 
-        [HttpDelete("{id}/permanent")]
-        public async Task<IActionResult> DeleteUserAddressPermanently(Guid id)
+        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id", userAddress.UserId);
+        return View(userAddress);
+    }
+
+    // GET: Address/Edit/5
+    public async Task<IActionResult> Edit(Guid? id)
+    {
+        if (id == null)
         {
-            var address = await context.UserAddress.FindAsync(id);
-            if (address == null)
+            return NotFound();
+        }
+
+        var userAddress = await context.UserAddress.FindAsync(id);
+        if (userAddress == null)
+        {
+            return NotFound();
+        }
+
+        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id", userAddress.UserId);
+        return View(userAddress);
+    }
+
+    // POST: Address/Edit/5
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(Guid id,
+        [Bind("UserId,Address1,Address2,City,State,ZipCode,Id,CreatedAt,UpdatedAt,DeletedAt")]
+        UserAddress userAddress)
+    {
+        if (id != userAddress.Id)
+        {
+            return NotFound();
+        }
+
+        if (ModelState.IsValid)
+        {
+            try
             {
-                return NotFound();
+                context.Update(userAddress);
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserAddressExists(userAddress.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
             }
 
-            context.UserAddress.Remove(address);
-            await context.SaveChangesAsync();
-            return NoContent();
+            return RedirectToAction(nameof(Index));
         }
+
+        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id", userAddress.UserId);
+        return View(userAddress);
+    }
+
+    // GET: Address/Delete/5
+    public async Task<IActionResult> Delete(Guid? id)
+    {
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var userAddress = await context.UserAddress
+            .Include(u => u.User)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (userAddress == null)
+        {
+            return NotFound();
+        }
+
+        return View(userAddress);
+    }
+
+    // POST: Address/Delete/5
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    {
+        var userAddress = await context.UserAddress.FindAsync(id);
+        if (userAddress != null)
+        {
+            context.UserAddress.Remove(userAddress);
+        }
+
+        await context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+    }
+
+    private bool UserAddressExists(Guid id)
+    {
+        return context.UserAddress.Any(e => e.Id == id);
     }
 }

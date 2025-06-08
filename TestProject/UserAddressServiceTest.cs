@@ -53,15 +53,15 @@ public class UserAddressServiceTests
         // Create test addresses
         _testAddresses = new List<UserAddress>
         {
-            new UserAddress(_testUser.Id, _testUser, "123 Main St", null, "New York", "NY", 10001)
+            new UserAddress(_testUser.Id, _testUser, "123 Main St", null, "New York", "NY", "10001")
             {
                 Id = Guid.NewGuid()
             },
-            new UserAddress(_testUser.Id, _testUser, "456 Oak Ave", "Apt 2", "Los Angeles", "CA", 90210)
+            new UserAddress(_testUser.Id, _testUser, "456 Oak Ave", "Apt 2", "Los Angeles", "CA", "90210")
             {
                 Id = Guid.NewGuid()
             },
-            new UserAddress(_testUser.Id, _testUser, "789 Pine Rd", null, "New York", "NY", 10002)
+            new UserAddress(_testUser.Id, _testUser, "789 Pine Rd", null, "New York", "NY", "10002")
             {
                 Id = Guid.NewGuid()
             }
@@ -132,9 +132,9 @@ public class UserAddressServiceTests
         // Assert
         Assert.That(grouped, Is.Not.Null);
         Assert.That(grouped.Count, Is.EqualTo(3)); // 10001, 90210, 10002
-        Assert.That(grouped.Any(g => g.ZipCode == 10001), Is.True);
-        Assert.That(grouped.Any(g => g.ZipCode == 90210), Is.True);
-        Assert.That(grouped.Any(g => g.ZipCode == 10002), Is.True);
+        Assert.That(grouped.Any(g => g.ZipCode == "10001"), Is.True);
+        Assert.That(grouped.Any(g => g.ZipCode == "90210"), Is.True);
+        Assert.That(grouped.Any(g => g.ZipCode == "10002"), Is.True);
     }
 
     [Test]
@@ -195,7 +195,7 @@ public class UserAddressServiceTests
     public async Task GetByUserAddressAsync_WithMatchingAddress1_ReturnsUserAddress()
     {
         // Arrange
-        var searchAddress = new UserAddress(_testUser.Id, _testUser, "123 Main St", null, "Test City", "TS", 12345);
+        var searchAddress = new UserAddress(_testUser.Id, _testUser, "123 Main St", null, "Test City", "TS", "12345");
 
         // Act
         var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
@@ -209,7 +209,8 @@ public class UserAddressServiceTests
     public async Task GetByUserAddressAsync_WithMatchingAddress2_ReturnsUserAddress()
     {
         // Arrange
-        var searchAddress = new UserAddress(_testUser.Id, _testUser, "Different St", "Apt 2", "Test City", "TS", 12345);
+        var searchAddress =
+            new UserAddress(_testUser.Id, _testUser, "Different St", "Apt 2", "Test City", "TS", "12345");
 
         // Act
         var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
@@ -224,7 +225,7 @@ public class UserAddressServiceTests
     {
         // Arrange
         var searchAddress = new UserAddress(_testUser.Id, _testUser, "Non-existent St", "Non-existent Apt", "Test City",
-            "TS", 12345);
+            "TS", "12345");
 
         // Act & Assert
         Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -296,13 +297,13 @@ public class UserAddressServiceTests
     public async Task FindAsync_WithComplexExpression_ReturnsMatchingAddresses()
     {
         // Act
-        var result = await _userAddressService.FindAsync(ua => ua.City == "New York" && ua.ZipCode > 10001);
+        var result = await _userAddressService.FindAsync(ua => ua.City == "New York" && ua.ZipCode == "10002");;
 
         // Assert
         var userAddresses = result.ToList();
         Assert.That(userAddresses, Is.Not.Null);
-        Assert.That(userAddresses.Count(), Is.EqualTo(1));
-        Assert.That(userAddresses.First().ZipCode, Is.EqualTo(10002));
+        Assert.That(userAddresses.Count, Is.EqualTo(1));
+        Assert.That(userAddresses.First().ZipCode, Is.EqualTo("10002"));
     }
 
     #endregion
@@ -356,7 +357,7 @@ public class UserAddressServiceTests
         // Arrange
         var newAddress =
             new UserAddress(_testUser.Id, _testUser, "999 New St", null, "Chicago", "IL",
-                60601) { Id = Guid.NewGuid() };
+                "60601") { Id = Guid.NewGuid() };
 
         // Act
         await _userAddressService.AddAsync(newAddress);
@@ -385,11 +386,11 @@ public class UserAddressServiceTests
         // Arrange
         var newAddresses = new List<UserAddress>
         {
-            new UserAddress(_testUser.Id, _testUser, "111 First St", null, "Boston", "MA", 02101)
+            new UserAddress(_testUser.Id, _testUser, "111 First St", null, "Boston", "MA", "02101")
             {
                 Id = Guid.NewGuid()
             },
-            new UserAddress(_testUser.Id, _testUser, "222 Second St", null, "Boston", "MA", 02102)
+            new UserAddress(_testUser.Id, _testUser, "222 Second St", null, "Boston", "MA", "02102")
             {
                 Id = Guid.NewGuid()
             }
@@ -570,7 +571,7 @@ public class UserAddressServiceTests
     {
         // Arrange
         var newAddress =
-            new UserAddress(_testUser.Id, _testUser, "Integration Test St", null, "Test City", "TC", 12345)
+            new UserAddress(_testUser.Id, _testUser, "Integration Test St", null, "Test City", "TC", "12345")
             {
                 Id = Guid.NewGuid()
             };
