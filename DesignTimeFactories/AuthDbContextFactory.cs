@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using TBD.AddressModule.Data;
+using TBD.AuthModule.Data;
 
 namespace TBD.DesignTimeFactories;
 
-public class AddressDbContextFactory : IDesignTimeDbContextFactory<AddressDbContext>
+public class AuthDbContextFactory : IDesignTimeDbContextFactory<AuthDbContext>
 {
-    public AddressDbContext CreateDbContext(string[] args)
+    public AuthDbContext CreateDbContext(string[] args)
     {
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
@@ -16,14 +16,16 @@ public class AddressDbContextFactory : IDesignTimeDbContextFactory<AddressDbCont
             .AddJsonFile($"appsettings.{environment}.json", optional: true)
             .Build();
 
-        var connectionString = configuration.GetConnectionString("AddressDb");
+        var connectionString = configuration.GetConnectionString("AuthDb");
 
         if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException("Connection string 'AddressDb' not found.");
+        {
+            throw new InvalidOperationException("Connection string 'AuthDb' not found.");
+        }
 
-        var optionsBuilder = new DbContextOptionsBuilder<AddressDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        var optionBuilder = new DbContextOptionsBuilder<AuthDbContext>();
+        optionBuilder.UseSqlServer(connectionString);
 
-        return new AddressDbContext(optionsBuilder.Options);
+        return new AuthDbContext(optionBuilder.Options);
     }
 }

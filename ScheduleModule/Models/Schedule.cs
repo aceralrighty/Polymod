@@ -6,8 +6,7 @@ using TBD.UserModule.Models;
 
 namespace TBD.ScheduleModule.Models;
 
-[Table("Schedule")]
-public sealed class Schedule : BaseTableProperties
+public class Schedule : BaseTableProperties
 {
     public double? TotalHoursWorked { get; set; }
 
@@ -21,10 +20,13 @@ public sealed class Schedule : BaseTableProperties
         User = user;
     }
 
-    public Guid UserId { get; set; }
+
+    [Required] public Guid UserId { get; set; }
 
     // Navigation property with ForeignKey attribute referencing the property name
-    [ForeignKey("UserId")] [Required] public User User { get; set; }
+    [ForeignKey(nameof(UserId))]
+    [Required]
+    public User User { get; set; }
 
     public double? BasePay { get; set; }
 

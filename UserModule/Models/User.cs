@@ -1,12 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TBD.AuthModule.Models;
 using TBD.GenericDBProperties;
 using TBD.ScheduleModule.Models;
 
 namespace TBD.UserModule.Models;
 
-[Table("Users")]
 public class User : BaseTableProperties
 {
     [Key] public new Guid Id { get; set; }
