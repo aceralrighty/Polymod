@@ -1,4 +1,5 @@
 using Serilog;
+using Serilog.Formatting.Display;
 using ILogger = Serilog.ILogger;
 
 namespace TBD.MetricsModule.Services;
@@ -8,10 +9,11 @@ public class MetricsService(string moduleName) : IMetricsService
     private readonly ILogger _metricsLogger = new LoggerConfiguration()
         .WriteTo.File(
             path: $"Logs/{moduleName.ToLower()}-metrics.log",
+            rollingInterval: RollingInterval.Minute,
             shared: false, // Prevent file sharing between loggers
             fileSizeLimitBytes: 50 * 1024 * 1024, // 50MB limit per file
             rollOnFileSizeLimit: true, // Roll when the size limit is reached
-            retainedFileCountLimit: 10 // Keep 10 files max
+            retainedFileCountLimit: 10
         )
         .CreateLogger();
 
@@ -21,7 +23,7 @@ public class MetricsService(string moduleName) : IMetricsService
     {
         MetricsCollector.Instance.Increment(key);
         var newValue = MetricsCollector.Instance.Get(key);
-        _metricsLogger.Information("Metric incremented: {MetricKey} -> {NewValue}", key, newValue);
+        _metricsLogger.Information("Metric incremented: {MetricKey}:-> {NewValue}", key, newValue);
     }
 
     public int GetCount(string key) => MetricsCollector.Instance.Get(key);
