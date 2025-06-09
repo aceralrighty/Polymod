@@ -22,8 +22,7 @@ public class UserSchedule
         ? OvertimeRate + (BasePay * TotalHoursWorked)
         : BasePay * TotalHoursWorked;
 
-    [Column(TypeName = "nvarchar(max)")]
-    public string DaysWorkedJson { get; set; } = "{}";
+    [Column(TypeName = "nvarchar(max)")] public string DaysWorkedJson { get; set; } = "{}";
 
     [NotMapped]
     public Dictionary<string, int> DaysWorked

@@ -1,6 +1,6 @@
 namespace TBD.API.DTOs;
 
-public class ServiceDTO : CreateServiceDto
+public class ServiceDto : CreateServiceDto
 {
     public Guid Id { get; set; }
 }
