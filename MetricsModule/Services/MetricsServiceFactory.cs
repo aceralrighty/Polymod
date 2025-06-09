@@ -2,8 +2,8 @@ namespace TBD.MetricsModule.Services;
 
 public class MetricsServiceFactory : IMetricsServiceFactory
 {
-    public IMetricsService CreateMetricsService(string fileName)
+    public IMetricsService CreateMetricsService(string moduleName)
     {
-        return new MetricsService(fileName);
+        return new MetricsService(moduleName);
     }
 }

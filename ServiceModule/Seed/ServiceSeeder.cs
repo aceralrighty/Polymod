@@ -11,7 +11,9 @@ public static class ServiceSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var serviceContext = scope.ServiceProvider.GetRequiredService<ServiceDbContext>();
-        var metricsService = scope.ServiceProvider.GetRequiredService<IMetricsService>();
+        var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
+        var metricsService = factory.CreateMetricsService("ServiceModule");
+
 
         metricsService.IncrementCounter("seeding.service_database_recreate_started");
 

@@ -11,7 +11,9 @@ public static class AuthSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var authContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-        var metricsService = scope.ServiceProvider.GetRequiredService<IMetricsService>();
+        var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
+        var metricsService = factory.CreateMetricsService("AuthModule");
+
 
         metricsService.IncrementCounter("seeding.database_recreate_started");
 

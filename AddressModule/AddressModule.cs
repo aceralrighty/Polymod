@@ -17,7 +17,7 @@ public static class AddressModule
         services.AddScoped<IMetricsService>(provider =>
         {
             var factory = provider.GetRequiredService<IMetricsServiceFactory>();
-            return factory.CreateMetricsService("Address");
+            return factory.CreateMetricsService("AddressModule");
         });
         services.AddAutoMapper(typeof(AddressModule).Assembly);
         return services;

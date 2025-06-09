@@ -15,7 +15,9 @@ public static class ScheduleSeeder
         using var scope = serviceProvider.CreateScope();
         var scheduleContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
-        var metricsService = scope.ServiceProvider.GetRequiredService<IMetricsService>();
+        var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
+        var metricsService = factory.CreateMetricsService("ScheduleModule");
+
 
         metricsService.IncrementCounter("seeding.schedule_reseed_started");
 

@@ -15,6 +15,8 @@ public class MetricsService(string moduleName) : IMetricsService
         )
         .CreateLogger();
 
+
+
     public void IncrementCounter(string key)
     {
         MetricsCollector.Instance.Increment(key);
