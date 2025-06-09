@@ -71,7 +71,7 @@ This project uses **GitHub Actions** to build, test, and validate Docker builds 
 
 ### Workflow Steps:
 - Restore and build solution
-- Run xUnit tests
+- Run NUnit tests
 - Build Docker image to validate containerization
 
 📝 **CI Config:** `.github/workflows/ci.yml`  
