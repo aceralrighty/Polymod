@@ -509,7 +509,7 @@ public static class DataSeeder
             }
         };
 
-        for (int i = 0; i < Math.Min(users.Count, addressData.Length); i++)
+        for (var i = 0; i < Math.Min(users.Count, addressData.Length); i++)
         {
             var addressInfo = addressData[i];
             var address = new UserAddress(

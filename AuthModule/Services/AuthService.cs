@@ -4,6 +4,7 @@ using TBD.AuthModule.Data;
 using TBD.AuthModule.Exceptions;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
+using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 
 namespace TBD.AuthModule.Services;
@@ -13,7 +14,8 @@ public class AuthService(
     AuthDbContext dbContext,
     IConfiguration configuration,
     ILogger<AuthService> logger,
-    IHasher hasher)
+    IHasher hasher,
+    IMetricsService metricsService)
     : IAuthService
 {
     public async Task<AuthUser?> AuthenticateAsync(string username, string password)
@@ -97,6 +99,7 @@ public class AuthService(
             if (string.IsNullOrWhiteSpace(request.Username) ||
                 string.IsNullOrWhiteSpace(request.Password))
             {
+                metricsService.IncrementCounter("Login Failed - Missing Credentials");
                 return new AuthResponse { isSuccessful = false, Message = "Username and password are required" };
             }
 
@@ -125,6 +128,7 @@ public class AuthService(
             // Update user with refresh token
             authUser.RefreshToken = refreshToken;
             authUser.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            metricsService.IncrementCounter("Login succeeded -> User logged in");
             await repository.UpdateAsync(authUser);
 
             logger.LogInformation("User {Username} logged in successfully", authUser.Username);

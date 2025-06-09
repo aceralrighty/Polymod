@@ -1,8 +1,9 @@
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
+using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 
-namespace TBD.Data.Seeding;
+namespace TBD.AuthModule.Seed;
 
 public static class AuthSeeder
 {
@@ -10,18 +11,26 @@ public static class AuthSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var authContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        var metricsService = scope.ServiceProvider.GetRequiredService<IMetricsService>();
+
+        metricsService.IncrementCounter("seeding.database_recreate_started");
 
         await authContext.Database.EnsureDeletedAsync();
         await authContext.Database.EnsureCreatedAsync();
         await authContext.SaveChangesAsync();
 
-        await SeedAuthAsync(authContext);
+        metricsService.IncrementCounter("seeding.database_recreate_completed");
+
+        await SeedAuthAsync(authContext, metricsService);
+
+        metricsService.IncrementCounter("seeding.full_reseed_completed");
     }
 
-    private static async Task SeedAuthAsync(AuthDbContext authContext)
+    private static async Task SeedAuthAsync(AuthDbContext authContext, IMetricsService metricsService)
     {
-        var auths = new List<AuthUser>();
+        metricsService.IncrementCounter("seeding.auth_seed_started");
 
+        var auths = new List<AuthUser>();
         var hasher = new Hasher();
 
         var auth1 = new AuthUser
@@ -311,7 +320,30 @@ public static class AuthSeeder
             auth15, auth16, auth17, auth18, auth19, auth20
         ]);
 
+        // Track users by status
+        var deletedUsers = auths.Where(u => u.DeletedAt.HasValue).Count();
+        var activeUsers = auths.Count - deletedUsers;
+
+        metricsService.IncrementCounter($"seeding.users_created_total");
+        for (int i = 0; i < auths.Count; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_total");
+        }
+
+        for (int i = 0; i < activeUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_active");
+        }
+
+        for (int i = 0; i < deletedUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_deleted");
+        }
+
         await authContext.AuthUsers.AddRangeAsync(auths);
         await authContext.SaveChangesAsync();
+
+        metricsService.IncrementCounter("seeding.database_save_completed");
+        metricsService.IncrementCounter("seeding.auth_seed_completed");
     }
 }
