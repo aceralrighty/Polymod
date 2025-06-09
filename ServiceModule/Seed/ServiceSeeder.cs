@@ -264,11 +264,11 @@ public static class ServiceSeeder
         ]);
 
         // Track service metrics by categories
-        var fitnessServices = services.Where(s => IsFitnessService(s.Title)).Count();
-        var wellnessServices = services.Where(s => IsWellnessService(s.Title)).Count();
-        var premiumServices = services.Where(s => s.Price >= 60).Count();
-        var quickServices = services.Where(s => s.DurationInMinutes <= 45).Count();
-        var longServices = services.Where(s => s.DurationInMinutes >= 75).Count();
+        var fitnessServices = services.Count(s => IsFitnessService(s.Title));
+        var wellnessServices = services.Count(s => IsWellnessService(s.Title));
+        var premiumServices = services.Count(s => s.Price >= 60);
+        var quickServices = services.Count(s => s.DurationInMinutes <= 45);
+        var longServices = services.Count(s => s.DurationInMinutes >= 75);
 
         // Log total services created
         for (int i = 0; i < services.Count; i++)
