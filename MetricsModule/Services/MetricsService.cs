@@ -10,7 +10,7 @@ public class MetricsService(string moduleName) : IMetricsService
             path: $"Logs/{moduleName.ToLower()}-metrics.log",
             shared: false, // Prevent file sharing between loggers
             fileSizeLimitBytes: 50 * 1024 * 1024, // 50MB limit per file
-            rollOnFileSizeLimit: true, // Roll when size limit is reached
+            rollOnFileSizeLimit: true, // Roll when the size limit is reached
             retainedFileCountLimit: 10 // Keep 10 files max
         )
         .CreateLogger();
@@ -21,7 +21,7 @@ public class MetricsService(string moduleName) : IMetricsService
     {
         MetricsCollector.Instance.Increment(key);
         var newValue = MetricsCollector.Instance.Get(key);
-        _metricsLogger.Information("Metric incremented: {MetricKey} = {NewValue}", key, newValue);
+        _metricsLogger.Information("Metric incremented: {MetricKey} -> {NewValue}", key, newValue);
     }
 
     public int GetCount(string key) => MetricsCollector.Instance.Get(key);
