@@ -120,17 +120,16 @@ This will:
 - Docker and Docker Compose
 - GitHub Actions (CI)
 
-**📦 What's Next?**
+📄 What's Next?
 
-- Finalize business logic and validations across all modules
-- Add Swagger/OpenAPI support for better API documentation
-- Implement comprehensive logging and monitoring
-- Add API versioning and rate limiting
-- Begin breaking into microservices
-- Add centralized configuration management
-- Experiment with alternative ORMs and patterns for deeper understanding
-- Implement caching strategies
-- Add integration tests
+- ✅ Finalize logging and metrics per module
+- 🔲 Add Swagger/OpenAPI for API documentation
+- 🔲 Introduce API versioning and rate limiting
+- 🔲 Add integration tests for all major API flows
+- 🔲 Begin splitting key modules into standalone services
+- 🔲 Add Redis or MemoryCache for read performance
+- 🔲 Refactor shared utility layer into namespaces (Crypto, Mapping, Extensions)
+- 🔲 Explore Dapper or alternative ORMs for focused modules
 
 **🙌 Contributions**
 
