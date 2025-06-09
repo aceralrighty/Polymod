@@ -11,8 +11,8 @@ using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Services;
 using TBD.API.DTOs;
-using TBD.API.Interfaces;
 using TBD.UserModule.Models;
+using TBD.UserModule.Services;
 
 namespace TBD.TestProject;
 

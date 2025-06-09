@@ -15,11 +15,7 @@ public static class ServiceModule
             options.UseSqlServer(configuration.GetConnectionString("ServiceDb")));
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IServicesService, ServicesService>();
-        services.AddScoped<IMetricsService>(provider =>
-        {
-            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
-            return factory.CreateMetricsService("service");
-        });
+        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
         services.AddAutoMapper(typeof(ServiceMapping).Assembly);
         return services;
     }

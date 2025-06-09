@@ -17,11 +17,8 @@ public static class AuthModule
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IHasher, Hasher>();
-        services.AddScoped<IMetricsService>(provider =>
-        {
-            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
-            return factory.CreateMetricsService("auth");
-        });
+        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
+
         services.AddAutoMapper(typeof(AuthModule).Assembly);
 
         return services;

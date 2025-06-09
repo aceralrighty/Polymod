@@ -1,6 +1,5 @@
 using AutoMapper;
 using TBD.API.DTOs;
-using TBD.API.Interfaces;
 using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 using TBD.UserModule.Models;
@@ -12,8 +11,10 @@ public class UserService(
     IUserRepository userRepository,
     IMapper mapper,
     IHasher hasher,
-    IMetricsService _metricsService) : IUserService
+    IMetricsServiceFactory metricsServiceFactory) : IUserService
 {
+    private readonly IMetricsService _metricsService = metricsServiceFactory.CreateMetricsService("UserModule");
+
     public async Task<UserDto?> GetUserByIdAsync(Guid id)
     {
         _metricsService.IncrementCounter("user.get_by_id.attempt");

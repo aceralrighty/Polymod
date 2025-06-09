@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.API.Interfaces;
 using TBD.MetricsModule;
 using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
@@ -19,11 +18,7 @@ public static class UserModule
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IHasher, Hasher>();
-        services.AddScoped<IMetricsService>(provider =>
-        {
-            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
-            return factory.CreateMetricsService("user");
-        });
+        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
         services.AddAutoMapper(typeof(UserMapping).Assembly);
 
         return services;

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TBD.API.DTOs;
-using TBD.API.Interfaces;
+using TBD.UserModule.Services;
 
 namespace TBD.UserModule.Controllers;
 
