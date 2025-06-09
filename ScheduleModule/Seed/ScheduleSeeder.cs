@@ -4,6 +4,7 @@ using TBD.ScheduleModule.Models;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
+using TBD.MetricsModule.Services;
 
 namespace TBD.ScheduleModule.Seed;
 
@@ -14,17 +15,26 @@ public static class ScheduleSeeder
         using var scope = serviceProvider.CreateScope();
         var scheduleContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+        var metricsService = scope.ServiceProvider.GetRequiredService<IMetricsService>();
+
+        metricsService.IncrementCounter("seeding.schedule_reseed_started");
 
         await userContext.Database.EnsureDeletedAsync();
         await scheduleContext.Database.EnsureDeletedAsync();
         await userContext.Database.MigrateAsync();
         await scheduleContext.Database.MigrateAsync();
 
-        await SeedScheduleAsync(scheduleContext);
+        metricsService.IncrementCounter("seeding.schedule_database_recreated");
+
+        await SeedScheduleAsync(scheduleContext, metricsService);
+
+        metricsService.IncrementCounter("seeding.schedule_reseed_completed");
     }
 
-    private static async Task SeedScheduleAsync(ScheduleDbContext scheduleContext)
+    private static async Task SeedScheduleAsync(ScheduleDbContext scheduleContext, IMetricsService metricsService)
     {
+        metricsService.IncrementCounter("seeding.schedule_seed_started");
+
         var schedules = new List<Schedule>();
 
         // Standard 40-hour work week (no overtime)
@@ -279,16 +289,114 @@ public static class ScheduleSeeder
             scheduleMassive, scheduleJustUnder40, scheduleJustUnder60, scheduleHighPayExact60,
             scheduleLowPayMassive, scheduleOneDay, schedulePerfectTiers
         ]);
+
         // I'm actually prouder of this one line than I should be.
         foreach (var calc in schedules)
         {
             calc.RecalculateTotalHours();
         }
 
+        // Track schedules by various categories
+        var regularTimeSchedules = schedules.Count(s => GetTotalHours(s) <= 40);
+        var overtimeSchedules = schedules.Count(s => GetTotalHours(s) > 40 && GetTotalHours(s) <= 60);
+        var doubleOvertimeSchedules = schedules.Count(s => GetTotalHours(s) > 60);
+        var zeroHourSchedules = schedules.Count(s => GetTotalHours(s) == 0);
+        var extremeHourSchedules = schedules.Count(s => GetTotalHours(s) > 80);
+        var highPaySchedules = schedules.Count(s => s.BasePay > 50.00);
+        var lowPaySchedules = schedules.Count(s => s.BasePay < 20.00);
+        var boundarySchedules = schedules.Count(s => IsBoundarySchedule(s));
+        var weekendWorkSchedules = schedules.Count(s => HasWeekendWork(s));
+        var singleDaySchedules = schedules.Count(s => IsSingleDaySchedule(s));
+
+        // Log total schedules created
+        for (int i = 0; i < schedules.Count; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_total");
+        }
+
+        // Log hour-based categories
+        for (int i = 0; i < regularTimeSchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_regular_time");
+        }
+
+        for (int i = 0; i < overtimeSchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_overtime");
+        }
+
+        for (int i = 0; i < doubleOvertimeSchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_double_overtime");
+        }
+
+        for (int i = 0; i < zeroHourSchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_zero_hours");
+        }
+
+        for (int i = 0; i < extremeHourSchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_extreme_hours");
+        }
+
+        // Log pay-based categories
+        for (int i = 0; i < highPaySchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_high_pay");
+        }
+
+        for (int i = 0; i < lowPaySchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_low_pay");
+        }
+
+        // Log pattern-based categories
+        for (int i = 0; i < boundarySchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_boundary_test");
+        }
+
+        for (int i = 0; i < weekendWorkSchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_weekend_work");
+        }
+
+        for (int i = 0; i < singleDaySchedules; i++)
+        {
+            metricsService.IncrementCounter("seeding.schedules_created_single_day");
+        }
+
         await scheduleContext.Schedules.AddRangeAsync(schedules);
         await scheduleContext.SaveChangesAsync();
 
+        metricsService.IncrementCounter("seeding.schedule_database_save_completed");
+        metricsService.IncrementCounter("seeding.schedule_seed_completed");
+
         Console.WriteLine($"Seeded {schedules.Count} schedules with varied overtime patterns");
+    }
+
+    private static int GetTotalHours(Schedule schedule)
+    {
+        return schedule.DaysWorked.Values.Sum();
+    }
+
+    private static bool IsBoundarySchedule(Schedule schedule)
+    {
+        var totalHours = GetTotalHours(schedule);
+        return totalHours is 40 or 41 or 60 or 61;
+    }
+
+    private static bool HasWeekendWork(Schedule schedule)
+    {
+        return schedule.DaysWorked.GetValueOrDefault("Saturday", 0) > 0 ||
+               schedule.DaysWorked.GetValueOrDefault("Sunday", 0) > 0;
+    }
+
+    private static bool IsSingleDaySchedule(Schedule schedule)
+    {
+        var daysWithWork = schedule.DaysWorked.Values.Count(hours => hours > 0);
+        return daysWithWork == 1;
     }
 
     private static User CreateScheduleUser(string username, string password, string email)
