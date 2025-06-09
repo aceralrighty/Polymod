@@ -1,100 +1,111 @@
-**TBD Modular Monolith (.NET Learning Project)**
+# TBD Modular Monolith (.NET Learning Project)
 
-This is a personal project aimed at deepening my understanding of the ```.NET framework```, ```Entity Framework Core```,
+This is a personal project aimed at deepening my understanding of the `.NET framework`, `Entity Framework Core`,
 and building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application
-for better scalability and maintainability.
+for better scalability, maintainability, and eventual transition toward microservices.
 
-The project includes separate modules for Authentication, User, Address, Schedule, and Service management—each with its own domain
-logic, DbContext, models, repositories, and services. Each module follows a clean architecture pattern with clear separation of concerns.
+Each module encapsulates its own domain: Authentication, User, Address, Schedule, Service, and Metrics—each with its own
+DbContext, models, repositories, and services. Logging, seeding, and testing are also organized per module.
 
-**🧱 Project Structure**
+---
+
+## 🧱 Project Structure
 
 ```plaintext
 .
 ├── API                      # Shared DTOs and data transfer objects
-│   └── DTOs                 # Request/Response models and shared DTOs
-│       └── AuthDTO          # Authentication-specific DTOs
-├── AuthModule               # Authentication and authorization logic
+│   └── DTOs                 # Request/Response models
+├── AuthModule               # Authentication & JWT token logic
 │   ├── Controllers, Data, Models, Repositories, Services
 │   ├── Exceptions           # Auth-specific exception handling
-│   └── Seed                 # Authentication data seeding
-├── AddressModule            # Address management logic
+│   └── Seed                 # Data seeding logic
+├── AddressModule            # Address storage and region validation
 │   ├── Controllers, Data, Models, Repositories, Services
-│   ├── Exceptions           # Address-specific exception handling
-│   └── Seed                 # Address data seeding
-├── ScheduleModule           # Schedule management logic
+│   ├── Exceptions
+│   └── Seed
+├── ScheduleModule           # Schedule tracking and availability
 │   ├── Controllers, Data, Models, Repositories, Services
-│   └── Seed                 # Schedule data seeding
-├── ServiceModule            # Service management logic
+│   └── Seed
+├── ServiceModule            # Service listings and domain logic
 │   ├── Controllers, Data, Models, Repositories, Services
-│   └── Seed                 # Service data seeding
-├── UserModule               # User management logic (if present)
-├── Shared                   # Cross-cutting concerns and utilities
+│   └── Seed
+├── MetricsModule            # Custom metric tracking (API hits, seeding ops)
+│   └── Services             # Singleton pattern for in-memory counters
+├── Shared                   # Cross-cutting concerns
 │   ├── Repositories         # Generic repository patterns
-│   └── Utils                # Mapping profiles, authentication utilities, and helpers
-├── GenericDBProperties      # Base model interfaces and shared database properties
-├── DesignTimeFactories      # EF Core design-time context factories for migrations
-├── Migrations               # EF Core migrations organized by module/database
-│   ├── AuthDb, ScheduleDb, ServiceDb, UserDb
-├── TestProject              # xUnit tests for services and repositories
-├── TBD.http                 # HTTP requests for manual API testing
-├── Dockerfile               # Docker build setup for API
-├── docker-compose.yml       # SQL Server and API orchestration
-├── .github/workflows/ci.yml # GitHub Actions CI pipeline
+│   └── Utils                # Hashing, JWTs, mappers
+├── GenericDBProperties      # Base entity contracts (Id, timestamps, etc.)
+├── DesignTimeFactories      # EF Core factories for migrations
+├── Migrations               # EF Core migrations by module
+│   ├── AuthDb, ScheduleDb, ServiceDb, UserDb, AddressDb
+├── Logs                     # Per-module metric log files (Serilog output)
+│   ├── authmodule-metrics.log
+│   ├── usermodule-metrics.log
+│   ├── schedulemodule-metrics.log
+│   └── servicemodule-metrics.log
+├── TestProject              # xUnit + Moq tests per service
+├── Dockerfile               # API Docker build
+├── docker-compose.yml       # Orchestration for SQL Server + API
+├── .github/workflows/ci.yml # CI pipeline config
 └── Program.cs, appsettings.json, etc.
 ```
 
-**🏗️ Architecture Highlights**
 
-- **Modular Design**: Each business domain (Auth, Address, Schedule, Service) is encapsulated in its own module
-- **Database Per Module**: Each module maintains its own DbContext and database schema
-- **Generic Repository Pattern**: Shared repository abstractions for common CRUD operations
-- **Exception Handling**: Module-specific exceptions for better error management
-- **Comprehensive Testing**: Unit tests covering services and repositories across all modules
-- **Data Seeding**: Automated data seeding capabilities for each module
+---
 
-**🔁 CI/CD Pipeline**
+## 🏗️ Architecture Highlights
 
-This project uses GitHub Actions to automatically build and test on every push or pull request to the main branch.
+- **Modular Design**: Self-contained modules with clearly defined service boundaries
+- **Database Per Module**: Each module uses its own `DbContext` and owns its schema
+- **Custom Metrics Tracking**: Singleton-based in-memory counters written to per-module logs
+- **Generic Repository Pattern**: Shared data access logic via reusable base repositories
+- **Exception Handling**: Domain-specific exceptions handled cleanly across modules
+- **Automated Seeding**: Seeders for test/development with observable metrics
+- **Comprehensive Testing**: xUnit test coverage on core business logic with Moq and in-memory DBs
 
-Workflow includes:
-- Restoring and building the solution
-- Running all unit tests with NUnit
-- Validating Docker image build
+---
 
-**📄 CI configuration file: .github/workflows/ci.yml**
+## 🔁 CI/CD Pipeline
 
-You can monitor the workflow under the Actions tab on GitHub.
+This project uses **GitHub Actions** to build, test, and validate Docker builds on every push to `main`.
 
-🛠️ **Future goals**: Add deployment steps to publish Docker images to a container registry or deploy to cloud infrastructure
-like Azure or AWS.
+### Workflow Steps:
+- Restore and build solution
+- Run xUnit tests
+- Build Docker image to validate containerization
 
-**🧪 Goals**
+📝 **CI Config:** `.github/workflows/ci.yml`  
+📌 *Deployment coming soon* — planned integration with Azure/AWS container services.
 
-- Grow fluency in .NET and Entity Framework Core
-- Practice building a backend using modular monolith architecture
-- Learn to seed data, manage multiple DbContexts, and configure dependency injection
-- Implement comprehensive authentication and authorization
-- Master exception handling and error management patterns
-- Prepare to transition into a microservices architecture:
-    - Define clear service boundaries
-    - Implement inter-service communication (REST, gRPC)
-    - Explore database-per-service and event-driven designs
+---
 
-**🐳 Docker Setup**
+## 📦 Goals
 
-This project uses Docker to spin up a SQL Server container alongside the backend API.
+- Deepen mastery of `.NET 8` and `Entity Framework Core`
+- Practice building scalable systems with **modular monolith** patterns
+- Explore metrics and observability within the backend
+- Build out clean seeding, migrations, and modular data management
+- Strengthen testing discipline using real-life scenarios
+- Prepare the foundation for microservice splitting:
+    - Inter-module isolation
+    - REST or gRPC communication interfaces
+    - Database-per-service readiness
 
-To get started:
+---
+
+## 🐳 Docker Setup
+
+The app runs alongside a **SQL Server** container using `docker-compose`.
 
 ```bash
 docker-compose up --build
 ```
 
 This will:
-- Start a SQL Server container with the correct ports and environment variables
-- Build and run the backend API
-- Apply database migrations for all modules
+- Starts SQL Server with port 1433
+- Builds and launches the backend API
+- Applies all pending migrations
+- Logs metric outputs to /Logs by module
 
 ⚠️ **Ensure Docker is running and port ```1433``` is available on your system.**
 
