@@ -17,13 +17,20 @@ public class ServiceDbContext(DbContextOptions<ServiceDbContext> options) : DbCo
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Service>()
-            .Property(s => s.TotalPrice)
-            .HasComputedColumnSql(
-                "CAST(ROUND(CASE " +
-                "WHEN [DurationInMinutes] < 60 THEN ([Price] / 60.0 * [DurationInMinutes]) " +
-                "ELSE [Price] * ([DurationInMinutes] / 60.0) END, 2) AS DECIMAL(18,2))",
-                stored: true
-            );
+        modelBuilder.Entity<Service>(entity =>
+        {
+            entity.Property(s => s.Price)
+                .HasPrecision(18, 2);
+
+
+            entity.Property(s => s.TotalPrice)
+                .HasPrecision(18, 2)
+                .HasComputedColumnSql(
+                    "CAST(ROUND(CASE " +
+                    "WHEN [DurationInMinutes] < 60 THEN ([Price] / 60.0 * [DurationInMinutes]) " +
+                    "ELSE [Price] * ([DurationInMinutes] / 60.0) END, 2) AS DECIMAL(18,2))",
+                    stored: true
+                );
+        });
     }
 }

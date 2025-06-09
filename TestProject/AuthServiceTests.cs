@@ -11,6 +11,7 @@ using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
 using TBD.AuthModule.Services;
+using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 
 namespace TBD.TestProject;
@@ -40,9 +41,9 @@ public class AuthServiceTests
 
         var configDict = new Dictionary<string, string>
         {
-            {"Jwt:Key", "this-is-a-test-secret-that-should-be-long"},
-            {"Jwt:Issuer", "TBD-API"},
-            {"Jwt:Audience", "TBD-Client"}
+            { "Jwt:Key", "this-is-a-test-secret-that-should-be-long" },
+            { "Jwt:Issuer", "TBD-API" },
+            { "Jwt:Audience", "TBD-Client" }
         };
         _configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
 
@@ -51,7 +52,7 @@ public class AuthServiceTests
             _dbContext,
             _configuration,
             _loggerMock.Object,
-            _hasherMock.Object);
+            _hasherMock.Object, new MetricsService("Auth"));
     }
 
     [TearDown]
@@ -112,9 +113,7 @@ public class AuthServiceTests
     {
         var request = new RegisterRequest
         {
-            Username = "newuser",
-            Email = "new@example.com",
-            Password = "securepass123"
+            Username = "newuser", Email = "new@example.com", Password = "securepass123"
         };
 
         _repositoryMock.Setup(r => r.GetUserByUsername("newuser")).ReturnsAsync((AuthUser?)null);
@@ -130,12 +129,7 @@ public class AuthServiceTests
     [Test]
     public async Task RegisterAsync_WithMissingUsername_ReturnsError()
     {
-        var request = new RegisterRequest
-        {
-            Username = "",
-            Email = "missing@example.com",
-            Password = "short"
-        };
+        var request = new RegisterRequest { Username = "", Email = "missing@example.com", Password = "short" };
 
         var response = await _authService.RegisterAsync(request);
 
@@ -172,7 +166,6 @@ public class AuthServiceTests
     [Test]
     public async Task RefreshTokenAsync_WithExpiredToken_ReturnsFailure()
     {
-
         var expiredUser = new AuthUser
         {
             Id = Guid.NewGuid(),
@@ -188,7 +181,9 @@ public class AuthServiceTests
         var repoMock = new Mock<IAuthRepository>();
         repoMock.Setup(r => r.GetUserByRefreshToken("oldtoken")).ReturnsAsync(expiredUser);
 
-        var authService = new AuthService(repoMock.Object, _dbContext, _configuration, _loggerMock.Object, _hasherMock.Object);
+        var authService = new AuthService(repoMock.Object, _dbContext, _configuration, _loggerMock.Object,
+            _hasherMock.Object, new MetricsService("Auth"));;
+        ;
 
         var response = await authService.RefreshTokenAsync("oldtoken");
 
@@ -199,7 +194,6 @@ public class AuthServiceTests
     [Test]
     public async Task InvalidateRefreshTokenAsync_RemovesTokens()
     {
-
         var user = new AuthUser
         {
             Id = Guid.NewGuid(),

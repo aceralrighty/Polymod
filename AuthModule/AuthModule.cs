@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Repositories;
 using TBD.AuthModule.Services;
+using TBD.MetricsModule;
+using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 
 namespace TBD.AuthModule;
@@ -15,7 +17,13 @@ public static class AuthModule
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IHasher, Hasher>();
+        services.AddScoped<IMetricsService>(provider =>
+        {
+            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
+            return factory.CreateMetricsService("auth");
+        });
         services.AddAutoMapper(typeof(AuthModule).Assembly);
+
         return services;
     }
 }

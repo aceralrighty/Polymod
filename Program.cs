@@ -1,8 +1,11 @@
 using TBD.AddressModule;
 using TBD.AuthModule;
-using TBD.Data.Seeding;
+using TBD.AuthModule.Seed;
+using TBD.MetricsModule;
 using TBD.ScheduleModule;
+using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
+using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
@@ -11,13 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Services.AddMetricsModule();
 
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
-builder.Services.AddSingleton<JwtTokenGenerator>();
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();

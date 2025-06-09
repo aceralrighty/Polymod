@@ -7,7 +7,7 @@ using TBD.AuthModule.Models;
 
 namespace TBD.Shared.Utils;
 
-public class JwtTokenGenerator
+public static class JwtTokenGenerator
 {
     public static string GenerateJwtToken(int length = 32)
     {

@@ -1,8 +1,9 @@
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
+using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 
-namespace TBD.Data.Seeding;
+namespace TBD.AuthModule.Seed;
 
 public static class AuthSeeder
 {
@@ -10,18 +11,28 @@ public static class AuthSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var authContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+        var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
+        var metricsService = factory.CreateMetricsService("AuthModule");
+
+
+        metricsService.IncrementCounter("seeding.database_recreate_started");
 
         await authContext.Database.EnsureDeletedAsync();
         await authContext.Database.EnsureCreatedAsync();
         await authContext.SaveChangesAsync();
 
-        await SeedAuthAsync(authContext);
+        metricsService.IncrementCounter("seeding.database_recreate_completed");
+
+        await SeedAuthAsync(authContext, metricsService);
+
+        metricsService.IncrementCounter("seeding.full_reseed_completed");
     }
 
-    private static async Task SeedAuthAsync(AuthDbContext authContext)
+    private static async Task SeedAuthAsync(AuthDbContext authContext, IMetricsService metricsService)
     {
-        var auths = new List<AuthUser>();
+        metricsService.IncrementCounter("seeding.auth_seed_started");
 
+        var auths = new List<AuthUser>();
         var hasher = new Hasher();
 
         var auth1 = new AuthUser
@@ -87,7 +98,7 @@ public static class AuthSeeder
             HashedPassword = hasher.HashPassword("GadooshBapa"),
             Username = "ThickBoy",
             FailedLoginAttempts = 0,
-            RefreshToken = JwtTokenGenerator.GenerateJwtToken(32),
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
             RefreshTokenExpiry = DateTime.UtcNow.AddDays(20),
             CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(30),
             UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(35),
@@ -311,7 +322,110 @@ public static class AuthSeeder
             auth15, auth16, auth17, auth18, auth19, auth20
         ]);
 
+        // Track users by various categories
+        var deletedUsers = auths.Count(u => u.DeletedAt.HasValue);
+        var activeUsers = auths.Count - deletedUsers;
+        var secureUsers = auths.Count(u => IsSecureUser(u));
+        var riskUsers = auths.Count(u => IsRiskUser(u));
+        var recentUsers = auths.Count(u => IsRecentUser(u));
+        var longTokenUsers = auths.Count(u => IsLongTokenUser(u));
+        var shortTokenUsers = auths.Count(u => IsShortTokenUser(u));
+        var frequentFailedLoginUsers = auths.Count(u => u.FailedLoginAttempts >= 3);
+        var expiringSoonUsers = auths.Count(u => IsExpiringSoon(u));
+
+        // Log total users created
+        for (int i = 0; i < auths.Count; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_total");
+        }
+
+        // Log user status categories
+        for (int i = 0; i < activeUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_active");
+        }
+
+        for (int i = 0; i < deletedUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_deleted");
+        }
+
+        // Log security-related categories
+        for (int i = 0; i < secureUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_secure");
+        }
+
+        for (int i = 0; i < riskUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_risk");
+        }
+
+        for (int i = 0; i < frequentFailedLoginUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_frequent_failed_logins");
+        }
+
+        // Log activity-related categories
+        for (int i = 0; i < recentUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_recent");
+        }
+
+        for (int i = 0; i < expiringSoonUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_expiring_soon");
+        }
+
+        // Log token-related categories
+        for (int i = 0; i < longTokenUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_long_token");
+        }
+
+        for (int i = 0; i < shortTokenUsers; i++)
+        {
+            metricsService.IncrementCounter("seeding.users_created_short_token");
+        }
+
         await authContext.AuthUsers.AddRangeAsync(auths);
         await authContext.SaveChangesAsync();
+
+        metricsService.IncrementCounter("seeding.database_save_completed");
+        metricsService.IncrementCounter("seeding.auth_seed_completed");
+    }
+
+    private static bool IsSecureUser(AuthUser user)
+    {
+        return user.FailedLoginAttempts == 0 &&
+               user.RefreshTokenExpiry > DateTime.UtcNow.AddDays(20) &&
+               !user.DeletedAt.HasValue;
+    }
+
+    private static bool IsRiskUser(AuthUser user)
+    {
+        return user.FailedLoginAttempts >= 5 ||
+               user.RefreshTokenExpiry < DateTime.UtcNow.AddDays(7) ||
+               user.DeletedAt.HasValue;
+    }
+
+    private static bool IsRecentUser(AuthUser user)
+    {
+        return user.LastLogin > DateTime.UtcNow.AddDays(-7);
+    }
+
+    private static bool IsLongTokenUser(AuthUser user)
+    {
+        return user.RefreshTokenExpiry > DateTime.UtcNow.AddDays(25);
+    }
+
+    private static bool IsShortTokenUser(AuthUser user)
+    {
+        return user.RefreshTokenExpiry < DateTime.UtcNow.AddDays(10);
+    }
+
+    private static bool IsExpiringSoon(AuthUser user)
+    {
+        return user.RefreshTokenExpiry < DateTime.UtcNow.AddDays(7);
     }
 }

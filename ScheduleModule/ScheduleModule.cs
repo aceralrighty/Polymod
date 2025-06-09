@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.Services;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Repositories;
 using TBD.ScheduleModule.Services;
@@ -12,6 +13,11 @@ public static class ScheduleModule
         services.AddDbContext<ScheduleDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("ScheduleDb")));
         services.AddScoped<IScheduleRepository, ScheduleRepository>();
+        services.AddScoped<IMetricsService>(provider =>
+        {
+            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
+            return factory.CreateMetricsService("schedule");
+        });
         services.AddScoped<IScheduleService, ScheduleService>();
         return services;
     }

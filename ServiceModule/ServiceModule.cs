@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.Services;
 using TBD.ServiceModule.Data;
 using TBD.ServiceModule.Repositories;
 using TBD.ServiceModule.Services;
@@ -14,6 +15,11 @@ public static class ServiceModule
             options.UseSqlServer(configuration.GetConnectionString("ServiceDb")));
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IServicesService, ServicesService>();
+        services.AddScoped<IMetricsService>(provider =>
+        {
+            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
+            return factory.CreateMetricsService("service");
+        });
         services.AddAutoMapper(typeof(ServiceMapping).Assembly);
         return services;
     }

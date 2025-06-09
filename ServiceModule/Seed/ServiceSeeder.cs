@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.Services;
 using TBD.ServiceModule.Data;
 using TBD.ServiceModule.Models;
 
-namespace TBD.Data.Seeding;
+namespace TBD.ServiceModule.Seed;
 
 public static class ServiceSeeder
 {
@@ -10,16 +11,26 @@ public static class ServiceSeeder
     {
         using var scope = serviceProvider.CreateScope();
         var serviceContext = scope.ServiceProvider.GetRequiredService<ServiceDbContext>();
+        var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
+        var metricsService = factory.CreateMetricsService("ServiceModule");
 
+
+        metricsService.IncrementCounter("seeding.service_database_recreate_started");
 
         await serviceContext.Database.EnsureDeletedAsync();
         await serviceContext.Database.MigrateAsync();
 
-        await SeedServiceAsync(serviceContext);
+        metricsService.IncrementCounter("seeding.service_database_recreate_completed");
+
+        await SeedServiceAsync(serviceContext, metricsService);
+
+        metricsService.IncrementCounter("seeding.service_full_reseed_completed");
     }
 
-    private static async Task SeedServiceAsync(ServiceDbContext serviceContext)
+    private static async Task SeedServiceAsync(ServiceDbContext serviceContext, IMetricsService metricsService)
     {
+        metricsService.IncrementCounter("seeding.service_seed_started");
+
         var services = new List<Service>();
 
         var service1 = new Service
@@ -251,11 +262,67 @@ public static class ServiceSeeder
         services.AddRange([
             service1, service2, service3, service4, service5, service6, service7, service8, service9, service10,
             service11, service12, service13, service14, service15, service16, service17, service18, service19,
-            service20,
-            service21, service22, service23, service24, service25
+            service20, service21, service22, service23, service24, service25
         ]);
+
+        // Track service metrics by categories
+        var fitnessServices = services.Count(s => IsFitnessService(s.Title));
+        var wellnessServices = services.Count(s => IsWellnessService(s.Title));
+        var premiumServices = services.Count(s => s.Price >= 60);
+        var quickServices = services.Count(s => s.DurationInMinutes <= 45);
+        var longServices = services.Count(s => s.DurationInMinutes >= 75);
+
+        // Log total services created
+        for (int i = 0; i < services.Count; i++)
+        {
+            metricsService.IncrementCounter("seeding.services_created_total");
+        }
+
+        // Log service categories
+        for (int i = 0; i < fitnessServices; i++)
+        {
+            metricsService.IncrementCounter("seeding.services_created_fitness");
+        }
+
+        for (int i = 0; i < wellnessServices; i++)
+        {
+            metricsService.IncrementCounter("seeding.services_created_wellness");
+        }
+
+        for (int i = 0; i < premiumServices; i++)
+        {
+            metricsService.IncrementCounter("seeding.services_created_premium");
+        }
+
+        for (int i = 0; i < quickServices; i++)
+        {
+            metricsService.IncrementCounter("seeding.services_created_quick");
+        }
+
+        for (int i = 0; i < longServices; i++)
+        {
+            metricsService.IncrementCounter("seeding.services_created_long");
+        }
 
         await serviceContext.Services.AddRangeAsync(services);
         await serviceContext.SaveChangesAsync();
+
+        metricsService.IncrementCounter("seeding.service_database_save_completed");
+        metricsService.IncrementCounter("seeding.service_seed_completed");
+    }
+
+    private static bool IsFitnessService(string title)
+    {
+        var fitnessKeywords = new[]
+        {
+            "CrossFit", "HIIT", "Boxing", "Kickboxing", "Bootcamp", "Strength", "TRX", "Spinning"
+        };
+        return fitnessKeywords.Any(keyword => title.Contains(keyword, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsWellnessService(string title)
+    {
+        var wellnessKeywords = new[] { "Yoga", "Meditation", "Tai Chi", "Stretching", "Prenatal" };
+        return wellnessKeywords.Any(keyword => title.Contains(keyword, StringComparison.OrdinalIgnoreCase));
     }
 }
