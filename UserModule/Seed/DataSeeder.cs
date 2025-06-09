@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
+using TBD.MetricsModule.Services;
 using TBD.ScheduleModule.Models;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
@@ -17,6 +18,7 @@ public static class DataSeeder
 
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
+        var metricsService = scope.ServiceProvider.GetRequiredService<IMetricsService>();
 
         // Clean DB
         await userContext.Database.EnsureDeletedAsync();
@@ -34,12 +36,15 @@ public static class DataSeeder
             Console.WriteLine("Address context tables already exist, skipping migration");
         }
 
-        await SeedUsersAsync(userContext);
-        await SeedUserAddressesAsync(addressContext, userContext);
+        await SeedUsersAsync(userContext, metricsService);
+        ;
+        metricsService.IncrementCounter("Seeding Users");
+        await SeedUserAddressesAsync(addressContext, userContext, metricsService);
+        metricsService.IncrementCounter("Seeding User Addresses");
     }
 
 
-    private static async Task SeedUsersAsync(UserDbContext context)
+    private static async Task SeedUsersAsync(UserDbContext context, IMetricsService metricsService)
     {
         var baseDate = DateTime.UtcNow;
         var hasher = new Hasher();
@@ -272,11 +277,13 @@ public static class DataSeeder
 
         await context.Set<User>().AddRangeAsync(users);
         await context.SaveChangesAsync();
+        metricsService.IncrementCounter("Users seeded successfully");
 
         Console.WriteLine($"Seeded {users.Count} users");
     }
 
-    private static async Task SeedUserAddressesAsync(AddressDbContext addressContext, UserDbContext context)
+    private static async Task SeedUserAddressesAsync(AddressDbContext addressContext, UserDbContext context,
+        IMetricsService metricsService)
     {
         var users = await context.Set<User>().ToListAsync();
         if (users.Count == 0)
@@ -554,6 +561,7 @@ public static class DataSeeder
 
         await addressContext.UserAddress.AddRangeAsync(addresses);
         await addressContext.SaveChangesAsync();
+        metricsService.IncrementCounter("User addresses seeded successfully");
 
         Console.WriteLine($"Seeded {addresses.Count} addresses for {users.Count} users");
     }

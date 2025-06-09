@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Repositories;
 using TBD.AddressModule.Services;
+using TBD.MetricsModule.Services;
 
 namespace TBD.AddressModule;
 
@@ -13,6 +14,11 @@ public static class AddressModule
             options.UseSqlServer(configuration.GetConnectionString("AddressDb")));
         services.AddScoped<IUserAddressRepository, UserAddressRepository>();
         services.AddScoped<IUserAddressService, UserAddressService>();
+        services.AddScoped<IMetricsService>(provider =>
+        {
+            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
+            return factory.CreateMetricsService("Address");
+        });
         services.AddAutoMapper(typeof(AddressModule).Assembly);
         return services;
     }

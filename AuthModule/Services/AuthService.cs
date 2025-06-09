@@ -27,6 +27,7 @@ public class AuthService(
         if (!hasher.Verify(authUser.HashedPassword, password))
         {
             authUser.FailedLoginAttempts++;
+            metricsService.IncrementCounter("Login Failed - Wrong Password");
             await repository.UpdateAsync(authUser);
             return null;
         }
@@ -34,6 +35,7 @@ public class AuthService(
         // Successful authentication
         authUser.LastLogin = DateTime.UtcNow;
         authUser.FailedLoginAttempts = 0;
+        metricsService.IncrementCounter("Login succeeded -> User authenticated");
         await repository.UpdateAsync(authUser);
         return authUser;
     }

@@ -6,7 +6,7 @@ public static class MetricsModule
 {
     public static IServiceCollection AddMetricsModule(this IServiceCollection services)
     {
-        services.AddSingleton<IMetricsService, MetricsService>();
+        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
         return services;
     }
 }

@@ -5,7 +5,7 @@ using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
-namespace TBD.Data.Seeding;
+namespace TBD.ScheduleModule.Seed;
 
 public static class ScheduleSeeder
 {

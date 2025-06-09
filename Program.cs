@@ -1,9 +1,9 @@
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
-using TBD.Data.Seeding;
 using TBD.MetricsModule;
 using TBD.ScheduleModule;
+using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils;

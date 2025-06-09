@@ -52,7 +52,7 @@ public class AuthServiceTests
             _dbContext,
             _configuration,
             _loggerMock.Object,
-            _hasherMock.Object, new MetricsService());
+            _hasherMock.Object, new MetricsService("Auth"));
     }
 
     [TearDown]
@@ -182,7 +182,7 @@ public class AuthServiceTests
         repoMock.Setup(r => r.GetUserByRefreshToken("oldtoken")).ReturnsAsync(expiredUser);
 
         var authService = new AuthService(repoMock.Object, _dbContext, _configuration, _loggerMock.Object,
-            _hasherMock.Object, new MetricsService());
+            _hasherMock.Object, new MetricsService("Auth"));;
         ;
 
         var response = await authService.RefreshTokenAsync("oldtoken");
