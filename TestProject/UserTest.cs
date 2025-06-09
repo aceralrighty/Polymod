@@ -7,7 +7,7 @@ using Moq;
 using NUnit.Framework;
 using TBD.API.DTOs;
 using TBD.API.Interfaces;
-using TBD.ScheduleModule.Models;
+using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;
@@ -40,7 +40,7 @@ public class UserServiceTests
         _userService = new UserService(
             _userRepositoryMock.Object,
             _mapperMock.Object,
-            _hasherMock.Object // Pass the mocked hasher
+            _hasherMock.Object, new MetricsService("UserModule")
         );
     }
 
