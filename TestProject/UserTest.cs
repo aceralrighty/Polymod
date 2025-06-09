@@ -6,7 +6,6 @@ using AutoMapper;
 using Moq;
 using NUnit.Framework;
 using TBD.API.DTOs;
-using TBD.API.Interfaces;
 using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 using TBD.UserModule.Models;
@@ -40,7 +39,7 @@ public class UserServiceTests
         _userService = new UserService(
             _userRepositoryMock.Object,
             _mapperMock.Object,
-            _hasherMock.Object, new MetricsService("UserModule")
+            _hasherMock.Object, new MetricsServiceFactory()
         );
     }
 

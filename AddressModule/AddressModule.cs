@@ -14,11 +14,6 @@ public static class AddressModule
             options.UseSqlServer(configuration.GetConnectionString("AddressDb")));
         services.AddScoped<IUserAddressRepository, UserAddressRepository>();
         services.AddScoped<IUserAddressService, UserAddressService>();
-        services.AddScoped<IMetricsService>(provider =>
-        {
-            var factory = provider.GetRequiredService<IMetricsServiceFactory>();
-            return factory.CreateMetricsService("AddressModule");
-        });
         services.AddAutoMapper(typeof(AddressModule).Assembly);
         return services;
     }

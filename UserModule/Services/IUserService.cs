@@ -1,6 +1,6 @@
 using TBD.API.DTOs;
 
-namespace TBD.API.Interfaces;
+namespace TBD.UserModule.Services;
 
 public interface IUserService
 {
