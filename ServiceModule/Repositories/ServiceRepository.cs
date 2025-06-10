@@ -8,9 +8,9 @@ namespace TBD.ServiceModule.Repositories;
 internal class ServiceRepository(ServiceDbContext context)
     : GenericRepository<Service>(context), IServiceRepository
 {
-    public override async Task<Service?> GetByIdAsync(Guid id)
+    public override async Task<Service> GetByIdAsync(Guid id)
     {
-        return await _dbSet.FindAsync(id);
+        return await _dbSet.FindAsync(id) ?? throw new NullReferenceException();
     }
 
     public async Task<IEnumerable<Service>> GetAllServicesAsync()
