@@ -15,7 +15,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddMetricsModule();
-
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
