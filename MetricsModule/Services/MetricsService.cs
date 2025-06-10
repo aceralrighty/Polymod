@@ -1,4 +1,5 @@
 using Serilog;
+using Serilog.Formatting.Display;
 using ILogger = Serilog.ILogger;
 
 namespace TBD.MetricsModule.Services;
@@ -13,6 +14,7 @@ public class MetricsService(string moduleName) : IMetricsService
             shared: false, // Prevent file sharing between loggers
             fileSizeLimitBytes: 50 * 1024 * 1024, // 50MB limit per file
             rollOnFileSizeLimit: true, // Roll when the size limit is reached
+
             retainedFileCountLimit: 10, // Keep 10 files max
             outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}"
         )
