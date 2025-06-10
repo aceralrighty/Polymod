@@ -6,12 +6,12 @@ namespace TBD.ServiceModule.Models;
 
 public class Service : BaseTableProperties
 {
+    public Guid ProviderId { get; init; }
     [MaxLength(255)] public string Title { get; init; } = null!;
     [MaxLength(255)] public string Description { get; init; } = null!;
 
     public decimal Price { get; init; }
     public int DurationInMinutes { get; init; }
-    public Guid ProviderId { get; init; }
 
     public decimal TotalPrice { get; init; }
 
