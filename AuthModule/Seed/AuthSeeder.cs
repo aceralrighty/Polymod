@@ -38,282 +38,282 @@ public static class AuthSeeder
         var auth1 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "joe.rogan@example.com",
-            HashedPassword = hasher.HashPassword("DMTBears"),
-            Username = "freakBitches",
+            Email = "sarah.johnson@techcorp.com",
+            HashedPassword = hasher.HashPassword("SecurePass123!"),
+            Username = "sarahj_dev",
             FailedLoginAttempts = 0,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(64),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(15),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(20),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(30),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(30)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(30),
+            CreatedAt = DateTime.UtcNow.AddDays(-45),
+            UpdatedAt = DateTime.UtcNow.AddDays(-2),
+            LastLogin = DateTime.UtcNow.AddHours(-6)
         };
 
         var auth2 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "Ari-the-jew@cabal.com",
-            HashedPassword = hasher.HashPassword("PissInBottles"),
-            Username = "SalviaLoser",
-            FailedLoginAttempts = 2,
+            Email = "michael.chen@innovatesoft.com",
+            HashedPassword = hasher.HashPassword("CloudNinja2024"),
+            Username = "mchen_architect",
+            FailedLoginAttempts = 1,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(15),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(10),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(30),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(20)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(22),
+            CreatedAt = DateTime.UtcNow.AddDays(-30),
+            UpdatedAt = DateTime.UtcNow.AddDays(-5),
+            LastLogin = DateTime.UtcNow.AddDays(-3)
         };
 
         var auth3 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "Shane.Downey_gillis@drunk.com",
-            HashedPassword = hasher.HashPassword("BudLightSucks"),
-            Username = "FootballIsLife",
-            FailedLoginAttempts = 3,
-            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(15),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(5),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(20),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(10)
+            Email = "emily.rodriguez@startupvibe.io",
+            HashedPassword = hasher.HashPassword("InnovateDaily"),
+            Username = "emily_pm",
+            FailedLoginAttempts = 0,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(48),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(25),
+            CreatedAt = DateTime.UtcNow.AddDays(-60),
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
+            LastLogin = DateTime.UtcNow.AddHours(-12)
         };
 
         var auth4 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "bryan.callen@suspicion.com",
-            HashedPassword = hasher.HashPassword("ItsEntirelyPossible"),
-            Username = "TheFighter",
-            FailedLoginAttempts = 1,
-            RefreshToken = JwtTokenGenerator.GenerateJwtToken(48),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(12),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(15),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(25),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(5)
+            Email = "david.kumar@datascience.net",
+            HashedPassword = hasher.HashPassword("Analytics2024!"),
+            Username = "dkumar_analyst",
+            FailedLoginAttempts = 2,
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(18),
+            CreatedAt = DateTime.UtcNow.AddDays(-25),
+            UpdatedAt = DateTime.UtcNow.AddDays(-4),
+            LastLogin = DateTime.UtcNow.AddDays(-2)
         };
 
         var auth5 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "brendan.schaub@redacted.com",
-            HashedPassword = hasher.HashPassword("GadooshBapa"),
-            Username = "ThickBoy",
+            Email = "lisa.thompson@cloudservices.com",
+            HashedPassword = hasher.HashPassword("DevOpsRocks"),
+            Username = "lisa_devops",
             FailedLoginAttempts = 0,
-            RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(20),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(30),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(35),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(2)
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(72),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(28),
+            CreatedAt = DateTime.UtcNow.AddDays(-40),
+            UpdatedAt = DateTime.UtcNow.AddDays(-3),
+            LastLogin = DateTime.UtcNow.AddHours(-18)
         };
 
         var auth6 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "eddie.bravo@flatearth.com",
-            HashedPassword = hasher.HashPassword("JiuJitsuTruth"),
-            Username = "10thPlanet",
+            Email = "robert.wilson@cybersec.org",
+            HashedPassword = hasher.HashPassword("Security1st!"),
+            Username = "rwilson_sec",
             FailedLoginAttempts = 0,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(64),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(30),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(45),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(50),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(1)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(35),
+            CreatedAt = DateTime.UtcNow.AddDays(-50),
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
+            LastLogin = DateTime.UtcNow.AddHours(-4)
         };
 
         var auth7 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "joey.diaz@coco.com",
-            HashedPassword = hasher.HashPassword("TremendousStars"),
-            Username = "UncleJoey",
-            FailedLoginAttempts = 5,
+            Email = "amanda.garcia@frontend.dev",
+            HashedPassword = hasher.HashPassword("ReactMaster"),
+            Username = "amanda_ui",
+            FailedLoginAttempts = 3,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(7),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(60),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(65),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(14)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(12),
+            CreatedAt = DateTime.UtcNow.AddDays(-35),
+            UpdatedAt = DateTime.UtcNow.AddDays(-7),
+            LastLogin = DateTime.UtcNow.AddDays(-5)
         };
 
         var auth8 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "tom.segura@ymh.com",
-            HashedPassword = hasher.HashPassword("MommyJeans"),
-            Username = "TopDog",
-            FailedLoginAttempts = 0,
+            Email = "james.brown@backend.tech",
+            HashedPassword = hasher.HashPassword("ApiNinja2024"),
+            Username = "james_api",
+            FailedLoginAttempts = 1,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(40),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(18),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(25),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(28),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(3)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(20),
+            CreatedAt = DateTime.UtcNow.AddDays(-28),
+            UpdatedAt = DateTime.UtcNow.AddDays(-6),
+            LastLogin = DateTime.UtcNow.AddDays(-1)
         };
 
         var auth9 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "christina.p@watermom.com",
-            HashedPassword = hasher.HashPassword("HighAndTight"),
-            Username = "MainMommy",
-            FailedLoginAttempts = 2,
+            Email = "jennifer.lee@mobile.apps",
+            HashedPassword = hasher.HashPassword("MobileFirst!"),
+            Username = "jenny_mobile",
+            FailedLoginAttempts = 0,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(56),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(22),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(18),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(24),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(6)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(24),
+            CreatedAt = DateTime.UtcNow.AddDays(-42),
+            UpdatedAt = DateTime.UtcNow.AddDays(-2),
+            LastLogin = DateTime.UtcNow.AddHours(-8)
         };
 
         var auth10 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "bert.kreischer@machine.com",
-            HashedPassword = hasher.HashPassword("ShirtlessComedy"),
-            Username = "TheMachine",
-            FailedLoginAttempts = 1,
+            Email = "daniel.martin@qa.testing",
+            HashedPassword = hasher.HashPassword("QualityFirst"),
+            Username = "dan_tester",
+            FailedLoginAttempts = 2,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
             RefreshTokenExpiry = DateTime.UtcNow.AddDays(14),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(40),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(42),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(8),
-            DeletedAt = DateTime.UtcNow + TimeSpan.FromDays(10)
+            CreatedAt = DateTime.UtcNow.AddDays(-20),
+            UpdatedAt = DateTime.UtcNow.AddDays(-8),
+            LastLogin = DateTime.UtcNow.AddDays(-4),
+            DeletedAt = DateTime.UtcNow.AddDays(-2)
         };
 
         var auth11 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "duncan.trussell@midnight.com",
-            HashedPassword = hasher.HashPassword("CosmicLove"),
-            Username = "MidnightGospel",
+            Email = "rachel.white@ux.design",
+            HashedPassword = hasher.HashPassword("DesignThinking"),
+            Username = "rachel_ux",
             FailedLoginAttempts = 0,
-            RefreshToken = JwtTokenGenerator.GenerateJwtToken(72),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(25),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(35),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(38),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(4)
+            RefreshToken = JwtTokenGenerator.GenerateJwtToken(68),
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(26),
+            CreatedAt = DateTime.UtcNow.AddDays(-38),
+            UpdatedAt = DateTime.UtcNow.AddDays(-3),
+            LastLogin = DateTime.UtcNow.AddHours(-14)
         };
 
         var auth12 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "andrew.santino@redhair.com",
-            HashedPassword = hasher.HashPassword("CheetoFingers"),
-            Username = "RedRocket",
-            FailedLoginAttempts = 3,
+            Email = "kevin.taylor@database.admin",
+            HashedPassword = hasher.HashPassword("DataSafety2024"),
+            Username = "kevin_dba",
+            FailedLoginAttempts = 1,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(44),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(11),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(22),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(26),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(9)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(16),
+            CreatedAt = DateTime.UtcNow.AddDays(-33),
+            UpdatedAt = DateTime.UtcNow.AddDays(-4),
+            LastLogin = DateTime.UtcNow.AddDays(-2)
         };
 
         var auth13 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "bobby.lee@tigerbelly.com",
-            HashedPassword = hasher.HashPassword("BadFriends"),
-            Username = "Nosotros",
+            Email = "stephanie.adams@content.mgmt",
+            HashedPassword = hasher.HashPassword("ContentKing"),
+            Username = "steph_cms",
             FailedLoginAttempts = 4,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
             RefreshTokenExpiry = DateTime.UtcNow.AddDays(8),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(50),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(52),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(12)
+            CreatedAt = DateTime.UtcNow.AddDays(-55),
+            UpdatedAt = DateTime.UtcNow.AddDays(-10),
+            LastLogin = DateTime.UtcNow.AddDays(-8)
         };
 
         var auth14 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "theo.von@rat.com",
-            HashedPassword = hasher.HashPassword("DarkArts"),
-            Username = "KingRat",
-            FailedLoginAttempts = 1,
+            Email = "brian.clark@marketing.tech",
+            HashedPassword = hasher.HashPassword("GrowthHack"),
+            Username = "brian_growth",
+            FailedLoginAttempts = 0,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(52),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(16),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(28),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(31),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(7)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(21),
+            CreatedAt = DateTime.UtcNow.AddDays(-27),
+            UpdatedAt = DateTime.UtcNow.AddDays(-5),
+            LastLogin = DateTime.UtcNow.AddDays(-1)
         };
 
         var auth15 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "whitney.cummings@robot.com",
-            HashedPassword = hasher.HashPassword("GoodForYou"),
-            Username = "Robutney",
+            Email = "maria.gonzalez@hr.solutions",
+            HashedPassword = hasher.HashPassword("PeopleFirst!"),
+            Username = "maria_hr",
             FailedLoginAttempts = 0,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(60),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(21),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(33),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(36),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(5)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(29),
+            CreatedAt = DateTime.UtcNow.AddDays(-48),
+            UpdatedAt = DateTime.UtcNow.AddDays(-2),
+            LastLogin = DateTime.UtcNow.AddHours(-10)
         };
 
         var auth16 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "tim.dillon@pigpen.com",
-            HashedPassword = hasher.HashPassword("FakeNews"),
-            Username = "PigKing",
+            Email = "thomas.anderson@finance.corp",
+            HashedPassword = hasher.HashPassword("NumbersCrunch"),
+            Username = "tom_finance",
             FailedLoginAttempts = 2,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(13),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(17),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(19),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(11)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(11),
+            CreatedAt = DateTime.UtcNow.AddDays(-22),
+            UpdatedAt = DateTime.UtcNow.AddDays(-6),
+            LastLogin = DateTime.UtcNow.AddDays(-3)
         };
 
         var auth17 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "dave.smith@komedy.com",
-            HashedPassword = hasher.HashPassword("PartOfTheProblem"),
-            Username = "BigJayOakerson",
-            FailedLoginAttempts = 0,
+            Email = "nicole.walker@support.help",
+            HashedPassword = hasher.HashPassword("HelpDesk24"),
+            Username = "nicole_support",
+            FailedLoginAttempts = 1,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(38),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(19),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(41),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(44),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(2)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(17),
+            CreatedAt = DateTime.UtcNow.AddDays(-31),
+            UpdatedAt = DateTime.UtcNow.AddDays(-4),
+            LastLogin = DateTime.UtcNow.AddHours(-20)
         };
 
         var auth18 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "mark.normand@tuesdays.com",
-            HashedPassword = hasher.HashPassword("WeAreGay"),
-            Username = "Queef",
+            Email = "alex.peterson@legal.tech",
+            HashedPassword = hasher.HashPassword("ComplianceKey"),
+            Username = "alex_legal",
             FailedLoginAttempts = 3,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(46),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(10),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(26),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(29),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(13)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(9),
+            CreatedAt = DateTime.UtcNow.AddDays(-26),
+            UpdatedAt = DateTime.UtcNow.AddDays(-7),
+            LastLogin = DateTime.UtcNow.AddDays(-4)
         };
 
         var auth19 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "sam.tripoli@tinfoil.com",
-            HashedPassword = hasher.HashPassword("BrokenSimulation"),
-            Username = "TinfoilHat",
-            FailedLoginAttempts = 6,
+            Email = "samantha.hill@sales.team",
+            HashedPassword = hasher.HashPassword("CloseDeals2024"),
+            Username = "sam_sales",
+            FailedLoginAttempts = 5,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(5),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(55),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(58),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(16)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(6),
+            CreatedAt = DateTime.UtcNow.AddDays(-18),
+            UpdatedAt = DateTime.UtcNow.AddDays(-9),
+            LastLogin = DateTime.UtcNow.AddDays(-7)
         };
 
         var auth20 = new AuthUser
         {
             Id = Guid.NewGuid(),
-            Email = "alex.jones@infowars.com",
-            HashedPassword = hasher.HashPassword("TurningFrogsGay"),
-            Username = "InfoWarrior",
+            Email = "christopher.moore@executive.suite",
+            HashedPassword = hasher.HashPassword("Leadership2024!"),
+            Username = "chris_exec",
             FailedLoginAttempts = 0,
             RefreshToken = JwtTokenGenerator.GenerateJwtToken(80),
-            RefreshTokenExpiry = DateTime.UtcNow.AddDays(30),
-            CreatedAt = DateTime.UtcNow + TimeSpan.FromDays(100),
-            UpdatedAt = DateTime.UtcNow + TimeSpan.FromDays(105),
-            LastLogin = DateTime.UtcNow + TimeSpan.FromDays(1)
+            RefreshTokenExpiry = DateTime.UtcNow.AddDays(45),
+            CreatedAt = DateTime.UtcNow.AddDays(-90),
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
+            LastLogin = DateTime.UtcNow.AddHours(-2)
         };
 
         // Add all users to the list

@@ -85,7 +85,7 @@ public class AuthService(
             {
                 _metricsService.IncrementCounter("auth.registration_failed_missing_fields");
                 logger.LogWarning("Registration failed - Missing required fields for username: {Username}",
-                    request.Username ?? "NULL");
+                    request.Username);
                 return new AuthResponse { isSuccessful = false, Message = $"All fields are required to be filled in" };
             }
 
@@ -151,7 +151,7 @@ public class AuthService(
             {
                 _metricsService.IncrementCounter("auth.login_failed_missing_credentials");
                 logger.LogWarning("Login failed - Missing credentials for username: {Username}",
-                    request.Username ?? "NULL");
+                    request.Username);
                 return new AuthResponse { isSuccessful = false, Message = "Username and password are required" };
             }
 
@@ -164,7 +164,7 @@ public class AuthService(
                 return new AuthResponse { isSuccessful = false, Message = "Invalid username or password" };
             }
 
-            // Check if account is locked
+            // Check if the account is locked
             if (IsAccountLocked(authUser))
             {
                 _metricsService.IncrementCounter("auth.login_failed_account_locked");

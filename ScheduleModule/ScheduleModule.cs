@@ -13,8 +13,8 @@ public static class ScheduleModule
         services.AddDbContext<ScheduleDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("ScheduleDb")));
         services.AddScoped<IScheduleRepository, ScheduleRepository>();
-        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
         services.AddScoped<IScheduleService, ScheduleService>();
+        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
         return services;
     }
 }

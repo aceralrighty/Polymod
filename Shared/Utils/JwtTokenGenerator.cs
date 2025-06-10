@@ -72,7 +72,7 @@ public static class JwtTokenGenerator
                 ClockSkew = TimeSpan.Zero
             };
 
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
             return principal;
         }
         catch
@@ -81,7 +81,7 @@ public static class JwtTokenGenerator
         }
     }
 
-    // Method to extract user ID from JWT token without full validation
+    // Method to extract user ID from a JWT token without full validation
     public static Guid? GetUserIdFromToken(string token)
     {
         try

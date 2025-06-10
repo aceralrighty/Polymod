@@ -17,7 +17,7 @@ public class ScheduleController(ScheduleDbContext context) : ControllerBase
     }
 
     // GET: api/Schedule/5
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     public async Task<ActionResult<Schedule>> GetSchedule(Guid id)
     {
         var schedule = await context.Schedules.FindAsync(id);
@@ -32,7 +32,7 @@ public class ScheduleController(ScheduleDbContext context) : ControllerBase
 
     // PUT: api/Schedule/5
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     public async Task<IActionResult> PutSchedule(Guid id, Schedule schedule)
     {
         if (id != schedule.Id)
@@ -73,7 +73,7 @@ public class ScheduleController(ScheduleDbContext context) : ControllerBase
     }
 
     // DELETE: api/Schedule/5
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteSchedule(Guid id)
     {
         var schedule = await context.Schedules
@@ -95,7 +95,7 @@ public class ScheduleController(ScheduleDbContext context) : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id}/permanent")]
+    [HttpDelete("{id:guid}/permanent")]
     public async Task<IActionResult> DeleteSchedulePermanently(Guid id)
     {
         var schedule = await context.Schedules.FindAsync(id);

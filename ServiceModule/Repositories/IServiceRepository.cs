@@ -8,7 +8,7 @@ internal interface IServiceRepository
     Task<Service> GetByTitleAsync(string title);
     Task<List<Service>> SortByHighestMinutesAsync();
     Task<List<Service>> SortByHighestPriceAsync();
-    Task<Service?> GetByIdAsync(Guid id);
+    Task<Service> GetByIdAsync(Guid id);
     Task AddAsync(Service service);
     Task UpdateAsync(Service service);
     Task DeleteAsync(Guid id);
