@@ -9,7 +9,7 @@ public class MetricsService(string moduleName) : IMetricsService
     private readonly ILogger _metricsLogger = new LoggerConfiguration()
         .WriteTo.File(
             path: $"Logs/{moduleName.ToLower()}-metrics.log",
-            rollingInterval: RollingInterval.Minute,
+            rollingInterval: RollingInterval.Day,
             shared: false, // Prevent file sharing between loggers
             fileSizeLimitBytes: 50 * 1024 * 1024, // 50MB limit per file
             rollOnFileSizeLimit: true, // Roll when the size limit is reached
