@@ -7,8 +7,6 @@ namespace TBD.AuthModule.Repositories;
 
 public class AuthRepository(AuthDbContext context) : GenericRepository<AuthUser>(context), IAuthRepository
 {
-    private readonly AuthDbContext _context = context;
-
     public async Task<IEnumerable<AuthUser>> GetAllUsers()
     {
         return await _dbSet.ToListAsync();
@@ -33,8 +31,7 @@ public class AuthRepository(AuthDbContext context) : GenericRepository<AuthUser>
 
     public async Task<IEnumerable<AuthUser>> GetUsersByLoginAttempts(int loginAttempts)
     {
-        var foundByAttempts = _dbSet.FirstOrDefaultAsync(ua => ua.FailedLoginAttempts == loginAttempts);
-        return await _dbSet.ToListAsync();
+        return await _dbSet.Where(ua => ua.FailedLoginAttempts == loginAttempts).ToListAsync();
     }
 
     public async Task<AuthUser?> GetUserByRefreshToken(string refreshToken)
@@ -44,12 +41,12 @@ public class AuthRepository(AuthDbContext context) : GenericRepository<AuthUser>
 
     public async Task InvalidateRefreshTokenAsync(Guid userId)
     {
-        var user = await _context.AuthUsers.FirstOrDefaultAsync(id => id.Id == userId);
+        var user = await context.AuthUsers.FirstOrDefaultAsync(id => id.Id == userId);
         if (user != null)
         {
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
         }
     }
 }
