@@ -9,34 +9,34 @@ public class AuthRepository(AuthDbContext context) : GenericRepository<AuthUser>
 {
     public async Task<IEnumerable<AuthUser>> GetAllUsers()
     {
-        return await _dbSet.ToListAsync();
+        return await DbSet.ToListAsync();
     }
 
     public async Task<AuthUser?> GetUserById(Guid id)
     {
-        var found = await _dbSet.FindAsync(id);
+        var found = await DbSet.FindAsync(id);
         return found;
     }
 
     public async Task<AuthUser?> GetUserByUsername(string username)
     {
-        var found = await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
+        var found = await DbSet.FirstOrDefaultAsync(u => u.Username == username);
         return found;
     }
 
     public async Task<AuthUser?> GetUserByEmail(string email)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
+        return await DbSet.FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<IEnumerable<AuthUser>> GetUsersByLoginAttempts(int loginAttempts)
     {
-        return await _dbSet.Where(ua => ua.FailedLoginAttempts == loginAttempts).ToListAsync();
+        return await DbSet.Where(ua => ua.FailedLoginAttempts == loginAttempts).ToListAsync();
     }
 
     public async Task<AuthUser?> GetUserByRefreshToken(string refreshToken)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+        return await DbSet.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
     }
 
     public async Task InvalidateRefreshTokenAsync(Guid userId)

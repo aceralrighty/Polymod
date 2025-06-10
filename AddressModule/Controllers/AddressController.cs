@@ -111,10 +111,8 @@ public class AddressController(AddressDbContext context, UserDbContext userConte
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+
+                throw;
             }
 
             return RedirectToAction(nameof(Index));

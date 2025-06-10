@@ -66,14 +66,9 @@ public class UserService(
             var user = await userRepository.GetByUsernameAsync(username);
             var userDto = mapper.Map<UserDto>(user);
 
-            if (userDto != null)
-            {
-                _metricsService.IncrementCounter("user.get_by_username.success");
-            }
-            else
-            {
-                _metricsService.IncrementCounter("user.get_by_username.not_found");
-            }
+            _metricsService.IncrementCounter(userDto != null
+                ? "user.get_by_username.success"
+                : "user.get_by_username.not_found");
 
             return userDto;
         }
@@ -163,12 +158,12 @@ public class UserService(
         }
         catch (ArgumentException ex)
         {
-            _metricsService.IncrementCounter("user.create.validation_error");
+            _metricsService.IncrementCounter($"user.create.validation_error: {ex.Message}");
             throw;
         }
         catch (Exception ex)
         {
-            _metricsService.IncrementCounter("user.create.error");
+            _metricsService.IncrementCounter($"user.create.error: {ex.Message}");
             throw;
         }
     }
@@ -187,7 +182,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            _metricsService.IncrementCounter("user.update.error");
+            _metricsService.IncrementCounter($"user.update.error: {ex.Message}");
             throw;
         }
     }
@@ -207,7 +202,7 @@ public class UserService(
         }
         catch (Exception ex)
         {
-            _metricsService.IncrementCounter("user.delete.error");
+            _metricsService.IncrementCounter($"user.delete.error: {ex.Message}");
             throw;
         }
     }

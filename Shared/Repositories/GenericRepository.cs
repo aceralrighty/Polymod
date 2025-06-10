@@ -9,13 +9,13 @@ namespace TBD.Shared.Repositories;
 public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     where T : class
 {
-    protected readonly DbContext _context = context;
-    protected readonly DbSet<T> _dbSet = context.Set<T>();
+    protected readonly DbContext Context = context;
+    protected readonly DbSet<T> DbSet = context.Set<T>();
     protected readonly IDbConnection DbConnection = context.Database.GetDbConnection();
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
-        return await _dbSet.ToListAsync();
+        return await DbSet.ToListAsync();
     }
 
     public virtual async Task<T> GetByIdAsync(Guid id)
@@ -25,30 +25,31 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} WHERE Id = @Id";
-        return await DbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ?? throw new NullReferenceException();
+        return await DbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ??
+               throw new NullReferenceException();
     }
 
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _dbSet.Where(predicate).ToListAsync();
+        return await DbSet.Where(predicate).ToListAsync();
     }
 
     public virtual async Task AddAsync(T entity)
     {
-        await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
+        await DbSet.AddAsync(entity);
+        await Context.SaveChangesAsync();
     }
 
     public virtual async Task UpdateAsync(T entity)
     {
-        _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        DbSet.Update(entity);
+        await Context.SaveChangesAsync();
     }
 
     public virtual async Task DeleteAsync(T entity)
     {
-        _dbSet.Remove(entity);
-        await _context.SaveChangesAsync();
+        DbSet.Remove(entity);
+        await Context.SaveChangesAsync();
     }
 
     /**
@@ -56,7 +57,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
      */
     protected virtual string GetTableName()
     {
-        var entityType = _context.Model.FindEntityType(typeof(T));
+        var entityType = Context.Model.FindEntityType(typeof(T));
         if (entityType == null)
             throw new InvalidOperationException($"Could not find entity type metadata for {typeof(T).Name}");
 
