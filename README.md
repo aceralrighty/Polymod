@@ -13,12 +13,24 @@ DbContext, models, repositories, and services. Logging, seeding, and testing are
 
 ```plaintext
 .
-├── API                      # Shared DTOs and data transfer objects
-│   └── DTOs                 # Request/Response models
+├── API                      # Shared DTOs and request/response models
+│   └── DTOs
+│       ├── AuthDTO         # Login/Register DTOs
+│       │   ├── AuthResponse.cs
+│       │   ├── LoginRequest.cs
+│       │   └── RegisterRequest.cs
+│       ├── CreateServiceDTO.cs
+│       ├── PagedResult.cs
+│       ├── ServiceDTO.cs
+│       ├── UserAddressRequest.cs
+│       ├── UserAddressResponse.cs
+│       ├── UserDTO.cs
+│       └── UserSchedule.cs
 ├── AuthModule               # Authentication & JWT token logic
 │   ├── Controllers, Data, Models, Repositories, Services
-│   ├── Exceptions           # Auth-specific exception handling
-│   └── Seed                 # Data seeding logic
+│   ├── Exceptions
+│   ├── Seed
+│   └── Views
 ├── AddressModule            # Address storage and region validation
 │   ├── Controllers, Data, Models, Repositories, Services
 │   ├── Exceptions
@@ -30,26 +42,53 @@ DbContext, models, repositories, and services. Logging, seeding, and testing are
 │   ├── Controllers, Data, Models, Repositories, Services
 │   └── Seed
 ├── MetricsModule            # Custom metric tracking (API hits, seeding ops)
-│   └── Services             # Singleton pattern for in-memory counters
+│   ├── MetricsModule.cs
+│   └── Services             # Singleton services for metric collection
+│       ├── IMetricsService.cs
+│       ├── IMetricsServiceFactory.cs
+│       ├── MetricsCollector.cs
+│       ├── MetricsService.cs
+│       └── MetricsServiceFactory.cs
 ├── Shared                   # Cross-cutting concerns
 │   ├── Repositories         # Generic repository patterns
-│   └── Utils                # Hashing, JWTs, mappers
+│   ├── CachingConfiguration
+│   │   ├── CacheOptions.cs
+│   │   ├── CachingRepositoryDecorator.cs
+│   │   └── ConcurrentHashSet.cs
+│   └── Utils                # Mapping, hashing, JWT generation
+│       ├── AuthUserMapping.cs
+│       ├── Hasher.cs
+│       ├── IHasher.cs
+│       ├── JwtTokenGenerator.cs
+│       ├── ServiceMapping.cs
+│       ├── UserAddressMapping.cs
+│       ├── UserMapping.cs
+│       └── UserScheduleMapping.cs
 ├── GenericDBProperties      # Base entity contracts (Id, timestamps, etc.)
 ├── DesignTimeFactories      # EF Core factories for migrations
-├── Migrations               # EF Core migrations by module
+├── Migrations               # EF Core migrations organized by module
 │   ├── AuthDb, ScheduleDb, ServiceDb, UserDb, AddressDb
-├── Logs                     # Per-module metric log files (Serilog output)
-│   ├── authmodule-metrics.log
-│   ├── usermodule-metrics.log
-│   ├── schedulemodule-metrics.log
-│   └── servicemodule-metrics.log
-├── TestProject              # xUnit + Moq tests per service
-├── Dockerfile               # API Docker build
-├── docker-compose.yml       # Orchestration for SQL Server + API
-├── .github/workflows/ci.yml # CI pipeline config
-└── Program.cs, appsettings.json, etc.
+├── Logs                     # Per-module metric logs (auto-generated)
+│   ├── authmodule-metrics*.log
+│   ├── usermodule-metrics*.log
+│   ├── schedulemodule-metrics*.log
+│   └── servicemodule-metrics*.log
+├── TestProject              # NUnit + Moq-based tests
+│   ├── AuthServiceTests.cs
+│   ├── CachingRepositoryDecoratorTests.cs
+│   ├── ScheduleTest.cs
+│   ├── UserAddressServiceTest.cs
+│   ├── UserTest.cs
+│   └── TestEntity.cs
+├── TBD.http                 # HTTP test requests
+├── TBD.csproj
+├── TBD.sln
+├── Dockerfile
+├── docker-compose.yml
+├── Program.cs
+└── Properties
+    └── launchSettings.json
 ```
-
 
 ---
 
@@ -59,9 +98,10 @@ DbContext, models, repositories, and services. Logging, seeding, and testing are
 - **Database Per Module**: Each module uses its own `DbContext` and owns its schema
 - **Custom Metrics Tracking**: Singleton-based in-memory counters written to per-module logs
 - **Generic Repository Pattern**: Shared data access logic via reusable base repositories
+- **Caching Layer**: In-memory caching for service performance boosts
 - **Exception Handling**: Domain-specific exceptions handled cleanly across modules
 - **Automated Seeding**: Seeders for test/development with observable metrics
-- **Comprehensive Testing**: xUnit test coverage on core business logic with Moq and in-memory DBs
+- **Comprehensive Testing**: NUnit test coverage on core business logic with Moq
 
 ---
 
@@ -102,25 +142,29 @@ docker-compose up --build
 ```
 
 This will:
-- Starts SQL Server with port 1433
-- Builds and launches the backend API
-- Applies all pending migrations
-- Logs metric outputs to /Logs by module
+- Start SQL Server with port 1433
+- Build and launch the backend API
+- Apply all pending migrations
+- Log metric outputs to `/Logs` by module
 
-⚠️ **Ensure Docker is running and port ```1433``` is available on your system.**
+⚠️ **Ensure Docker is running and port `1433` is available on your system.**
 
-**🗃️ Technologies Used**
+---
 
-- .NET 8 (or latest .NET version)
+## 🧰 Technologies Used
+
+- .NET 8
 - Entity Framework Core
 - SQL Server (via Docker)
 - AutoMapper
 - JWT Authentication
-- NUnit
-- Docker and Docker Compose
+- NUnit + Moq
+- Docker & Docker Compose
 - GitHub Actions (CI)
 
-📄 What's Next?
+---
+
+## 🔮 What's Next?
 
 - ✅ Finalize logging and metrics per module
 - 🔲 Add Swagger/OpenAPI for API documentation
@@ -131,11 +175,15 @@ This will:
 - 🔲 Refactor shared utility layer into namespaces (Crypto, Mapping, Extensions)
 - 🔲 Explore Dapper or alternative ORMs for focused modules
 
-**🙌 Contributions**
+---
+
+## 🙌 Contributions
 
 This is an educational and personal learning project. That said, feel free to fork it, open issues, or contribute ideas
 if it piques your interest.
 
-**📄 License**
+---
+
+## 📄 License
 
 MIT — use it, learn from it, or build upon it freely.
