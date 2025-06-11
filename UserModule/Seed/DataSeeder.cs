@@ -12,7 +12,7 @@ namespace TBD.UserModule.Seed;
 
 public static class DataSeeder
 {
-    public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
+    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
 
@@ -22,39 +22,93 @@ public static class DataSeeder
         var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
         var metricsService = factory.CreateMetricsService("UserModule");
 
-        metricsService.IncrementCounter("seeding.user_db_delete_started");
-        await userContext.Database.EnsureDeletedAsync();
-        metricsService.IncrementCounter("seeding.user_db_delete_completed");
-
-        metricsService.IncrementCounter("seeding.address_db_delete_started");
-        await addressContext.Database.EnsureDeletedAsync();
-        metricsService.IncrementCounter("seeding.address_db_delete_completed");
-
-        metricsService.IncrementCounter("seeding.user_db_migration_started");
-        await userContext.Database.MigrateAsync();
-        metricsService.IncrementCounter("seeding.user_db_migration_completed");
-
         try
         {
-            metricsService.IncrementCounter("seeding.address_db_migration_started");
-            await addressContext.Database.MigrateAsync();
-            metricsService.IncrementCounter("seeding.address_db_migration_completed");
+            Console.WriteLine("🔄 Starting user database operations...");
+
+            // Check connection strings
+            Console.WriteLine($"👥 User DB Connection: {userContext.Database.GetConnectionString()}");
+            Console.WriteLine($"📍 Address DB Connection: {addressContext.Database.GetConnectionString()}");
+
+            // Check if databases can be connected to before deletion
+            var userDbExists = await userContext.Database.CanConnectAsync();
+            var addressDbExists = await addressContext.Database.CanConnectAsync();
+            Console.WriteLine($"👥 User database accessible before deletion: {userDbExists}");
+            Console.WriteLine($"📍 Address database accessible before deletion: {addressDbExists}");
+
+            metricsService.IncrementCounter("seeding.user_db_delete_started");
+            await userContext.Database.EnsureDeletedAsync();
+            Console.WriteLine("🗑️ User database deleted");
+            metricsService.IncrementCounter("seeding.user_db_delete_completed");
+
+            metricsService.IncrementCounter("seeding.address_db_delete_started");
+            await addressContext.Database.EnsureDeletedAsync();
+            Console.WriteLine("🗑️ Address database deleted");
+            metricsService.IncrementCounter("seeding.address_db_delete_completed");
+
+            metricsService.IncrementCounter("seeding.user_db_migration_started");
+            await userContext.Database.MigrateAsync();
+            Console.WriteLine("📊 User database migrated");
+            metricsService.IncrementCounter("seeding.user_db_migration_completed");
+
+            try
+            {
+                metricsService.IncrementCounter("seeding.address_db_migration_started");
+                await addressContext.Database.MigrateAsync();
+                Console.WriteLine("📊 Address database migrated");
+                metricsService.IncrementCounter("seeding.address_db_migration_completed");
+            }
+            catch (SqlException ex) when (ex.Number == 2714)
+            {
+                metricsService.IncrementCounter("seeding.address_db_migration_skipped_existing_tables");
+                Console.WriteLine("⚠️ Address context tables already exist, skipping migration");
+            }
+
+            // Verify databases exist after migration
+            var userDbExistsAfter = await userContext.Database.CanConnectAsync();
+            var addressDbExistsAfter = await addressContext.Database.CanConnectAsync();
+            Console.WriteLine($"👥 User database accessible after migration: {userDbExistsAfter}");
+            Console.WriteLine($"📍 Address database accessible after migration: {addressDbExistsAfter}");
+
+            var seededUsers = await SeedUsersAsync(userContext, metricsService);
+            Console.WriteLine($"✅ Successfully seeded {seededUsers.Count} users");
+            metricsService.IncrementCounter("seeding.users_seeded");
+
+            // Verify users were actually saved
+            var userCountAfterSeeding = await userContext.Set<User>().CountAsync();
+            Console.WriteLine($"🔢 User count in database after seeding: {userCountAfterSeeding}");
+
+            if (userCountAfterSeeding != seededUsers.Count)
+            {
+                Console.WriteLine(
+                    $"⚠️ WARNING: Expected {seededUsers.Count} users but found {userCountAfterSeeding} in database!");
+            }
+
+            // List first few users for verification
+            var usersInDb = await userContext.Set<User>().Take(3).Select(u => new { u.Id, u.Username }).ToListAsync();
+            Console.WriteLine("📝 Users in database:");
+            foreach (var user in usersInDb)
+            {
+                Console.WriteLine($"   👤 {user.Username} (ID: {user.Id})");
+            }
+
+            await SeedUserAddressesAsync(addressContext, userContext, metricsService);
+            metricsService.IncrementCounter("seeding.user_addresses_seeded");
+            return seededUsers;
         }
-        catch (SqlException ex) when (ex.Number == 2714)
+        catch (Exception ex)
         {
-            metricsService.IncrementCounter("seeding.address_db_migration_skipped_existing_tables");
-            Console.WriteLine("Address context tables already exist, skipping migration");
+            Console.WriteLine($"❌ Error in DataSeeder: {ex.Message}");
+            Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
+            throw;
         }
 
-        await SeedUsersAsync(userContext, metricsService);
-        metricsService.IncrementCounter("seeding.users_seeded");
-
-        await SeedUserAddressesAsync(addressContext, userContext, metricsService);
-        metricsService.IncrementCounter("seeding.user_addresses_seeded");
     }
 
-    private static async Task SeedUsersAsync(UserDbContext context, IMetricsService metricsService)
+    private static async Task<List<User>> SeedUsersAsync(UserDbContext context, IMetricsService metricsService)
     {
+        Console.WriteLine("🌱 Starting user seeding...");
+
         var baseDate = DateTime.UtcNow;
         var hasher = new Hasher();
 
@@ -109,75 +163,50 @@ public static class DataSeeder
                 CreatedAt = baseDate.AddDays(-45),
                 UpdatedAt = baseDate.AddDays(-2),
                 Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "ahmad.hassan",
-                Email = "ahmad.hassan@tech.ae",
-                Password = hasher.HashPassword("SecureArabic987!"),
-                CreatedAt = baseDate.AddDays(-120),
-                UpdatedAt = baseDate.AddDays(-15),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "test.user.with.long.name",
-                Email = "very.long.email.address.for.testing@extremelylongdomainname.international",
-                Password = hasher.HashPassword("VeryLongPasswordWithSpecialChars!@#$%^&*()"),
-                CreatedAt = baseDate.AddMinutes(-30),
-                UpdatedAt = baseDate.AddMinutes(-30),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "a",
-                Email = "a@b.co",
-                Password = hasher.HashPassword("Short1!"),
-                CreatedAt = baseDate.AddDays(-1),
-                UpdatedAt = baseDate.AddDays(-1),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "user_2024",
-                Email = "user+tag@example-domain.com",
-                Password = hasher.HashPassword("Password!2024"),
-                CreatedAt = baseDate.AddDays(-60),
-                UpdatedAt = baseDate.AddDays(-30),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "test-user123",
-                Email = "test.email+filter@subdomain.example.org",
-                Password = hasher.HashPassword("Complex@Pass#123"),
-                CreatedAt = baseDate.AddDays(-15),
-                UpdatedAt = baseDate.AddDays(-7),
-                Schedule = new Schedule()
             }
         };
 
-        await context.Set<User>().AddRangeAsync(users);
-        await context.SaveChangesAsync();
+        Console.WriteLine($"📝 Creating {users.Count} users...");
 
-        metricsService.IncrementCounter("seeding.users_seeded_successfully");
-        metricsService.IncrementCounter($"seeding.users_total_{users.Count}");
+        foreach (var user in users.Take(3))
+        {
+            Console.WriteLine($"   👤 {user.Username} (ID: {user.Id})");
+        }
 
-        Console.WriteLine($"Seeded {users.Count} users");
+        try
+        {
+            await context.Set<User>().AddRangeAsync(users);
+            var saveResult = await context.SaveChangesAsync();
+            Console.WriteLine($"💾 SaveChanges returned: {saveResult}");
+
+            metricsService.IncrementCounter("seeding.users_seeded_successfully");
+            metricsService.IncrementCounter($"seeding.users_total_{users.Count}");
+
+            // Verify the save worked
+            var countAfterSave = await context.Set<User>().CountAsync();
+            Console.WriteLine($"🔢 Users in database after SaveChanges: {countAfterSave}");
+
+            return users;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error saving users: {ex.Message}");
+            Console.WriteLine($"🔍 Inner exception: {ex.InnerException?.Message}");
+            throw;
+        }
     }
 
     private static async Task SeedUserAddressesAsync(AddressDbContext addressContext, UserDbContext context,
         IMetricsService metricsService)
     {
+        Console.WriteLine("🌱 Starting address seeding...");
+
         var users = await context.Set<User>().ToListAsync();
+        Console.WriteLine($"👥 Found {users.Count} users for address seeding");
+
         if (users.Count == 0)
         {
-            Console.WriteLine("No users found for address seeding");
+            Console.WriteLine("❌ No users found for address seeding");
             metricsService.IncrementCounter("seeding.user_addresses_skipped_no_users");
             return;
         }
@@ -190,11 +219,11 @@ public static class DataSeeder
         };
 
         await addressContext.UserAddress.AddRangeAsync(addresses);
-        await addressContext.SaveChangesAsync();
+        var savedAddresses = await addressContext.SaveChangesAsync();
 
         metricsService.IncrementCounter("seeding.user_addresses_seeded_successfully");
         metricsService.IncrementCounter($"seeding.user_addresses_total_{addresses.Count}");
 
-        Console.WriteLine($"Seeded {addresses.Count} addresses for {users.Count} users");
+        Console.WriteLine($"✅ Seeded {savedAddresses} addresses for {users.Count} users");
     }
 }

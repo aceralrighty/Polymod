@@ -7,7 +7,7 @@ namespace TBD.ServiceModule.Seed;
 
 public static class ServiceSeeder
 {
-    public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
+    public static async Task<List<Service>> ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
         var serviceContext = scope.ServiceProvider.GetRequiredService<ServiceDbContext>();
@@ -22,12 +22,14 @@ public static class ServiceSeeder
 
         metricsService.IncrementCounter("seeding.service_database_recreate_completed");
 
-        await SeedServiceAsync(serviceContext, metricsService);
-
+        var seededServices = await SeedServiceAsync(serviceContext, metricsService);
+        await serviceContext.SaveChangesAsync();
         metricsService.IncrementCounter("seeding.service_full_reseed_completed");
+        return seededServices;
     }
 
-    private static async Task SeedServiceAsync(ServiceDbContext serviceContext, IMetricsService metricsService)
+    private static async Task<List<Service>> SeedServiceAsync(ServiceDbContext serviceContext,
+        IMetricsService metricsService)
     {
         metricsService.IncrementCounter("seeding.service_seed_started");
 
@@ -309,6 +311,7 @@ public static class ServiceSeeder
 
         metricsService.IncrementCounter("seeding.service_database_save_completed");
         metricsService.IncrementCounter("seeding.service_seed_completed");
+        return services;
     }
 
     private static bool IsFitnessService(string title)
