@@ -6,6 +6,7 @@ using TBD.ScheduleModule;
 using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
+using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
@@ -28,6 +29,7 @@ builder.Services.AddAutoMapper(typeof(UserAddressMapping));
 builder.Services.AddAutoMapper(typeof(UserMapping));
 builder.Services.AddAutoMapper(typeof(UserScheduleMapping));
 builder.Services.AddAutoMapper(typeof(AuthUserMapping));
+builder.Services.AddMemoryCache();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
