@@ -26,9 +26,9 @@ public static class RecommendationModule
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
         services.AddScoped<IRecommendationService, RecommendationService>();
         services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
-        services.AddScoped<IGenericRepository<Recommendation>>(sp =>
-            new GenericRepository<Recommendation>(sp.GetRequiredService<RecommendationDbContext>()));
-        services.Decorate<IGenericRepository<Recommendation>, CachingRepositoryDecorator<Recommendation>>();
+        services.AddScoped<IGenericRepository<UserRecommendation>>(sp =>
+            new GenericRepository<UserRecommendation>(sp.GetRequiredService<RecommendationDbContext>()));
+        services.Decorate<IGenericRepository<UserRecommendation>, CachingRepositoryDecorator<UserRecommendation>>();
         return services;
     }
 }

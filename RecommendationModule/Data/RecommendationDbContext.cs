@@ -5,7 +5,7 @@ namespace TBD.RecommendationModule.Data;
 
 public class RecommendationDbContext : DbContext
 {
-    public DbSet<Recommendation> Recommendations { get; set; }
+    public DbSet<UserRecommendation> UserRecommendations { get; set; }
 
     public RecommendationDbContext(DbContextOptions<RecommendationDbContext> options) : base(options) { }
     public RecommendationDbContext() { }
@@ -21,7 +21,7 @@ public class RecommendationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<Recommendation>(entity =>
+        modelBuilder.Entity<UserRecommendation>(entity =>
         {
             entity.HasKey(r => r.Id);
             entity.HasOne(r => r.User)
@@ -34,10 +34,10 @@ public class RecommendationDbContext : DbContext
 
     public override int SaveChanges()
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is Recommendation);
+        var entries = ChangeTracker.Entries().Where(u => u.Entity is UserRecommendation);
         foreach (var entityEntry in entries)
         {
-            if (entityEntry.Entity is not Recommendation recommendation) continue;
+            if (entityEntry.Entity is not UserRecommendation recommendation) continue;
             recommendation.UpdatedAt = DateTime.UtcNow;
             if (entityEntry.State == EntityState.Added)
             {
@@ -50,10 +50,10 @@ public class RecommendationDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        var entries = ChangeTracker.Entries().Where(u => u.Entity is Recommendation);
+        var entries = ChangeTracker.Entries().Where(u => u.Entity is UserRecommendation);
         foreach (var entityEntry in entries)
         {
-            if (entityEntry.Entity is not Recommendation recommendation) continue;
+            if (entityEntry.Entity is not UserRecommendation recommendation) continue;
             recommendation.UpdatedAt = DateTime.UtcNow;
             if (entityEntry.State == EntityState.Added)
             {

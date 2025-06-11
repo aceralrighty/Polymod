@@ -13,6 +13,11 @@ internal class ServiceRepository(ServiceDbContext context)
         return await DbSet.FindAsync(id) ?? throw new NullReferenceException();
     }
 
+    public async Task<IEnumerable<Service>> GetByIdsAsync(IEnumerable<Guid> ids)
+    {
+        return await DbSet.Where(s => ids.Contains(s.Id)).ToListAsync();
+    }
+
     public async Task<IEnumerable<Service>> GetAllServicesAsync()
     {
         return await DbSet.ToListAsync();

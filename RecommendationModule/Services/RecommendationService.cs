@@ -1,36 +1,46 @@
-using Microsoft.EntityFrameworkCore;
-using TBD.RecommendationModule.Data;
+using TBD.MetricsModule.Services;
 using TBD.RecommendationModule.Models;
 using TBD.RecommendationModule.Repositories;
-using TBD.Shared.Repositories;
+using TBD.ServiceModule.Models;
+using TBD.ServiceModule.Repositories;
 
 namespace TBD.RecommendationModule.Services;
 
-public class RecommendationService(RecommendationDbContext context)
-    : GenericRepository<Recommendation>(context), IRecommendationRepository
+public class RecommendationService(
+    IRecommendationRepository recommendationRepository,
+    IMetricsServiceFactory serviceFactory,
+    IServiceRepository service) : IRecommendationService
 {
-    public async Task AddAsync(Recommendation recommendation)
+    public async Task<IEnumerable<Service>> GetRecommendationsForUserAsync(Guid userId)
     {
-        await context.Recommendations.AddAsync(recommendation);
-        await SaveChangesAsync();
+        var recs = await recommendationRepository.GetByUserIdAsync(userId);
+        var serviceIds = recs.Select(r => r.ServiceId).Distinct();
+        return await service.GetByIdsAsync(serviceIds);
     }
 
-    public async Task<IEnumerable<Recommendation>> GetByUserIdAsync(Guid userId)
+    public async Task RecordRecommendationAsync(Guid userId, Guid serviceId)
     {
-        return await context.Recommendations.Where(u => u.UserId == userId).OrderByDescending(r => r.RecommendedAt)
-            .ToListAsync();
+        var existing = await recommendationRepository.GetLatestByUserAndServiceAsync(userId, serviceId);
+        if (existing != null)
+        {
+            return;
+        }
+
+        var recommendation = new UserRecommendation()
+        {
+            UserId = userId, ServiceId = serviceId, RecommendedAt = DateTime.UtcNow
+        };
+        await recommendationRepository.AddAsync(recommendation);
+        await recommendationRepository.SaveChangesAsync();
     }
 
-    public async Task<Recommendation?> GetLatestByUserAndServiceAsync(Guid userId, Guid serviceId)
+    public async Task IncrementClickAsync(Guid userId, Guid serviceId)
     {
-        return await context.Recommendations
-            .Where(r => r.UserId == userId && r.ServiceId == serviceId)
-            .OrderByDescending(r => r.RecommendedAt)
-            .FirstOrDefaultAsync();
-    }
-
-    public async Task SaveChangesAsync()
-    {
-        await context.SaveChangesAsync();
+        var rec = recommendationRepository.GetLatestByUserAndServiceAsync(userId, serviceId);
+        if (rec != null)
+        {
+            rec.ClickCount++;
+            await recommendationRepository.SaveChangesAsync();
+        }
     }
 }

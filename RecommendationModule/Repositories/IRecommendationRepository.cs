@@ -4,8 +4,8 @@ namespace TBD.RecommendationModule.Repositories;
 
 public interface IRecommendationRepository
 {
-    Task AddAsync(Recommendation recommendation);
-    Task<IEnumerable<Recommendation>> GetByUserIdAsync(Guid userId);
-    Task<Recommendation?> GetLatestByUserAndServiceAsync(Guid userId, Guid serviceId);
+    Task AddAsync(UserRecommendation userRecommendation);
+    Task<IEnumerable<UserRecommendation>> GetByUserIdAsync(Guid userId);
+    Task<UserRecommendation?> GetLatestByUserAndServiceAsync(Guid userId, Guid serviceId);
     Task SaveChangesAsync();
 }

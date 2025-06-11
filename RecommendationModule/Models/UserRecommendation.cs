@@ -6,7 +6,7 @@ using TBD.UserModule.Models;
 
 namespace TBD.RecommendationModule.Models;
 
-public class Recommendation : BaseTableProperties
+public class UserRecommendation : BaseTableProperties
 {
     [Required] public Guid UserId { get; set; }
     [Required] public Guid ServiceId { get; set; }
@@ -20,5 +20,5 @@ public class Recommendation : BaseTableProperties
     public Service? Service { get; set; }
 
     public DateTime RecommendedAt { get; set; }
-    public int ClickCount { get; set; }
+    public int ClickCount { get; set; } = 0;
 }
