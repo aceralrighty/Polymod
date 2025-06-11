@@ -42,12 +42,12 @@ public static class RecommendationSeeder
             Console.WriteLine($"👥 Using {users.Count} users for recommendations");
             Console.WriteLine($"🎯 Using {services.Count} services for recommendations");
 
-            // 👇 Add users to this context first
+           // make sure you save the users before seeding the recommendations
             await context.Users.AddRangeAsync(users);
             await context.SaveChangesAsync();
             Console.WriteLine($"👥 Added {users.Count} users to recommendation context");
 
-            // 👇 Ensure services are saved in this context before referencing their IDs
+            // make sure you save the services before seeding the recommendations
             await context.Services.AddRangeAsync(services);
             await context.SaveChangesAsync();
             Console.WriteLine($"🎯 Added {services.Count} services to recommendation context");
