@@ -31,4 +31,36 @@ public class RecommendationDbContext : DbContext
             entity.HasOne(r => r.Service).WithMany().HasForeignKey(r => r.ServiceId).OnDelete(DeleteBehavior.Cascade);
         });
     }
+
+    public override int SaveChanges()
+    {
+        var entries = ChangeTracker.Entries().Where(u => u.Entity is Recommendation);
+        foreach (var entityEntry in entries)
+        {
+            if (entityEntry.Entity is not Recommendation recommendation) continue;
+            recommendation.UpdatedAt = DateTime.UtcNow;
+            if (entityEntry.State == EntityState.Added)
+            {
+                recommendation.CreatedAt = DateTime.UtcNow;
+            }
+        }
+
+        return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker.Entries().Where(u => u.Entity is Recommendation);
+        foreach (var entityEntry in entries)
+        {
+            if (entityEntry.Entity is not Recommendation recommendation) continue;
+            recommendation.UpdatedAt = DateTime.UtcNow;
+            if (entityEntry.State == EntityState.Added)
+            {
+                recommendation.CreatedAt = DateTime.UtcNow;
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 }
