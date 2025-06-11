@@ -3,11 +3,11 @@ using TBD.AuthModule;
 using TBD.AuthModule.Seed;
 using TBD.MetricsModule;
 using TBD.RecommendationModule;
+using TBD.RecommendationModule.Seed;
 using TBD.ScheduleModule;
 using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
-using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
@@ -40,23 +40,42 @@ if (app.Environment.IsDevelopment())
     {
         Console.WriteLine("🌱 Starting database seeding...");
 
-        // Seed in order with error handling
-        await DataSeeder.ReseedForTestingAsync(app.Services);
-        await Task.Delay(1000); // Give DB time to settle
+        // Seed users first and capture the result
+        Console.WriteLine("👥 Seeding users...");
+        var seededUsers = await DataSeeder.ReseedForTestingAsync(app.Services);
+        Console.WriteLine($"✅ User seeding complete - {seededUsers.Count} users created");
+        await Task.Delay(1000); // Reduced delay
 
+        // Seed schedules
+        Console.WriteLine("📅 Seeding schedules...");
         await ScheduleSeeder.ReseedForTestingAsync(app.Services);
+        Console.WriteLine("✅ Schedule seeding complete");
         await Task.Delay(1000);
 
-        await ServiceSeeder.ReseedForTestingAsync(app.Services);
+        // Seed services and capture the result
+        Console.WriteLine("🎯 Seeding services...");
+        var seededServices = await ServiceSeeder.ReseedForTestingAsync(app.Services);
+        Console.WriteLine($"✅ Service seeding complete - {seededServices.Count} services created");
         await Task.Delay(1000);
+
+        // Seed auth
+        Console.WriteLine("🔐 Seeding auth...");
         await AuthSeeder.ReseedSeedAsync(app.Services);
+        Console.WriteLine("✅ Auth seeding complete");
+        await Task.Delay(1000);
 
-        Console.WriteLine("✅ All seeding complete!");
+        // Seed recommendations with the users and services we just created
+        Console.WriteLine("💡 Seeding recommendations...");
+        await RecommendationSeeder.ReseedForTestingAsync(app.Services, seededUsers, seededServices);
+        Console.WriteLine("✅ Recommendation seeding complete");
+
+        Console.WriteLine("🎉 All seeding complete!");
     }
     catch (Exception ex)
     {
         Console.WriteLine($"❌ Seeding failed: {ex.Message}");
-        throw new NullReferenceException("Seeding failed", ex);
+        Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
+        throw new InvalidOperationException("Database seeding failed", ex);
     }
 
     app.MapOpenApi();

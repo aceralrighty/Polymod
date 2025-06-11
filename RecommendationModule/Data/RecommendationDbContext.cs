@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.RecommendationModule.Models;
+using TBD.ServiceModule.Models;
+using TBD.UserModule.Models;
 
 namespace TBD.RecommendationModule.Data;
 
 public class RecommendationDbContext : DbContext
 {
     public DbSet<UserRecommendation> UserRecommendations { get; set; }
+    public DbSet<Service> Services { get; set; }
+    public DbSet<User> Users { get; set; }
 
     public RecommendationDbContext(DbContextOptions<RecommendationDbContext> options) : base(options) { }
     public RecommendationDbContext() { }
@@ -28,7 +32,10 @@ public class RecommendationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
-            entity.HasOne(r => r.Service).WithMany().HasForeignKey(r => r.ServiceId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(r => r.Service)
+                .WithMany()
+                .HasForeignKey(r => r.ServiceId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 
