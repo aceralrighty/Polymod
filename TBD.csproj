@@ -45,9 +45,7 @@
     <Folder Include="AuthModule\Controllers\" />
     <Folder Include="AuthModule\Views\" />
     <Folder Include="RecommendationModule\Controllers\" />
-    <Folder Include="RecommendationModule\Repositories\" />
     <Folder Include="RecommendationModule\Seed\" />
-    <Folder Include="RecommendationModule\Services\" />
     <Folder Include="ScheduleModule\Controllers\" />
     <Folder Include="ServiceModule\Controllers\" />
     <Folder Include="UserModule\Controllers\" />
