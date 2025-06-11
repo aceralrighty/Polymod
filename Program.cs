@@ -44,27 +44,27 @@ if (app.Environment.IsDevelopment())
         Console.WriteLine("👥 Seeding users...");
         var seededUsers = await DataSeeder.ReseedForTestingAsync(app.Services);
         Console.WriteLine($"✅ User seeding complete - {seededUsers.Count} users created");
-        await Task.Delay(1000); // Reduced delay
+        await Task.Delay(3000); // Reduced delay
 
         // Seed schedules
         Console.WriteLine("📅 Seeding schedules...");
         await ScheduleSeeder.ReseedForTestingAsync(app.Services);
         Console.WriteLine("✅ Schedule seeding complete");
-        await Task.Delay(1000);
+        await Task.Delay(3000);
 
         // Seed services and capture the result
         Console.WriteLine("🎯 Seeding services...");
         var seededServices = await ServiceSeeder.ReseedForTestingAsync(app.Services);
         Console.WriteLine($"✅ Service seeding complete - {seededServices.Count} services created");
-        await Task.Delay(1000);
+        await Task.Delay(3000);
 
         // Seed auth
         Console.WriteLine("🔐 Seeding auth...");
         await AuthSeeder.ReseedSeedAsync(app.Services);
         Console.WriteLine("✅ Auth seeding complete");
-        await Task.Delay(1000);
+        await Task.Delay(3000);
 
-        // Seed recommendations with the users and services we just created
+        // Seed recommendations with the users and services
         Console.WriteLine("💡 Seeding recommendations...");
         await RecommendationSeeder.ReseedForTestingAsync(app.Services, seededUsers, seededServices);
         Console.WriteLine("✅ Recommendation seeding complete");
