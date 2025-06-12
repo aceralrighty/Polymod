@@ -37,7 +37,7 @@ public class ScheduleTest
             Schedule = null
         };
 
-        var schedule = new Schedule(userMock);
+        var schedule = new Schedule();
 
         Assert.That(schedule.UserId, Is.EqualTo(userMock.Id));
         Assert.That(schedule.User, Is.EqualTo(userMock));

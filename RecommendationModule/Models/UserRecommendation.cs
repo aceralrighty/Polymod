@@ -14,11 +14,9 @@ public class UserRecommendation : BaseTableProperties
     public float Rating { get; set; } = 0f;
 
     [ForeignKey(nameof(UserId))]
-    [Required]
     public User? User { get; set; }
 
     [ForeignKey(nameof(ServiceId))]
-    [Required]
     public Service? Service { get; set; }
 
     public DateTime RecommendedAt { get; set; }

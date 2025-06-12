@@ -10,23 +10,9 @@ public class Schedule : BaseTableProperties
 {
     public double? TotalHoursWorked { get; set; }
 
-    public Schedule()
-    {
-    }
 
-    public Schedule(User user)
-    {
-        UserId = user.Id;
-        User = user;
-    }
-
-
-    [Required] public Guid UserId { get; set; }
-
-    // Navigation property with ForeignKey attribute referencing the property name
-    [ForeignKey(nameof(UserId))]
-    [Required]
-    public User User { get; set; }
+    public Guid UserId { get; set; }
+    [ForeignKey(nameof(UserId))] public User User { get; set; }
 
     public double? BasePay { get; set; }
 
@@ -128,7 +114,7 @@ public class Schedule : BaseTableProperties
         }
     }
 
-    [Column(TypeName = "nvarchar(9)")] public string DaysWorkedJson { get; set; } = "{}";
+    [Column(TypeName = "nvarchar(255)")] public string DaysWorkedJson { get; set; } = "{}";
 
     /// <summary>
     /// Represents a dictionary containing the days of work and corresponding hours worked for each day.
