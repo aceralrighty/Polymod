@@ -11,6 +11,8 @@ public class UserRecommendation : BaseTableProperties
     [Required] public Guid UserId { get; set; }
     [Required] public Guid ServiceId { get; set; }
 
+    public float Rating { get; set; } = 0f;
+
     [ForeignKey(nameof(UserId))]
     [Required]
     public User? User { get; set; }
