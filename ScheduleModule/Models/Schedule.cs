@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using TBD.GenericDBProperties;
@@ -9,7 +8,8 @@ namespace TBD.ScheduleModule.Models;
 public class Schedule : BaseTableProperties
 {
     public double? TotalHoursWorked { get; set; }
-    // Have to explicit call this constructor because my tests freak out when i don't
+
+    // Have to explicitly call this constructor because my tests freak out when I don't
     public Schedule() { }
 
     public Schedule(User user)
@@ -161,7 +161,7 @@ public class Schedule : BaseTableProperties
                 throw new InvalidOperationException("Failed to deserialize DaysWorkedJson due to invalid JSON.", ex);
             }
         }
-        set => DaysWorkedJson = JsonSerializer.Serialize(value ?? new Dictionary<string, int>());
+        set => DaysWorkedJson = JsonSerializer.Serialize(value);
     }
 
     public void RecalculateTotalHours()
