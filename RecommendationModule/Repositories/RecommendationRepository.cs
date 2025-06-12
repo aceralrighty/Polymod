@@ -8,7 +8,7 @@ namespace TBD.RecommendationModule.Repositories;
 public class RecommendationRepository(RecommendationDbContext context)
     : GenericRepository<UserRecommendation>(context), IRecommendationRepository
 {
-    public async Task AddAsync(UserRecommendation userRecommendation)
+    public override async Task AddAsync(UserRecommendation userRecommendation)
     {
         await context.UserRecommendations.AddAsync(userRecommendation);
         await SaveChangesAsync();
