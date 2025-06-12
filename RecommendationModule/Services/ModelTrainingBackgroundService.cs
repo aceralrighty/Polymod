@@ -5,7 +5,7 @@ public class ModelTrainingBackgroundService(
     ILogger<ModelTrainingBackgroundService> logger)
     : BackgroundService
 {
-    private readonly TimeSpan _trainingInterval = TimeSpan.FromHours(24); // Train daily
+    private readonly TimeSpan _trainingInterval = TimeSpan.FromHours(24);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

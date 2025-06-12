@@ -46,6 +46,7 @@
     <Folder Include="AddressModule\Seed\" />
     <Folder Include="AuthModule\Controllers\" />
     <Folder Include="AuthModule\Views\" />
+    <Folder Include="Logs\" />
     <Folder Include="RecommendationModule\Controllers\" />
     <Folder Include="ScheduleModule\Controllers\" />
     <Folder Include="ServiceModule\Controllers\" />
