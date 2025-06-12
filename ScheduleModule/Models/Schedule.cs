@@ -9,6 +9,14 @@ namespace TBD.ScheduleModule.Models;
 public class Schedule : BaseTableProperties
 {
     public double? TotalHoursWorked { get; set; }
+    // Have to explicit call this constructor because my tests freak out when i don't
+    public Schedule() { }
+
+    public Schedule(User user)
+    {
+        UserId = user.Id;
+        User = user;
+    }
 
 
     public Guid UserId { get; set; }
