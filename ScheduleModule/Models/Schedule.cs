@@ -20,7 +20,7 @@ public class Schedule : BaseTableProperties
 
 
     public Guid UserId { get; set; }
-    [ForeignKey(nameof(UserId))] public User User { get; set; }
+    [ForeignKey(nameof(UserId))] public User? User { get; set; }
 
     public double? BasePay { get; set; }
 
