@@ -36,8 +36,6 @@ public static class RecommendationModule
         services.Decorate<IGenericRepository<UserRecommendation>, CachingRepositoryDecorator<UserRecommendation>>();
 
         services.AddHostedService<ModelTrainingBackgroundService>();
-
-        // Register RecommendationSeederAndTrainer here
         services.AddScoped<RecommendationSeederAndTrainer>();
 
         return services;

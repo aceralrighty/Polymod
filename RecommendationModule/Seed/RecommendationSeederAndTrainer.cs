@@ -20,8 +20,8 @@ public class RecommendationSeederAndTrainer(
     {
         public static async Task ExampleUsageAsync(IServiceProvider serviceProvider)
         {
-            var users = await GetSampleUsersAsync(serviceProvider);
-            var services = await GetSampleServicesAsync(serviceProvider);
+            var users = await GetSampleUsersAsync();
+            var services = await GetSampleServicesAsync();
 
 
             var logger = serviceProvider.GetRequiredService<ILogger<RecommendationSeederAndTrainer>>();
@@ -29,17 +29,17 @@ public class RecommendationSeederAndTrainer(
 
             await seeder.SeedAndTrainAsync(users, services, includeRatings: true);
 
-            // Option 2: Just seed the database
+            // Option 2: Seed the database
             await seeder.SeedRecommendationsWithRatingsAsync(users, services, includeRatings: true);
 
-            // Option 3: Just train the model (if data already exists)
+            // Option 3: Train the model (if data already exists)
             // await seeder.TrainRecommendationModelAsync();
 
             // Option 4: Add more ratings to existing data
             // await seeder.AddAdditionalRatingsAsync(500);
         }
 
-        private static Task<List<User>> GetSampleUsersAsync(IServiceProvider serviceProvider)
+        private static Task<List<User>> GetSampleUsersAsync()
         {
             var hashedPassword = new Hasher();
             return Task.FromResult<List<User>>([
@@ -56,7 +56,7 @@ public class RecommendationSeederAndTrainer(
                     Id = Guid.NewGuid(),
                     Username = "jane_smith",
                     Email = "jane@example.com",
-                    Password = hashedPassword.HashPassword("Boogaloo"),
+                    Password = hashedPassword.HashPassword("Froogaloop"),
                     Schedule = new Schedule()
                 },
                 new User
@@ -71,7 +71,7 @@ public class RecommendationSeederAndTrainer(
             ]);
         }
 
-        private static Task<List<Service>> GetSampleServicesAsync(IServiceProvider serviceProvider)
+        private static Task<List<Service>> GetSampleServicesAsync()
         {
             // In real implementation, get from your service repository
             // For now, return sample services
@@ -88,18 +88,8 @@ public class RecommendationSeederAndTrainer(
         }
     }
 
-// Extension method for easy DI registration
-    public static class ServiceCollectionExtensions
-    {
-        public static IServiceCollection AddRecommendationSeeder(IServiceCollection services)
-        {
-            services.AddScoped<RecommendationSeederAndTrainer>();
-            return services;
-        }
-    }
-
     /// <summary>
-    /// Complete workflow: Seed database with realistic data and train ML model
+    /// Complete workflow: Seed database with realistic data and train an ML model
     /// </summary>
     public async Task SeedAndTrainAsync(List<User> users, List<Service> services, bool includeRatings = true)
     {
@@ -128,7 +118,7 @@ public class RecommendationSeederAndTrainer(
     /// <summary>
     /// Seed database with realistic user-service interactions and ratings
     /// </summary>
-    public async Task SeedRecommendationsWithRatingsAsync(List<User> users, List<Service> services,
+    private async Task SeedRecommendationsWithRatingsAsync(List<User> users, List<Service> services,
         bool includeRatings = true)
     {
         using var scope = serviceProvider.CreateScope();
@@ -149,7 +139,8 @@ public class RecommendationSeederAndTrainer(
             await context.Services.AddRangeAsync(services);
             await context.SaveChangesAsync();
 
-            logger.LogInformation($"👥 Added {users.Count} users and 🎯 {services.Count} services to context");
+            logger.LogInformation("👥 Added {UsersCount} users and 🎯 {ServicesCount} services to context", users.Count,
+                services.Count);
 
             // Generate realistic recommendations and ratings
             var recommendations = GenerateRealisticRecommendations(users, services, includeRatings);
@@ -227,7 +218,7 @@ public class RecommendationSeederAndTrainer(
     /// <summary>
     /// Train the ML recommendation model using seeded data
     /// </summary>
-    public async Task TrainRecommendationModelAsync()
+    private async Task TrainRecommendationModelAsync()
     {
         using var scope = serviceProvider.CreateScope();
         var recommendationService = scope.ServiceProvider.GetRequiredService<IRecommendationService>();
@@ -264,7 +255,8 @@ public class RecommendationSeederAndTrainer(
                 // Test ML recommendations
                 var mlRecommendations = await recommendationService.GetMlRecommendationsAsync(user.Id, 5);
                 logger.LogInformation(
-                    $"👤 User {user.Username}: Generated {mlRecommendations.Count()} ML recommendations");
+                    "👤 User {UserUsername}: Generated {Count} ML recommendations", user.Username,
+                    mlRecommendations.Count());
 
                 // Test rating predictions for a few services
                 var testServices = services.Take(3);
@@ -276,7 +268,7 @@ public class RecommendationSeederAndTrainer(
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, $"⚠️ Validation issue for user {user.Username}");
+                logger.LogWarning(ex, "⚠️ Validation issue for user {UserUsername}", user.Username);
             }
         }
     }
@@ -304,10 +296,10 @@ public class RecommendationSeederAndTrainer(
     private float GenerateRealisticRating(int clickCount, List<string> userPreferences, Service service)
     {
         // Base rating influenced by engagement
-        float baseRating = clickCount switch
+        var baseRating = clickCount switch
         {
             0 => GenerateRatingInRange(1.0f, 3.0f), // Low rating if no clicks
-            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed rating for single click
+            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed rating for a single click
             >= 2 and <= 4 => GenerateRatingInRange(3.0f, 5.0f), // Good rating for moderate engagement
             >= 5 and <= 8 => GenerateRatingInRange(3.5f, 5.0f), // High rating for high engagement
             _ => GenerateRatingInRange(4.0f, 5.0f) // Excellent rating for very high engagement
@@ -317,14 +309,14 @@ public class RecommendationSeederAndTrainer(
         var serviceCategory = GetServiceCategory(service);
         if (userPreferences.Contains(serviceCategory))
         {
-            baseRating = Math.Min(5.0f, baseRating + _random.Next(0, 10) * 0.1f); // Boost for preferred category
+            baseRating = Math.Min(5.0f, baseRating + _random.Next(0, 10) * 0.1f); // Boost for a preferred category
         }
 
         // Add some randomness but keep it realistic
         var noise = (_random.NextSingle() - 0.5f) * 0.4f; // ±0.2 rating noise
         baseRating = Math.Max(1.0f, Math.Min(5.0f, baseRating + noise));
 
-        // Round to nearest 0.5 for realistic ratings
+        // Round to the nearest 0.5 for realistic ratings
         return (float)(Math.Round(baseRating * 2) / 2.0);
     }
 
@@ -344,7 +336,7 @@ public class RecommendationSeederAndTrainer(
             "Technology", "Healthcare", "Education", "Finance", "Entertainment", "Travel", "Food", "Fitness"
         };
 
-        // Simple categorization based on service index (in real app, you'd use actual categories)
+        // Simple categorization based on service index (in a real app, you'd use actual categories)
         foreach (var service in services)
         {
             var categoryIndex = Math.Abs(service.Id.GetHashCode()) % categoryNames.Length;
@@ -382,14 +374,14 @@ public class RecommendationSeederAndTrainer(
 
         // Select from preferred categories
         var preferredServices = userPreferences
-            .SelectMany(pref => categories.ContainsKey(pref) ? categories[pref] : new List<Service>())
+            .SelectMany(pref => categories.TryGetValue(pref, out var category) ? category : [])
             .Distinct()
             .OrderBy(_ => _random.Next())
             .Take(preferredCount);
 
         selectedServices.AddRange(preferredServices);
 
-        // Fill remaining with random services
+        // Fill the remaining with random services
         var remainingServices = allServices
             .Except(selectedServices)
             .OrderBy(_ => _random.Next())
@@ -422,7 +414,7 @@ public class RecommendationSeederAndTrainer(
             .AverageAsync(r => r.Rating);
         var totalClicks = await context.UserRecommendations.SumAsync(r => r.ClickCount);
 
-        logger.LogInformation($"📊 Seeded Data Statistics:");
+        logger.LogInformation("📊 Seeded Data Statistics:");
         logger.LogInformation("   • Total Recommendations: {TotalRecommendations}", totalRecommendations);
         logger.LogInformation("   • Recommendations with Ratings: {TotalWithRatings}", totalWithRatings);
         logger.LogInformation("   • Average Rating: {AvgRating:F2}", avgRating);
@@ -446,11 +438,12 @@ public class RecommendationSeederAndTrainer(
         {
             // Generate rating based on click count
             rec.Rating =
-                GenerateRealisticRating(rec.ClickCount, new List<string>(), new Service { Id = rec.ServiceId });
+                GenerateRealisticRating(rec.ClickCount, [], new Service { Id = rec.ServiceId });
             rec.UpdatedAt = DateTime.UtcNow;
         }
 
         await context.SaveChangesAsync();
-        logger.LogInformation($"📊 Added {unratedRecommendations.Count} additional ratings");
+        logger.LogInformation("📊 Added {UnratedRecommendationsCount} additional ratings",
+            unratedRecommendations.Count);
     }
 }

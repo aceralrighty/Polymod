@@ -84,7 +84,6 @@ if (app.Environment.IsDevelopment())
     {
         Console.WriteLine($"❌ Startup failed: {ex.Message}");
         Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
-        // Re-throw to indicate a critical startup failure
         throw new InvalidOperationException(
             "Application startup failed due to database seeding or model training issues", ex);
     }
