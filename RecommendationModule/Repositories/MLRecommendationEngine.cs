@@ -5,13 +5,15 @@ using TBD.RecommendationModule.Models;
 
 namespace TBD.RecommendationModule.Repositories;
 
-public class MlRecommendationEngine(IRecommendationRepository repository, IMetricsServiceFactory serviceFactory) : IMlRecommendationEngine
+public class MlRecommendationEngine(IRecommendationRepository repository, IMetricsServiceFactory serviceFactory)
+    : IMlRecommendationEngine
 {
     private readonly MLContext _mlContext = new(seed: 0);
     private ITransformer? _model;
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Data", "RecommendationModel.zip");
     private PredictionEngine<ServiceRating, ServiceRatingPrediction>? _predictionEngine;
     private readonly IMetricsService _metricsService = serviceFactory.CreateMetricsService("Recommendation");
+
     public Task<bool> IsModelTrainedAsync()
     {
         _metricsService.IncrementCounter("rec.is_model_trained");
@@ -20,8 +22,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
     public async Task TrainModelAsync()
     {
-
-
         _metricsService.IncrementCounter("rec.train_model");
         var allRecommendations = await repository.GetAllWithRatingsAsync();
 
@@ -35,9 +35,7 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
         var trainingData = userRecommendations.Select(r => new ServiceRating
         {
-            UserId = HashGuid(r.UserId),
-            ServiceId = HashGuid(r.ServiceId),
-            Label = r.Rating
+            UserId = HashGuid(r.UserId), ServiceId = HashGuid(r.ServiceId), Label = r.Rating
         }).ToList();
 
         var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
