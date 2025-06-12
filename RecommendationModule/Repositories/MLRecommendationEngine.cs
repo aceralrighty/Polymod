@@ -23,14 +23,15 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
         // Get all user-service interactions with ratings
         var allRecommendations = await repository.GetAllWithRatingsAsync();
 
-        if (!allRecommendations.Any())
+        var userRecommendations = allRecommendations as UserRecommendation[] ?? allRecommendations.ToArray();
+        if (userRecommendations.Length == 0)
         {
             Console.WriteLine("No training data available. Skipping model training.");
             return;
         }
 
         // Convert to ML.NET format
-        var trainingData = allRecommendations.Select(r => new ServiceRating
+        var trainingData = userRecommendations.Select(r => new ServiceRating
         {
             UserId = HashGuid(r.UserId), // Convert Guid to float
             ServiceId = HashGuid(r.ServiceId),
@@ -40,8 +41,10 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
         var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
 
         // Define data preparation and training pipeline
-        var pipeline = _mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "UserId", outputColumnName: "UserIdEncoded")
-            .Append(_mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "ServiceId", outputColumnName: "ServiceIdEncoded"))
+        var pipeline = _mlContext.Transforms.Conversion
+            .MapValueToKey(inputColumnName: "UserId", outputColumnName: "UserIdEncoded")
+            .Append(_mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "ServiceId",
+                outputColumnName: "ServiceIdEncoded"))
             .Append(_mlContext.Recommendation().Trainers.MatrixFactorization(
                 new MatrixFactorizationTrainer.Options
                 {
@@ -68,7 +71,8 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
             {
                 Console.WriteLine($"DEBUG: Directory '{modelDirectory}' does not exist. Attempting to create...");
                 Directory.CreateDirectory(modelDirectory);
-                Console.WriteLine($"DEBUG: Directory exists after creation attempt: {Directory.Exists(modelDirectory)}");
+                Console.WriteLine(
+                    $"DEBUG: Directory exists after creation attempt: {Directory.Exists(modelDirectory)}");
             }
             else if (Directory.Exists(modelDirectory))
             {
@@ -96,21 +100,23 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
     {
         if (_model == null)
         {
-            // Try to load model if it exists
+            // Try to load the model if it exists
             if (File.Exists(_modelPath))
             {
                 await LoadModelAsync();
             }
             else
             {
-                Console.WriteLine("Model not trained or loaded. Generating popularity-based recommendations as fallback.");
+                Console.WriteLine(
+                    "Model not trained or loaded. Generating popularity-based recommendations as fallback.");
                 return await GetPopularityBasedRecommendationsAsync(userId, maxResults);
             }
         }
 
         if (_predictionEngine == null)
         {
-            Console.WriteLine("Prediction engine not initialized. Generating popularity-based recommendations as fallback.");
+            Console.WriteLine(
+                "Prediction engine not initialized. Generating popularity-based recommendations as fallback.");
             return await GetPopularityBasedRecommendationsAsync(userId, maxResults);
         }
 
@@ -130,8 +136,7 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
 
             var prediction = _predictionEngine.Predict(new ServiceRating
             {
-                UserId = HashGuid(userId),
-                ServiceId = HashGuid(serviceId)
+                UserId = HashGuid(userId), ServiceId = HashGuid(serviceId)
             });
             scores.Add((serviceId, prediction.Score));
         }
@@ -145,7 +150,7 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
     {
         if (_model == null)
         {
-            // Try to load model if it exists
+            // Try to load the model if it exists
             if (File.Exists(_modelPath))
             {
                 await LoadModelAsync();
@@ -156,42 +161,39 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
             }
         }
 
-        if (_predictionEngine == null)
-        {
-            _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
-        }
+        _predictionEngine ??= _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
 
         var prediction = _predictionEngine.Predict(new ServiceRating
         {
-            UserId = HashGuid(userId),
-            ServiceId = HashGuid(serviceId)
+            UserId = HashGuid(userId), ServiceId = HashGuid(serviceId)
         });
 
         return prediction.Score;
     }
 
-    private async Task<bool> LoadModelAsync()
+    private Task<bool> LoadModelAsync()
     {
         if (!File.Exists(_modelPath))
         {
             Console.WriteLine($"Model file not found at {_modelPath}.");
-            return false;
+            return Task.FromResult(false);
         }
 
         try
         {
             using (var stream = new FileStream(_modelPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                _model = _mlContext.Model.Load(stream, out var modelInputSchema);
+                _model = _mlContext.Model.Load(stream, out _);
             }
+
             _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
             Console.WriteLine("ML.NET model loaded successfully.");
-            return true;
+            return Task.FromResult(true);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error loading ML.NET model: {ex.Message}");
-            return false;
+            return Task.FromResult(false);
         }
     }
 
@@ -220,10 +222,5 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
     private float HashGuid(Guid guid)
     {
         return Math.Abs(guid.GetHashCode()) % 100000; // Simple hash to float conversion
-    }
-
-    public void Dispose()
-    {
-        // Dispose any unmanaged resources if necessary
     }
 }
