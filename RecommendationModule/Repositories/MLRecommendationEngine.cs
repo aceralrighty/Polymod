@@ -8,7 +8,7 @@ public class MlRecommendationEngine(IRecommendationRepository _repository) : IMl
 {
     private readonly MLContext _mlContext = new(seed: 0);
     private ITransformer? _model;
-    private readonly string _modelPath = Path.Combine(Environment.CurrentDirectory, "Data", "RecommendationModel.zip");
+    private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Data", "RecommendationModel.zip");
     private PredictionEngine<ServiceRating, ServiceRatingPrediction>? _predictionEngine;
 
     public Task<bool> IsModelTrainedAsync()
@@ -39,108 +39,159 @@ public class MlRecommendationEngine(IRecommendationRepository _repository) : IMl
 
         var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
 
-        // Define the ML pipeline
-        var estimator = _mlContext.Transforms.Conversion
-            .MapValueToKey(outputColumnName: "userIdEncoded", inputColumnName: nameof(ServiceRating.UserId))
-            .Append(_mlContext.Transforms.Conversion
-                .MapValueToKey(outputColumnName: "serviceIdEncoded", inputColumnName: nameof(ServiceRating.ServiceId)));
-
-        // Configure Matrix Factorization trainer
-        var options = new MatrixFactorizationTrainer.Options
-        {
-            MatrixColumnIndexColumnName = "userIdEncoded",
-            MatrixRowIndexColumnName = "serviceIdEncoded",
-            LabelColumnName = "Label",
-            NumberOfIterations = 20,
-            ApproximationRank = 32, // Smaller rank for smaller datasets
-            LearningRate = 0.1
-        };
-
-        var trainer = estimator.Append(_mlContext.Recommendation().Trainers.MatrixFactorization(options));
+        // Define data preparation and training pipeline
+        var pipeline = _mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "UserId", outputColumnName: "UserIdEncoded")
+            .Append(_mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "ServiceId", outputColumnName: "ServiceIdEncoded"))
+            .Append(_mlContext.Recommendation().Trainers.MatrixFactorization(
+                new MatrixFactorizationTrainer.Options
+                {
+                    MatrixColumnIndexColumnName = "UserIdEncoded",
+                    MatrixRowIndexColumnName = "ServiceIdEncoded",
+                    LabelColumnName = "Label",
+                    NumberOfIterations = 20,
+                    ApproximationRank = 100 // Adjust as needed
+                }));
 
         // Train the model
-        _model = trainer.Fit(dataView);
+        _model = pipeline.Fit(dataView);
 
-        // Create prediction engine
-        _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
-
-        // Save the model
-        _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
-
-        Console.WriteLine("=============== Model Training Complete ===============");
-    }
-
-    public Task<float> PredictRatingAsync(Guid userId, Guid serviceId)
-    {
-        if (_predictionEngine == null)
+        // Save the trained model
+        try
         {
-            if (File.Exists(_modelPath))
+            // Ensure the directory exists before saving the model
+            var modelDirectory = Path.GetDirectoryName(_modelPath);
+
+            Console.WriteLine($"DEBUG: Model Path: {_modelPath}");
+            Console.WriteLine($"DEBUG: Model Directory: {modelDirectory}");
+
+            if (!string.IsNullOrEmpty(modelDirectory) && !Directory.Exists(modelDirectory))
             {
-                // Load existing model
-                _model = _mlContext.Model.Load(_modelPath, out _);
-                _predictionEngine =
-                    _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
+                Console.WriteLine($"DEBUG: Directory '{modelDirectory}' does not exist. Attempting to create...");
+                Directory.CreateDirectory(modelDirectory);
+                Console.WriteLine($"DEBUG: Directory exists after creation attempt: {Directory.Exists(modelDirectory)}");
+            }
+            else if (Directory.Exists(modelDirectory))
+            {
+                Console.WriteLine($"DEBUG: Directory '{modelDirectory}' already exists.");
             }
             else
             {
-                // No model available, return default rating
-                return Task.FromResult(2.5f);
+                Console.WriteLine($"DEBUG: modelDirectory is null or empty. Cannot create directory.");
+            }
+
+            // This is the line where the error consistently occurs
+            _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
+            Console.WriteLine($"=============== Model saved to {_modelPath} ===============");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving model: {ex.Message}");
+            throw;
+        }
+
+        _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
+    }
+
+    public async Task<IEnumerable<Guid>> GenerateRecommendationsAsync(Guid userId, int maxResults)
+    {
+        if (_model == null)
+        {
+            // Try to load model if it exists
+            if (File.Exists(_modelPath))
+            {
+                await LoadModelAsync();
+            }
+            else
+            {
+                Console.WriteLine("Model not trained or loaded. Generating popularity-based recommendations as fallback.");
+                return await GetPopularityBasedRecommendationsAsync(userId, maxResults);
             }
         }
 
-        var testInput = new ServiceRating { UserId = HashGuid(userId), ServiceId = HashGuid(serviceId) };
-
-        var prediction = _predictionEngine.Predict(testInput);
-        return Task.FromResult(Math.Max(1f, Math.Min(5f, prediction.Score))); // Clamp between 1-5
-    }
-
-    public async Task<IEnumerable<Guid>> GenerateRecommendationsAsync(Guid userId, int maxResults = 10)
-    {
-        if (_predictionEngine == null && !await LoadModelAsync())
+        if (_predictionEngine == null)
         {
-            // Fallback to popularity-based recommendations
+            Console.WriteLine("Prediction engine not initialized. Generating popularity-based recommendations as fallback.");
             return await GetPopularityBasedRecommendationsAsync(userId, maxResults);
         }
 
-        // Get all services the user hasn't interacted with
+        var allServiceIds = (await GetAllServiceIdsAsync()).ToList();
         var userInteractions = await _repository.GetByUserIdAsync(userId);
         var interactedServiceIds = userInteractions.Select(r => r.ServiceId).ToHashSet();
 
-        // For demo purposes, get all possible service IDs
-        // In a real app, you'd get this from your service repository
-        var allServiceIds = await GetAllServiceIdsAsync();
-        var candidateServices = allServiceIds.Where(id => !interactedServiceIds.Contains(id)).ToList();
+        var scores = new List<(Guid ServiceId, float Score)>();
 
-        // Predict ratings for all candidate services
-        var predictions = new List<(Guid ServiceId, float PredictedRating)>();
-
-        foreach (var serviceId in candidateServices)
+        foreach (var serviceId in allServiceIds)
         {
-            var rating = await PredictRatingAsync(userId, serviceId);
-            predictions.Add((serviceId, rating));
+            // Skip services the user has already interacted with
+            if (interactedServiceIds.Contains(serviceId))
+            {
+                continue;
+            }
+
+            var prediction = _predictionEngine.Predict(new ServiceRating
+            {
+                UserId = HashGuid(userId),
+                ServiceId = HashGuid(serviceId)
+            });
+            scores.Add((serviceId, prediction.Score));
         }
 
-        // Return top-rated services
-        return predictions
-            .Where(p => p.PredictedRating >= 3.5f) // Only recommend highly-rated services
-            .OrderByDescending(p => p.PredictedRating)
+        return scores.OrderByDescending(s => s.Score)
             .Take(maxResults)
-            .Select(p => p.ServiceId);
+            .Select(s => s.ServiceId);
     }
 
-    private Task<bool> LoadModelAsync()
+    public async Task<float> PredictRatingAsync(Guid userId, Guid serviceId)
     {
-        if (!File.Exists(_modelPath)) return Task.FromResult(false);
+        if (_model == null)
+        {
+            // Try to load model if it exists
+            if (File.Exists(_modelPath))
+            {
+                await LoadModelAsync();
+            }
+            else
+            {
+                throw new InvalidOperationException("Model not trained or loaded. Cannot predict rating.");
+            }
+        }
+
+        if (_predictionEngine == null)
+        {
+            _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
+        }
+
+        var prediction = _predictionEngine.Predict(new ServiceRating
+        {
+            UserId = HashGuid(userId),
+            ServiceId = HashGuid(serviceId)
+        });
+
+        return prediction.Score;
+    }
+
+    private async Task<bool> LoadModelAsync()
+    {
+        if (!File.Exists(_modelPath))
+        {
+            Console.WriteLine($"Model file not found at {_modelPath}.");
+            return false;
+        }
 
         try
         {
-            _model = _mlContext.Model.Load(_modelPath, out _);
+            using (var stream = new FileStream(_modelPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                _model = _mlContext.Model.Load(stream, out var modelInputSchema);
+            }
             _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
-            return Task.FromResult(true);
+            Console.WriteLine("ML.NET model loaded successfully.");
+            return true;
         }
-        catch
+        catch (Exception ex)
         {
-            return Task.FromResult(false);
+            Console.WriteLine($"Error loading ML.NET model: {ex.Message}");
+            return false;
         }
     }
 
@@ -173,6 +224,6 @@ public class MlRecommendationEngine(IRecommendationRepository _repository) : IMl
 
     public void Dispose()
     {
-        _predictionEngine?.Dispose();
+        // Dispose any unmanaged resources if necessary
     }
 }

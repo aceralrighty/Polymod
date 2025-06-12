@@ -9,7 +9,7 @@ namespace TBD.RecommendationModule.Services;
 public class RecommendationService(
     IRecommendationRepository recommendationRepository,
     IMetricsServiceFactory serviceFactory,
-    IServiceRepository service, IMlRecommendationEngine _mlEngine) : IRecommendationService
+    IServiceRepository service, IMlRecommendationEngine mlEngine) : IRecommendationService
 {
     private readonly IMetricsService _metricsService = serviceFactory.CreateMetricsService("Recommendation");
 
@@ -53,7 +53,7 @@ public class RecommendationService(
     {
         _metricsService.IncrementCounter("rec.get_ml_recommendations");
 
-        var recommendedServiceIds = await _mlEngine.GenerateRecommendationsAsync(userId, count);
+        var recommendedServiceIds = await mlEngine.GenerateRecommendationsAsync(userId, count);
         return await service.GetByIdsAsync(recommendedServiceIds);
     }
 
@@ -69,12 +69,12 @@ public class RecommendationService(
     public async Task<float> PredictRatingAsync(Guid userId, Guid serviceId)
     {
         _metricsService.IncrementCounter("rec.predict_rating");
-        return await _mlEngine.PredictRatingAsync(userId, serviceId);
+        return await mlEngine.PredictRatingAsync(userId, serviceId);
     }
 
     public async Task TrainRecommendationModelAsync()
     {
         _metricsService.IncrementCounter("rec.train_model");
-        await _mlEngine.TrainModelAsync();
+        await mlEngine.TrainModelAsync();
     }
 }

@@ -3,6 +3,7 @@ using TBD.MetricsModule.Services;
 using TBD.RecommendationModule.Data;
 using TBD.RecommendationModule.Models;
 using TBD.RecommendationModule.Repositories;
+using TBD.RecommendationModule.Seed;
 using TBD.RecommendationModule.Services;
 using TBD.Shared.Repositories;
 
@@ -34,8 +35,10 @@ public static class RecommendationModule
             new GenericRepository<UserRecommendation>(sp.GetRequiredService<RecommendationDbContext>()));
         services.Decorate<IGenericRepository<UserRecommendation>, CachingRepositoryDecorator<UserRecommendation>>();
 
-        // Add background service for model training
         services.AddHostedService<ModelTrainingBackgroundService>();
+
+        // Register RecommendationSeederAndTrainer here
+        services.AddScoped<RecommendationSeederAndTrainer>();
 
         return services;
     }
