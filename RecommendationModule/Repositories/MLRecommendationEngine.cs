@@ -1,46 +1,48 @@
 using Microsoft.ML;
 using Microsoft.ML.Trainers;
+using TBD.MetricsModule.Services;
 using TBD.RecommendationModule.Models;
 
 namespace TBD.RecommendationModule.Repositories;
 
-public class MlRecommendationEngine(IRecommendationRepository repository) : IMlRecommendationEngine
+public class MlRecommendationEngine(IRecommendationRepository repository, IMetricsServiceFactory serviceFactory) : IMlRecommendationEngine
 {
     private readonly MLContext _mlContext = new(seed: 0);
     private ITransformer? _model;
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Data", "RecommendationModel.zip");
     private PredictionEngine<ServiceRating, ServiceRatingPrediction>? _predictionEngine;
-
+    private readonly IMetricsService _metricsService = serviceFactory.CreateMetricsService("Recommendation");
     public Task<bool> IsModelTrainedAsync()
     {
+        _metricsService.IncrementCounter("rec.is_model_trained");
         return Task.FromResult(File.Exists(_modelPath) && _model != null);
     }
 
     public async Task TrainModelAsync()
     {
-        Console.WriteLine("=============== Training ML.NET Recommendation Model ===============");
 
-        // Get all user-service interactions with ratings
+
+        _metricsService.IncrementCounter("rec.train_model");
         var allRecommendations = await repository.GetAllWithRatingsAsync();
 
         var userRecommendations = allRecommendations as UserRecommendation[] ?? allRecommendations.ToArray();
         if (userRecommendations.Length == 0)
         {
-            Console.WriteLine("No training data available. Skipping model training.");
+            _metricsService.IncrementCounter("rec.train_model_empty_data");
             return;
         }
 
-        // Convert to ML.NET format
+
         var trainingData = userRecommendations.Select(r => new ServiceRating
         {
-            UserId = HashGuid(r.UserId), // Convert Guid to float
+            UserId = HashGuid(r.UserId),
             ServiceId = HashGuid(r.ServiceId),
             Label = r.Rating
         }).ToList();
 
         var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
 
-        // Define data preparation and training pipeline
+        _metricsService.IncrementCounter("rec.prep_model_training_pipeline");
         var pipeline = _mlContext.Transforms.Conversion
             .MapValueToKey(inputColumnName: "UserId", outputColumnName: "UserIdEncoded")
             .Append(_mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "ServiceId",
@@ -52,13 +54,13 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
                     MatrixRowIndexColumnName = "ServiceIdEncoded",
                     LabelColumnName = "Label",
                     NumberOfIterations = 20,
-                    ApproximationRank = 100 // Adjust as needed
+                    ApproximationRank = 100
                 }));
 
-        // Train the model
+        _metricsService.IncrementCounter("rec.fit_model_training_pipeline");
         _model = pipeline.Fit(dataView);
 
-        // Save the trained model
+        _metricsService.IncrementCounter("rec.save_model");
         try
         {
             // Ensure the directory exists before saving the model
@@ -83,7 +85,7 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
                 Console.WriteLine($"DEBUG: modelDirectory is null or empty. Cannot create directory.");
             }
 
-            // This is the line where the error consistently occurs
+            _metricsService.IncrementCounter("rec.save_model_dataView_modelSchema_modelPath");
             _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
             Console.WriteLine($"=============== Model saved to {_modelPath} ===============");
         }
@@ -175,6 +177,7 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
     {
         if (!File.Exists(_modelPath))
         {
+            _metricsService.IncrementCounter("rec.model_file_not_found");
             Console.WriteLine($"Model file not found at {_modelPath}.");
             return Task.FromResult(false);
         }
@@ -221,6 +224,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository) : IMlR
     // Helper method to convert Guid to float for ML.NET
     private float HashGuid(Guid guid)
     {
-        return Math.Abs(guid.GetHashCode()) % 100000; // Simple hash to float conversion
+        return Math.Abs(guid.GetHashCode()) % 100000;
     }
 }
