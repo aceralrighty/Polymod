@@ -16,27 +16,21 @@ public class RecommendationSeederAndTrainer(
 {
     private readonly Random _random = new();
 
-    // Usage Example - How to integrate with your existing system
     public static class RecommendationSeederUsage
     {
-        /// <summary>
-        /// Example of how to use the seeder in your application startup or testing
-        /// </summary>
         public static async Task ExampleUsageAsync(IServiceProvider serviceProvider)
         {
-            // Create sample users and services (you'll get these from your actual repositories)
             var users = await GetSampleUsersAsync(serviceProvider);
             var services = await GetSampleServicesAsync(serviceProvider);
 
-            // Create the seeder
+
             var logger = serviceProvider.GetRequiredService<ILogger<RecommendationSeederAndTrainer>>();
             var seeder = new RecommendationSeederAndTrainer(serviceProvider, logger);
 
-            // Option 1: Complete workflow (recommended for initial setup)
             await seeder.SeedAndTrainAsync(users, services, includeRatings: true);
 
             // Option 2: Just seed the database
-            // await seeder.SeedRecommendationsWithRatingsAsync(users, services, includeRatings: true);
+            await seeder.SeedRecommendationsWithRatingsAsync(users, services, includeRatings: true);
 
             // Option 3: Just train the model (if data already exists)
             // await seeder.TrainRecommendationModelAsync();
@@ -47,15 +41,14 @@ public class RecommendationSeederAndTrainer(
 
         private static Task<List<User>> GetSampleUsersAsync(IServiceProvider serviceProvider)
         {
-            // In real implementation, get from your user repository
-            // For now, return sample users
+            var hashedPassword = new Hasher();
             return Task.FromResult<List<User>>([
                 new User
                 {
                     Id = Guid.NewGuid(),
                     Username = "john_doe",
                     Email = "john@example.com",
-                    Password = "<PASSWORD>",
+                    Password = hashedPassword.HashPassword("Sinners"),
                     Schedule = new Schedule()
                 },
                 new User
@@ -63,7 +56,7 @@ public class RecommendationSeederAndTrainer(
                     Id = Guid.NewGuid(),
                     Username = "jane_smith",
                     Email = "jane@example.com",
-                    Password = "<PASSWORD>",
+                    Password = hashedPassword.HashPassword("Boogaloo"),
                     Schedule = new Schedule()
                 },
                 new User
@@ -71,7 +64,7 @@ public class RecommendationSeederAndTrainer(
                     Id = Guid.NewGuid(),
                     Username = "bob_wilson",
                     Email = "bob@example.com",
-                    Password = "<PASSWORD>",
+                    Password = hashedPassword.HashPassword("why lord why"),
                     Schedule = new Schedule()
                 },
                 // Add more users as needed

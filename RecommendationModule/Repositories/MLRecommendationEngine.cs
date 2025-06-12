@@ -4,7 +4,7 @@ using TBD.RecommendationModule.Models;
 
 namespace TBD.RecommendationModule.Repositories;
 
-public class MlRecommendationEngine(IRecommendationRepository _repository) : IMlRecommendationEngine
+public class MlRecommendationEngine(IRecommendationRepository repository) : IMlRecommendationEngine
 {
     private readonly MLContext _mlContext = new(seed: 0);
     private ITransformer? _model;
@@ -21,7 +21,7 @@ public class MlRecommendationEngine(IRecommendationRepository _repository) : IMl
         Console.WriteLine("=============== Training ML.NET Recommendation Model ===============");
 
         // Get all user-service interactions with ratings
-        var allRecommendations = await _repository.GetAllWithRatingsAsync();
+        var allRecommendations = await repository.GetAllWithRatingsAsync();
 
         if (!allRecommendations.Any())
         {
@@ -115,7 +115,7 @@ public class MlRecommendationEngine(IRecommendationRepository _repository) : IMl
         }
 
         var allServiceIds = (await GetAllServiceIdsAsync()).ToList();
-        var userInteractions = await _repository.GetByUserIdAsync(userId);
+        var userInteractions = await repository.GetByUserIdAsync(userId);
         var interactedServiceIds = userInteractions.Select(r => r.ServiceId).ToHashSet();
 
         var scores = new List<(Guid ServiceId, float Score)>();
@@ -198,10 +198,10 @@ public class MlRecommendationEngine(IRecommendationRepository _repository) : IMl
     private async Task<IEnumerable<Guid>> GetPopularityBasedRecommendationsAsync(Guid userId, int maxResults)
     {
         // Fallback: return most popular services this user hasn't tried
-        var userInteractions = await _repository.GetByUserIdAsync(userId);
+        var userInteractions = await repository.GetByUserIdAsync(userId);
         var interactedServiceIds = userInteractions.Select(r => r.ServiceId).ToHashSet();
 
-        var popularServices = await _repository.GetMostPopularServicesAsync(maxResults * 2);
+        var popularServices = await repository.GetMostPopularServicesAsync(maxResults * 2);
 
         return popularServices
             .Where(serviceId => !interactedServiceIds.Contains(serviceId))
@@ -212,7 +212,7 @@ public class MlRecommendationEngine(IRecommendationRepository _repository) : IMl
     {
         // This would typically come from your service repository
         // For now, return services from existing recommendations
-        var recommendations = await _repository.GetAllAsync();
+        var recommendations = await repository.GetAllAsync();
         return recommendations.Select(r => r.ServiceId).Distinct();
     }
 

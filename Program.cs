@@ -1,5 +1,3 @@
-// Program.cs
-
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
@@ -14,8 +12,6 @@ using TBD.Shared.Utils;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
 
-// Add this for IMlRecommendationEngine
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -26,7 +22,8 @@ builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
-builder.Services.AddRecommendationModule(builder.Configuration); // RecommendationSeederAndTrainer should be registered here
+builder.Services.AddRecommendationModule(builder
+    .Configuration);
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
@@ -44,10 +41,9 @@ if (app.Environment.IsDevelopment())
     {
         Console.WriteLine("🌱 Starting database seeding and model training...");
 
-        // Create a service scope for the seeding and training operation
         using (var scope = app.Services.CreateScope())
         {
-            var scopedServices = scope.ServiceProvider; // Get services from the scope
+            var scopedServices = scope.ServiceProvider;
 
             // Seed users first and capture the result
             Console.WriteLine("👥 Seeding users...");
@@ -75,11 +71,12 @@ if (app.Environment.IsDevelopment())
 
             // This is the combined seeding and training logic
             // The RecommendationSeederAndTrainer will handle database recreation and data seeding for recommendations
-            Console.WriteLine("💡 Starting RecommendationSeederAndTrainer workflow (seeding recommendations and training model)...");
+            Console.WriteLine(
+                "💡 Starting RecommendationSeederAndTrainer workflow (seeding recommendations and training model)...");
             var recommendationSeederAndTrainer = scopedServices.GetRequiredService<RecommendationSeederAndTrainer>();
             await recommendationSeederAndTrainer.SeedAndTrainAsync(seededUsers, seededServices, includeRatings: true);
             Console.WriteLine("✅ Recommendation Seeding and Training complete!");
-        } // End of service scope
+        }
 
         Console.WriteLine("🎉 All startup tasks complete!");
     }
@@ -88,7 +85,8 @@ if (app.Environment.IsDevelopment())
         Console.WriteLine($"❌ Startup failed: {ex.Message}");
         Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
         // Re-throw to indicate a critical startup failure
-        throw new InvalidOperationException("Application startup failed due to database seeding or model training issues", ex);
+        throw new InvalidOperationException(
+            "Application startup failed due to database seeding or model training issues", ex);
     }
 
     app.MapOpenApi();
