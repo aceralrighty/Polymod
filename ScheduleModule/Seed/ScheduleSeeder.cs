@@ -1,15 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.Services;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
-using TBD.MetricsModule.Services;
 
 namespace TBD.ScheduleModule.Seed;
 
 public static class ScheduleSeeder
 {
+    private static readonly Random Random = new();
+
     public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
@@ -291,6 +293,53 @@ public static class ScheduleSeeder
             scheduleMassive, scheduleJustUnder40, scheduleJustUnder60, scheduleHighPayExact60,
             scheduleLowPayMassive, scheduleOneDay, schedulePerfectTiers
         ]);
+
+        // --- NEW: Generate more realistic schedules ---
+        for (int i = 0; i < 15; i++) // Add 15 more varied schedules
+        {
+            var totalHours = Random.Next(20, 70); // Total hours between 20 and 70
+            var daysWorked = new Dictionary<string, int>();
+            var remainingHours = totalHours;
+            var days = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+            // Distribute hours somewhat randomly across days
+            foreach (var day in days.OrderBy(_ => Random.Next())) // Randomize day order
+            {
+                if (remainingHours <= 0) break;
+
+                var hoursToday = Math.Min(remainingHours, Random.Next(0, 15)); // Max 14 hours per day
+                daysWorked[day] = hoursToday;
+                remainingHours -= hoursToday;
+            }
+
+            // Ensure all days are present, even if 0 hours
+            foreach (var day in days)
+            {
+                if (!daysWorked.ContainsKey(day))
+                {
+                    daysWorked[day] = 0;
+                }
+            }
+
+            // Ensure remaining hours are distributed if any (e.g., if initial random distribution didn't hit totalHours)
+            if (remainingHours > 0)
+            {
+                var dayToAddTo = days[Random.Next(days.Length)];
+                daysWorked[dayToAddTo] += remainingHours;
+            }
+
+            var basePay = (double)Random.Next(15, 60); // Random pay between $15-$60
+
+            var newSchedule = new Schedule
+            {
+                Id = Guid.NewGuid(),
+                DaysWorked = daysWorked,
+                BasePay = basePay,
+                User = CreateScheduleUser($"dynamic.user.{i + 1}", $"DynamicPass{i + 1}!", $"dynamic{i + 1}@test.com")
+            };
+            schedules.Add(newSchedule);
+        }
+        // --- End of NEW section ---
 
         // I'm actually prouder of this one line than I should be.
         foreach (var calc in schedules)
