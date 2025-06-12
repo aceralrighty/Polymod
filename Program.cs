@@ -16,6 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 builder.Services.AddMetricsModule();
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
@@ -86,10 +88,12 @@ if (app.Environment.IsDevelopment())
         throw new InvalidOperationException(
             "Application startup failed due to database seeding or model training issues", ex);
     }
-
-    app.MapOpenApi();
 }
 
+app.MapOpenApi();
+
+app.UseSwagger();
+app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TBD.Api v1"));
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
