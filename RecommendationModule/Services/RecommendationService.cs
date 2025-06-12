@@ -9,7 +9,7 @@ namespace TBD.RecommendationModule.Services;
 public class RecommendationService(
     IRecommendationRepository recommendationRepository,
     IMetricsServiceFactory serviceFactory,
-    IServiceRepository service) : IRecommendationService
+    IServiceRepository service, IMlRecommendationEngine _mlEngine) : IRecommendationService
 {
     private readonly IMetricsService _metricsService = serviceFactory.CreateMetricsService("Recommendation");
 
@@ -47,5 +47,34 @@ public class RecommendationService(
             _metricsService.IncrementCounter("rec.increment_click.");
             await recommendationRepository.SaveChangesAsync();
         }
+    }
+
+    public async Task<IEnumerable<Service>> GetMlRecommendationsAsync(Guid userId, int count = 10)
+    {
+        _metricsService.IncrementCounter("rec.get_ml_recommendations");
+
+        var recommendedServiceIds = await _mlEngine.GenerateRecommendationsAsync(userId, count);
+        return await service.GetByIdsAsync(recommendedServiceIds);
+    }
+
+    public async Task RateServiceAsync(Guid userId, Guid serviceId, float rating)
+    {
+        if (rating is < 1f or > 5f)
+            throw new ArgumentException("Rating must be between 1 and 5");
+
+        _metricsService.IncrementCounter("rec.rate_service");
+        await recommendationRepository.AddRatingAsync(userId, serviceId, rating);
+    }
+
+    public async Task<float> PredictRatingAsync(Guid userId, Guid serviceId)
+    {
+        _metricsService.IncrementCounter("rec.predict_rating");
+        return await _mlEngine.PredictRatingAsync(userId, serviceId);
+    }
+
+    public async Task TrainRecommendationModelAsync()
+    {
+        _metricsService.IncrementCounter("rec.train_model");
+        await _mlEngine.TrainModelAsync();
     }
 }
