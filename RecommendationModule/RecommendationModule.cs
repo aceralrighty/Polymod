@@ -27,15 +27,25 @@ public static class RecommendationModule
             options.CacheKeyPrefix = "Recommendation";
         });
 
+        // Register repositories
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
+        services.AddScoped<IRecommendationOutputRepository, RecommendationOutputRepository>(); // Make sure this is registered!
+
+        // Register services
         services.AddScoped<IRecommendationService, RecommendationService>();
         services.AddScoped<IMlRecommendationEngine, MlRecommendationEngine>();
         services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
 
+        // Register generic repositories with caching
         services.AddScoped<IGenericRepository<UserRecommendation>>(sp =>
             new GenericRepository<UserRecommendation>(sp.GetRequiredService<RecommendationDbContext>()));
         services.Decorate<IGenericRepository<UserRecommendation>, CachingRepositoryDecorator<UserRecommendation>>();
 
+        services.AddScoped<IGenericRepository<RecommendationOutput>>(sp =>
+            new GenericRepository<RecommendationOutput>(sp.GetRequiredService<RecommendationDbContext>()));
+        services.Decorate<IGenericRepository<RecommendationOutput>, CachingRepositoryDecorator<RecommendationOutput>>();
+
+        // Background services
         services.AddHostedService<ModelTrainingBackgroundService>();
         services.AddScoped<RecommendationSeederAndTrainer>();
 

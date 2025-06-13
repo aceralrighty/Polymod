@@ -6,13 +6,17 @@ using TBD.RecommendationModule.Repositories.Interfaces;
 
 namespace TBD.RecommendationModule.Repositories;
 
-public class MlRecommendationEngine(IRecommendationRepository repository, IMetricsServiceFactory serviceFactory) : IMlRecommendationEngine
+public class MlRecommendationEngine(
+    IRecommendationRepository repository,
+    IRecommendationOutputRepository outputRepository,
+    IMetricsServiceFactory serviceFactory) : IMlRecommendationEngine
 {
     private readonly MLContext _mlContext = new(seed: 0);
     private ITransformer? _model;
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Data", "RecommendationModel.zip");
     private PredictionEngine<ServiceRating, ServiceRatingPrediction>? _predictionEngine;
     private readonly IMetricsService _metricsService = serviceFactory.CreateMetricsService("Recommendation");
+
     public Task<bool> IsModelTrainedAsync()
     {
         _metricsService.IncrementCounter("rec.is_model_trained");
@@ -21,8 +25,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
     public async Task TrainModelAsync()
     {
-
-
         _metricsService.IncrementCounter("rec.train_model");
         var allRecommendations = await repository.GetAllWithRatingsAsync();
 
@@ -33,12 +35,9 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
             return;
         }
 
-
         var trainingData = userRecommendations.Select(r => new ServiceRating
         {
-            UserId = HashGuid(r.UserId),
-            ServiceId = HashGuid(r.ServiceId),
-            Label = r.Rating
+            UserId = HashGuid(r.UserId), ServiceId = HashGuid(r.ServiceId), Label = r.Rating
         }).ToList();
 
         var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
@@ -56,7 +55,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
                     LabelColumnName = "Label",
                     NumberOfIterations = 20,
                     ApproximationRank = 100,
-
                 }));
 
         // Train the model
@@ -65,7 +63,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
         // Save the trained model
         try
         {
-            // Ensure the directory exists before saving the model
             var modelDirectory = Path.GetDirectoryName(_modelPath);
 
             Console.WriteLine($"DEBUG: Model Path: {_modelPath}");
@@ -87,7 +84,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
                 Console.WriteLine($"DEBUG: modelDirectory is null or empty. Cannot create directory.");
             }
 
-            // This is the line where the error consistently occurs
             _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
             Console.WriteLine($"=============== Model saved to {_modelPath} ===============");
         }
@@ -102,9 +98,11 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
     public async Task<IEnumerable<Guid>> GenerateRecommendationsAsync(Guid userId, int maxResults)
     {
+        var batchId = Guid.NewGuid();
+        var context = GetCurrentContext();
+
         if (_model == null)
         {
-            // Try to load the model if it exists
             if (File.Exists(_modelPath))
             {
                 await LoadModelAsync();
@@ -113,7 +111,9 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
             {
                 Console.WriteLine(
                     "Model not trained or loaded. Generating popularity-based recommendations as fallback.");
-                return await GetPopularityBasedRecommendationsAsync(userId, maxResults);
+                var fallbackRecs = await GetPopularityBasedRecommendationsAsync(userId, maxResults);
+                await SaveRecommendationOutputsAsync(userId, fallbackRecs, batchId, "Popularity", context);
+                return fallbackRecs;
             }
         }
 
@@ -121,7 +121,9 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
         {
             Console.WriteLine(
                 "Prediction engine not initialized. Generating popularity-based recommendations as fallback.");
-            return await GetPopularityBasedRecommendationsAsync(userId, maxResults);
+            var fallbackRecs = await GetPopularityBasedRecommendationsAsync(userId, maxResults);
+            await SaveRecommendationOutputsAsync(userId, fallbackRecs, batchId, "Popularity", context);
+            return fallbackRecs;
         }
 
         var allServiceIds = (await GetAllServiceIdsAsync()).ToList();
@@ -132,7 +134,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
         foreach (var serviceId in allServiceIds)
         {
-            // Skip services the user has already interacted with
             if (interactedServiceIds.Contains(serviceId))
             {
                 continue;
@@ -145,16 +146,21 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
             scores.Add((serviceId, prediction.Score));
         }
 
-        return scores.OrderByDescending(s => s.Score)
+        var recommendedServiceIds = scores.OrderByDescending(s => s.Score)
             .Take(maxResults)
-            .Select(s => s.ServiceId);
+            .Select(s => s.ServiceId)
+            .ToList();
+
+        // Save the recommendation outputs to database
+        await SaveRecommendationOutputsAsync(userId, scores.Take(maxResults), batchId, "MatrixFactorization", context);
+
+        return recommendedServiceIds;
     }
 
     public async Task<float> PredictRatingAsync(Guid userId, Guid serviceId)
     {
         if (_model == null)
         {
-            // Try to load the model if it exists
             if (File.Exists(_modelPath))
             {
                 await LoadModelAsync();
@@ -173,6 +179,63 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
         });
 
         return prediction.Score;
+    }
+
+    // NEW METHOD: Save recommendation outputs to database
+    private async Task SaveRecommendationOutputsAsync(
+        Guid userId,
+        IEnumerable<(Guid ServiceId, float Score)> recommendations,
+        Guid batchId,
+        string strategy,
+        string context)
+    {
+        var outputs = recommendations.Select((rec, index) => new RecommendationOutput
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ServiceId = rec.ServiceId,
+            Score = rec.Score,
+            Rank = index + 1,
+            Strategy = strategy,
+            Context = context,
+            BatchId = batchId,
+            GeneratedAt = DateTime.UtcNow
+        }).ToList();
+
+        await outputRepository.SaveRecommendationBatchAsync(outputs);
+
+        _metricsService.IncrementCounter("rec.outputs_saved");
+        Console.WriteLine($"Saved {outputs.Count} recommendation outputs for user {userId} (Batch: {batchId})");
+    }
+
+    // Overload for simple service IDs (for fallback methods)
+    private async Task SaveRecommendationOutputsAsync(
+        Guid userId,
+        IEnumerable<Guid> serviceIds,
+        Guid batchId,
+        string strategy,
+        string context)
+    {
+        var recommendations = serviceIds.Select((serviceId, index) => (serviceId, Score: 0f));
+        await SaveRecommendationOutputsAsync(userId, recommendations, batchId, strategy, context);
+    }
+
+    private string GetCurrentContext()
+    {
+        var hour = DateTime.Now.Hour;
+        var dayOfWeek = DateTime.Now.DayOfWeek;
+
+        var timeOfDay = hour switch
+        {
+            >= 6 and < 12 => "Morning",
+            >= 12 and < 17 => "Afternoon",
+            >= 17 and < 22 => "Evening",
+            _ => "Night"
+        };
+
+        var dayType = dayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday ? "Weekend" : "Weekday";
+
+        return $"{timeOfDay}_{dayType}";
     }
 
     private Task<bool> LoadModelAsync()
@@ -203,7 +266,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
     private async Task<IEnumerable<Guid>> GetPopularityBasedRecommendationsAsync(Guid userId, int maxResults)
     {
-        // Fallback: return most popular services this user hasn't tried
         var userInteractions = await repository.GetByUserIdAsync(userId);
         var interactedServiceIds = userInteractions.Select(r => r.ServiceId).ToHashSet();
 
@@ -216,15 +278,12 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
     private async Task<IEnumerable<Guid>> GetAllServiceIdsAsync()
     {
-        // This would typically come from your service repository
-        // For now, return services from existing recommendations
         var recommendations = await repository.GetAllAsync();
         return recommendations.Select(r => r.ServiceId).Distinct();
     }
 
-    // Helper method to convert Guid to float for ML.NET
     private float HashGuid(Guid guid)
     {
-        return Math.Abs(guid.GetHashCode()) % 100000; // Simple hash to float conversion
+        return Math.Abs(guid.GetHashCode()) % 100000;
     }
 }
