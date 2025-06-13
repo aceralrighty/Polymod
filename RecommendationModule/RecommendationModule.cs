@@ -6,6 +6,7 @@ using TBD.RecommendationModule.Repositories;
 using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.RecommendationModule.Seed;
 using TBD.RecommendationModule.Services;
+using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 
 namespace TBD.RecommendationModule;
@@ -29,7 +30,8 @@ public static class RecommendationModule
 
         // Register repositories
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
-        services.AddScoped<IRecommendationOutputRepository, RecommendationOutputRepository>(); // Make sure this is registered!
+        services
+            .AddScoped<IRecommendationOutputRepository, RecommendationOutputRepository>();
 
         // Register services
         services.AddScoped<IRecommendationService, RecommendationService>();

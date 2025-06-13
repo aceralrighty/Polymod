@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace TBD.Shared.Repositories;
+namespace TBD.Shared.CachingConfiguration;
 
 public class ConcurrentHashSet<T> : IDisposable where T : notnull
 {

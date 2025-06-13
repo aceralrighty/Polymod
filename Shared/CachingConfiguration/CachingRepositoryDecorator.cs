@@ -3,8 +3,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using TBD.Shared.Repositories;
 
-namespace TBD.Shared.Repositories;
+namespace TBD.Shared.CachingConfiguration;
 
 public class CachingRepositoryDecorator<T>(
     IGenericRepository<T> inner,

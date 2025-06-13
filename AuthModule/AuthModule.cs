@@ -5,6 +5,7 @@ using TBD.AuthModule.Repositories;
 using TBD.AuthModule.Services;
 using TBD.MetricsModule;
 using TBD.MetricsModule.Services;
+using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 

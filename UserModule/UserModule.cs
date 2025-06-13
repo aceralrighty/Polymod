@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
+using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;

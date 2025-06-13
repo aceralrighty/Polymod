@@ -1,4 +1,4 @@
-namespace TBD.Shared.Repositories;
+namespace TBD.Shared.CachingConfiguration;
 
 public class CacheOptions
 {
