@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
 using TBD.RecommendationModule.Data;
 using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.ScheduleModule.Models;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
@@ -10,7 +11,8 @@ namespace TBD.RecommendationModule.Seed;
 
 public class RecommendationSeederAndTrainer(
     IServiceProvider serviceProvider,
-    ILogger<RecommendationSeederAndTrainer> logger)
+    ILogger<RecommendationSeederAndTrainer> logger,
+    IRecommendationOutputRepository outputRepository)
 {
     private readonly Random _random = new();
 
@@ -21,7 +23,8 @@ public class RecommendationSeederAndTrainer(
         List<User> users,
         List<Service> services,
         bool recreateDatabase = true,
-        bool includeRatings = true)
+        bool includeRatings = true,
+        bool generateRecommendationOutputs = true)
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<RecommendationDbContext>();
@@ -43,11 +46,17 @@ public class RecommendationSeederAndTrainer(
             // Step 3: Seed base entities (users and services)
             await SeedBaseEntities(context, users, services);
 
-            // Step 4: Generate and seed recommendations
+            // Step 4: Generate and seed user recommendations (historical data)
             var recommendations = await GenerateRecommendations(users, services, includeRatings);
             await SeedRecommendations(context, recommendations);
 
-            // Step 5: Log statistics
+            // Step 5: Generate and seed recommendation outputs (ML generated recommendations)
+            if (generateRecommendationOutputs)
+            {
+                await GenerateAndSeedRecommendationOutputs(users, services);
+            }
+
+            // Step 6: Log statistics
             await LogSeedingStatistics(context);
 
             logger.LogInformation("✅ Recommendation seeding completed successfully!");
@@ -62,6 +71,118 @@ public class RecommendationSeederAndTrainer(
     }
 
     /// <summary>
+    /// Generate and seed recommendation outputs (ML-generated recommendations)
+    /// </summary>
+    private async Task GenerateAndSeedRecommendationOutputs(List<User> users, List<Service> services)
+    {
+        logger.LogInformation("🤖 Generating ML recommendation outputs...");
+
+        var batchId = Guid.NewGuid();
+        var recommendationOutputs = new List<RecommendationOutput>();
+
+        foreach (var user in users)
+        {
+            // Generate 5-15 recommendations per user
+            var recommendationCount = _random.Next(5, 16);
+            var selectedServices = services.OrderBy(_ => _random.Next()).Take(recommendationCount).ToList();
+
+            for (int i = 0; i < selectedServices.Count; i++)
+            {
+                var service = selectedServices[i];
+                var output = CreateRecommendationOutput(user.Id, service.Id, batchId, i + 1);
+                recommendationOutputs.Add(output);
+            }
+        }
+
+        // Save using the repository
+        await outputRepository.SaveRecommendationBatchAsync(recommendationOutputs);
+
+        logger.LogInformation("✅ Generated and saved {OutputCount} recommendation outputs for {UserCount} users",
+            recommendationOutputs.Count, users.Count);
+    }
+
+    /// <summary>
+    /// Create a single recommendation output with realistic ML data
+    /// </summary>
+    private RecommendationOutput CreateRecommendationOutput(Guid userId, Guid serviceId, Guid batchId, int rank)
+    {
+        var now = DateTime.UtcNow;
+        var score = GenerateRealisticScore(rank);
+        var context = GenerateRecommendationContext();
+        var strategy = GenerateRecommendationStrategy();
+
+        // Simulate some user interactions
+        var hasBeenViewed = _random.NextDouble() < 0.7; // 70% viewed
+        var hasBeenClicked = hasBeenViewed && _random.NextDouble() < 0.3; // 30% of viewed get clicked
+
+        return new RecommendationOutput
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ServiceId = serviceId,
+            Score = score,
+            Rank = rank,
+            Strategy = strategy,
+            Context = context,
+            BatchId = batchId,
+            GeneratedAt = now.AddMinutes(-_random.Next(0, 1440)), // Generated within last 24 hours
+            HasBeenViewed = hasBeenViewed,
+            HasBeenClicked = hasBeenClicked,
+            ViewedAt = hasBeenViewed ? now.AddMinutes(-_random.Next(0, 720)) : null, // Viewed within last 12 hours
+            ClickedAt = hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within last 6 hours
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+    }
+
+    /// <summary>
+    /// Generate realistic ML confidence scores (higher scores for better ranks)
+    /// </summary>
+    private float GenerateRealisticScore(int rank)
+    {
+        // Higher ranks (1, 2, 3) should have higher scores
+        var baseScore = rank switch
+        {
+            1 => _random.NextSingle() * 0.2f + 0.8f, // 0.8-1.0
+            2 => _random.NextSingle() * 0.15f + 0.7f, // 0.7-0.85
+            3 => _random.NextSingle() * 0.15f + 0.6f, // 0.6-0.75
+            <= 5 => _random.NextSingle() * 0.2f + 0.4f, // 0.4-0.6
+            <= 10 => _random.NextSingle() * 0.2f + 0.2f, // 0.2-0.4
+            _ => _random.NextSingle() * 0.2f + 0.1f // 0.1-0.3
+        };
+
+        return (float)Math.Round(baseScore, 3);
+    }
+
+    /// <summary>
+    /// Generate recommendation context
+    /// </summary>
+    private string GenerateRecommendationContext()
+    {
+        var contexts = new[]
+        {
+            "morning_routine", "evening_relaxation", "weekend_activities", "workday_break", "lunch_time",
+            "after_work", "weekend_morning", "late_night", "holiday_special", "seasonal_recommendation"
+        };
+
+        return contexts[_random.Next(contexts.Length)];
+    }
+
+    /// <summary>
+    /// Generate recommendation strategy
+    /// </summary>
+    private string GenerateRecommendationStrategy()
+    {
+        var strategies = new[]
+        {
+            "MatrixFactorization", "CollaborativeFiltering", "ContentBased", "Hybrid", "PopularityBased",
+            "TrendingNow", "PersonalizedRanking"
+        };
+
+        return strategies[_random.Next(strategies.Length)];
+    }
+
+    /// <summary>
     /// Prepare database - clean slate approach
     /// </summary>
     private async Task PrepareDatabase(RecommendationDbContext context)
@@ -72,7 +193,7 @@ public class RecommendationSeederAndTrainer(
         {
             // Ensure the database is deleted and recreated
             await context.Database.EnsureDeletedAsync();
-            await context.Database.EnsureCreatedAsync();
+            await context.Database.MigrateAsync();
 
             logger.LogInformation("✅ Database prepared successfully");
         }
@@ -162,7 +283,7 @@ public class RecommendationSeederAndTrainer(
         List<Service> services,
         bool includeRatings)
     {
-        logger.LogInformation("📝 Generating recommendations...");
+        logger.LogInformation("📝 Generating user recommendations...");
 
         var serviceIds = services.Select(s => s.Id).ToList();
 
@@ -174,7 +295,7 @@ public class RecommendationSeederAndTrainer(
             from serviceId in selectedServiceIds
             select CreateRecommendation(user.Id, serviceId, includeRatings)).ToList();
 
-        logger.LogInformation("✅ Generated {RecommendationCount} recommendations", recommendations.Count);
+        logger.LogInformation("✅ Generated {RecommendationCount} user recommendations", recommendations.Count);
         return Task.FromResult(recommendations);
     }
 
@@ -252,7 +373,7 @@ public class RecommendationSeederAndTrainer(
     /// </summary>
     private async Task SeedRecommendations(RecommendationDbContext context, List<UserRecommendation> recommendations)
     {
-        logger.LogInformation("💾 Seeding {RecommendationCount} recommendations...", recommendations.Count);
+        logger.LogInformation("💾 Seeding {RecommendationCount} user recommendations...", recommendations.Count);
 
         const int batchSize = 1000;
         var totalBatches = (int)Math.Ceiling((double)recommendations.Count / batchSize);
@@ -270,7 +391,7 @@ public class RecommendationSeederAndTrainer(
                 i + 1, totalBatches, batchSaved);
         }
 
-        logger.LogInformation("✅ Successfully seeded {SavedCount} recommendations", savedCount);
+        logger.LogInformation("✅ Successfully seeded {SavedCount} user recommendations", savedCount);
     }
 
     /// <summary>
@@ -286,21 +407,27 @@ public class RecommendationSeederAndTrainer(
         {
             var totalUsers = await context.Users.CountAsync();
             var totalRecommendations = await context.UserRecommendations.CountAsync();
+            var totalOutputs = await context.RecommendationOutputs.CountAsync();
             var totalWithRatings = await context.UserRecommendations.CountAsync(r => r.Rating > 0);
             var totalClicks = await context.UserRecommendations.SumAsync(r => r.ClickCount);
+            var totalViewed = await context.RecommendationOutputs.CountAsync(r => r.HasBeenViewed);
+            var totalClicked = await context.RecommendationOutputs.CountAsync(r => r.HasBeenClicked);
 
             var avgRating = totalWithRatings > 0
                 ? await context.UserRecommendations.Where(r => r.Rating > 0).AverageAsync(r => r.Rating)
                 : 0;
 
             var avgRecommendationsPerUser = totalUsers > 0 ? (double)totalRecommendations / totalUsers : 0;
+            var avgOutputsPerUser = totalUsers > 0 ? (double)totalOutputs / totalUsers : 0;
 
             logger.LogInformation("📈 Seeding Statistics:");
             service.IncrementCounter("========================>📈 Seeding Statistics<========================");
             logger.LogInformation("   • Users: {TotalUsers}", totalUsers);
             service.IncrementCounter($"stats.total_users_{totalUsers}");
-            logger.LogInformation("   • Total Recommendations: {TotalRecommendations}", totalRecommendations);
+            logger.LogInformation("   • User Recommendations: {TotalRecommendations}", totalRecommendations);
             service.IncrementCounter($"stats.total_recommendations_{totalRecommendations}");
+            logger.LogInformation("   • ML Recommendation Outputs: {TotalOutputs}", totalOutputs);
+            service.IncrementCounter($"stats.total_outputs_{totalOutputs}");
             logger.LogInformation("   • Recommendations with Ratings: {TotalWithRatings}", totalWithRatings);
             service.IncrementCounter($"stats.recommendations_with_ratings_{totalWithRatings}");
             logger.LogInformation("   • Rating Coverage: {RatingCoverage:P1}",
@@ -309,9 +436,14 @@ public class RecommendationSeederAndTrainer(
             logger.LogInformation("   • Average Rating: {AvgRating:F2}", avgRating);
             service.IncrementCounter($"avg.AverageRating_{avgRating:F2}");
             logger.LogInformation("   • Total Clicks: {TotalClicks}", totalClicks);
-            logger.LogInformation("   • Avg Recommendations per User: {AvgRecommendationsPerUser:F1}",
+            logger.LogInformation("   • Outputs Viewed: {TotalViewed}", totalViewed);
+            logger.LogInformation("   • Outputs Clicked: {TotalClicked}", totalClicked);
+            logger.LogInformation("   • Avg User Recommendations per User: {AvgRecommendationsPerUser:F1}",
                 avgRecommendationsPerUser);
-            service.IncrementCounter($"avg.AverageRecommendationsPerUser_{avgRating:F1}");
+            logger.LogInformation("   • Avg ML Outputs per User: {AvgOutputsPerUser:F1}",
+                avgOutputsPerUser);
+            service.IncrementCounter($"avg.AverageRecommendationsPerUser_{avgRecommendationsPerUser:F1}");
+            service.IncrementCounter($"avg.AverageOutputsPerUser_{avgOutputsPerUser:F1}");
         }
         catch (Exception ex)
         {
