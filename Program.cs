@@ -54,7 +54,7 @@ if (app.Environment.IsDevelopment())
 
             // Seed schedules
             Console.WriteLine("📅 Seeding schedules...");
-            var seededSchedule = await ScheduleSeeder.ReseedForTestingAsync(scopedServices);
+            await ScheduleSeeder.ReseedForTestingAsync(scopedServices);
             Console.WriteLine("✅ Schedule seeding complete");
             await Task.Delay(1000);
 

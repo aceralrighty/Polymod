@@ -135,7 +135,7 @@ public class RecommendationSeederAndTrainer(
             }
 
             EnsureProperTimestamps(user.Schedule);
-            user.Schedule.UserId = user.Id; // Ensure FK is set
+            user.Schedule.UserId = user.Id;
         }
 
         // Prepare services with proper timestamps
@@ -305,7 +305,7 @@ public class RecommendationSeederAndTrainer(
             service.IncrementCounter($"stats.recommendations_with_ratings_{totalWithRatings}");
             logger.LogInformation("   • Rating Coverage: {RatingCoverage:P1}",
                 (double)totalWithRatings / totalRecommendations);
-            service.IncrementCounter($"stats.rating_coverage_{(double)totalWithRatings / totalRecommendations})");
+            service.IncrementCounter($"stats.rating_coverage_{(double)totalWithRatings / totalRecommendations}");
             logger.LogInformation("   • Average Rating: {AvgRating:F2}", avgRating);
             service.IncrementCounter($"avg.AverageRating_{avgRating:F2}");
             logger.LogInformation("   • Total Clicks: {TotalClicks}", totalClicks);
