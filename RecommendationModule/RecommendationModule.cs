@@ -6,6 +6,7 @@ using TBD.RecommendationModule.Repositories;
 using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.RecommendationModule.Seed;
 using TBD.RecommendationModule.Services;
+using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 
 namespace TBD.RecommendationModule;

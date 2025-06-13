@@ -4,6 +4,7 @@ using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
 using TBD.ScheduleModule.Repositories;
 using TBD.ScheduleModule.Services;
+using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 
 namespace TBD.ScheduleModule;
