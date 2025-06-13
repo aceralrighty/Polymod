@@ -11,7 +11,7 @@ public class UserRecommendation : BaseTableProperties
     [Required] public Guid UserId { get; set; }
     [Required] public Guid ServiceId { get; set; }
 
-    public float Rating { get; set; } = 0f;
+    public float Rating { get; set; }
 
     [ForeignKey(nameof(UserId))] public User? User { get; set; }
 
@@ -20,5 +20,4 @@ public class UserRecommendation : BaseTableProperties
     public DateTime RecommendedAt { get; set; }
     public int ClickCount { get; set; } = 0;
 
-    public ServiceRatingPrediction? ServiceRatingPrediction { get; set; } = new ServiceRatingPrediction();
 }

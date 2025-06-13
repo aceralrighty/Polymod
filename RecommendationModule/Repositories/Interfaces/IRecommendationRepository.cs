@@ -1,7 +1,7 @@
 using TBD.RecommendationModule.Models;
 using TBD.Shared.Repositories;
 
-namespace TBD.RecommendationModule.Repositories;
+namespace TBD.RecommendationModule.Repositories.Interfaces;
 
 public interface IRecommendationRepository : IGenericRepository<UserRecommendation>
 {

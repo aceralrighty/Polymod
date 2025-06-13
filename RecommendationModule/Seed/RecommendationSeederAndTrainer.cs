@@ -93,14 +93,14 @@ public class RecommendationSeederAndTrainer(
             throw new ArgumentException("Users list cannot be null or empty", nameof(users));
         }
 
-        if (services == null || !services.Any())
+        if (services == null || services.Count == 0)
         {
             throw new ArgumentException("Services list cannot be null or empty", nameof(services));
         }
 
         // Validate users have proper IDs
         var invalidUsers = users.Where(u => u.Id == Guid.Empty).ToList();
-        if (invalidUsers.Any())
+        if (invalidUsers.Count != 0)
         {
             throw new ArgumentException($"Found {invalidUsers.Count} users with empty GUIDs");
         }
@@ -278,6 +278,8 @@ public class RecommendationSeederAndTrainer(
     /// </summary>
     private async Task LogSeedingStatistics(RecommendationDbContext context)
     {
+        IMetricsServiceFactory serviceFactory = new MetricsServiceFactory();
+        var service = serviceFactory.CreateMetricsService("LogSeedingStatistics");
         logger.LogInformation("📊 Computing seeding statistics...");
 
         try
@@ -294,15 +296,22 @@ public class RecommendationSeederAndTrainer(
             var avgRecommendationsPerUser = totalUsers > 0 ? (double)totalRecommendations / totalUsers : 0;
 
             logger.LogInformation("📈 Seeding Statistics:");
+            service.IncrementCounter("========================>📈 Seeding Statistics<========================");
             logger.LogInformation("   • Users: {TotalUsers}", totalUsers);
+            service.IncrementCounter($"stats.total_users_{totalUsers}");
             logger.LogInformation("   • Total Recommendations: {TotalRecommendations}", totalRecommendations);
+            service.IncrementCounter($"stats.total_recommendations_{totalRecommendations}");
             logger.LogInformation("   • Recommendations with Ratings: {TotalWithRatings}", totalWithRatings);
+            service.IncrementCounter($"stats.recommendations_with_ratings_{totalWithRatings}");
             logger.LogInformation("   • Rating Coverage: {RatingCoverage:P1}",
                 (double)totalWithRatings / totalRecommendations);
+            service.IncrementCounter($"stats.rating_coverage_{(double)totalWithRatings / totalRecommendations})");
             logger.LogInformation("   • Average Rating: {AvgRating:F2}", avgRating);
+            service.IncrementCounter($"avg.AverageRating_{avgRating:F2}");
             logger.LogInformation("   • Total Clicks: {TotalClicks}", totalClicks);
             logger.LogInformation("   • Avg Recommendations per User: {AvgRecommendationsPerUser:F1}",
                 avgRecommendationsPerUser);
+            service.IncrementCounter($"avg.AverageRecommendationsPerUser_{avgRating:F1}");
         }
         catch (Exception ex)
         {
