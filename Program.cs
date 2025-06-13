@@ -50,7 +50,7 @@ if (app.Environment.IsDevelopment())
             Console.WriteLine("👥 Seeding users...");
             var seededUsers = await DataSeeder.ReseedForTestingAsync(scopedServices);
             Console.WriteLine($"✅ User seeding complete - {seededUsers.Count} users created");
-            await Task.Delay(1000); // Shorter delay
+            await Task.Delay(1000);
 
             // Seed schedules
             Console.WriteLine("📅 Seeding schedules...");
@@ -102,5 +102,5 @@ app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
 
-Console.WriteLine("Starting Server😁\n");
+Console.WriteLine("=============================>Starting Server<=============================\n");
 await app.RunAsync();

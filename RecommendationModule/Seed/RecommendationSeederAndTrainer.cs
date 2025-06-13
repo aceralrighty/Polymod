@@ -22,13 +22,17 @@ public class RecommendationSeederAndTrainer(
         {
             var users = await GetSampleUsersAsync();
             var services = await GetSampleServicesAsync();
+            using var scope = serviceProvider.CreateScope();
+            var recContext = scope.ServiceProvider.GetRequiredService<RecommendationDbContext>();
 
 
             var logger = serviceProvider.GetRequiredService<ILogger<RecommendationSeederAndTrainer>>();
             var seeder = new RecommendationSeederAndTrainer(serviceProvider, logger);
+            await recContext.Database.EnsureDeletedAsync();
+            await recContext.Database.EnsureCreatedAsync();
+
 
             await seeder.SeedAndTrainAsync(users, services, includeRatings: true);
-
             // Option 2: Seed the database
             await seeder.SeedRecommendationsWithRatingsAsync(users, services, includeRatings: true);
 
@@ -49,7 +53,12 @@ public class RecommendationSeederAndTrainer(
                     Username = "john_doe",
                     Email = "john@example.com",
                     Password = hashedPassword.HashPassword("Sinners"),
-                    Schedule = new Schedule()
+                    Schedule = new Schedule
+                    {
+                        BasePay = 25.00,
+                        DaysWorkedJson =
+                            "{\"Monday\": 8, \"Tuesday\": 8, \"Wednesday\": 8, \"Thursday\": 8, \"Friday\": 8}"
+                    }
                 },
                 new User
                 {
@@ -57,7 +66,12 @@ public class RecommendationSeederAndTrainer(
                     Username = "jane_smith",
                     Email = "jane@example.com",
                     Password = hashedPassword.HashPassword("Froogaloop"),
-                    Schedule = new Schedule()
+                    Schedule = new Schedule
+                    {
+                        BasePay = 30.00,
+                        DaysWorkedJson =
+                            "{\"Monday\": 7, \"Tuesday\": 7, \"Wednesday\": 7, \"Thursday\": 7, \"Friday\": 7}"
+                    }
                 },
                 new User
                 {
@@ -65,7 +79,12 @@ public class RecommendationSeederAndTrainer(
                     Username = "bob_wilson",
                     Email = "bob@example.com",
                     Password = hashedPassword.HashPassword("why lord why"),
-                    Schedule = new Schedule()
+                    Schedule = new Schedule
+                    {
+                        BasePay = 20.00,
+                        DaysWorkedJson =
+                            "{\"Monday\": 9, \"Tuesday\": 9, \"Wednesday\": 9, \"Thursday\": 9, \"Friday\": 9}"
+                    }
                 },
                 // Add more users as needed
             ]);

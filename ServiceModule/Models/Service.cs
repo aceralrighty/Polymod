@@ -10,6 +10,7 @@ public class Service : BaseTableProperties
     [MaxLength(255)] public string Title { get; init; } = null!;
     [MaxLength(255)] public string Description { get; init; } = null!;
 
+
     public decimal Price { get; init; }
     public int DurationInMinutes { get; init; }
 
