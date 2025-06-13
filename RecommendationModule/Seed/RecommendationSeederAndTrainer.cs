@@ -25,12 +25,10 @@ public class RecommendationSeederAndTrainer(
             using var scope = serviceProvider.CreateScope();
             var recContext = scope.ServiceProvider.GetRequiredService<RecommendationDbContext>();
 
-
             var logger = serviceProvider.GetRequiredService<ILogger<RecommendationSeederAndTrainer>>();
             var seeder = new RecommendationSeederAndTrainer(serviceProvider, logger);
             await recContext.Database.EnsureDeletedAsync();
             await recContext.Database.EnsureCreatedAsync();
-
 
             await seeder.SeedAndTrainAsync(users, services, includeRatings: true);
             // Option 2: Seed the database
@@ -46,64 +44,121 @@ public class RecommendationSeederAndTrainer(
         private static Task<List<User>> GetSampleUsersAsync()
         {
             var hashedPassword = new Hasher();
-            return Task.FromResult<List<User>>([
-                new User
-                {
-                    Id = Guid.NewGuid(),
-                    Username = "john_doe",
-                    Email = "john@example.com",
-                    Password = hashedPassword.HashPassword("Sinners"),
-                    Schedule = new Schedule
-                    {
-                        BasePay = 25.00,
-                        DaysWorkedJson =
-                            "{\"Monday\": 8, \"Tuesday\": 8, \"Wednesday\": 8, \"Thursday\": 8, \"Friday\": 8}"
-                    }
-                },
-                new User
-                {
-                    Id = Guid.NewGuid(),
-                    Username = "jane_smith",
-                    Email = "jane@example.com",
-                    Password = hashedPassword.HashPassword("Froogaloop"),
-                    Schedule = new Schedule
-                    {
-                        BasePay = 30.00,
-                        DaysWorkedJson =
-                            "{\"Monday\": 7, \"Tuesday\": 7, \"Wednesday\": 7, \"Thursday\": 7, \"Friday\": 7}"
-                    }
-                },
-                new User
-                {
-                    Id = Guid.NewGuid(),
-                    Username = "bob_wilson",
-                    Email = "bob@example.com",
-                    Password = hashedPassword.HashPassword("why lord why"),
-                    Schedule = new Schedule
-                    {
-                        BasePay = 20.00,
-                        DaysWorkedJson =
-                            "{\"Monday\": 9, \"Tuesday\": 9, \"Wednesday\": 9, \"Thursday\": 9, \"Friday\": 9}"
-                    }
-                },
-                // Add more users as needed
-            ]);
+            var users = new List<User>();
+
+            // Create users with proper schedule relationships
+            var user1 = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "john_doe",
+                Email = "john@example.com",
+                Password = hashedPassword.HashPassword("Sinners"),
+                CreatedAt = DateTime.UtcNow.AddDays(-30),
+                UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            };
+
+            var user2 = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "jane_smith",
+                Email = "jane@example.com",
+                Password = hashedPassword.HashPassword("Froogaloop"),
+                CreatedAt = DateTime.UtcNow.AddDays(-25),
+                UpdatedAt = DateTime.UtcNow.AddDays(-2)
+            };
+
+            var user3 = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "bob_wilson",
+                Email = "bob@example.com",
+                Password = hashedPassword.HashPassword("why lord why"),
+                CreatedAt = DateTime.UtcNow.AddDays(-20),
+                UpdatedAt = DateTime.UtcNow.AddDays(-3)
+            };
+
+            // Create schedules with proper foreign key relationships
+            var schedule1 = new Schedule
+            {
+                Id = Guid.NewGuid(),
+                UserId = user1.Id,
+                BasePay = 25.00,
+                DaysWorkedJson = "{\"Monday\": 8, \"Tuesday\": 8, \"Wednesday\": 8, \"Thursday\": 8, \"Friday\": 8, \"Saturday\": 0, \"Sunday\": 0}",
+                CreatedAt = DateTime.UtcNow.AddDays(-30),
+                UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            };
+
+            var schedule2 = new Schedule
+            {
+                Id = Guid.NewGuid(),
+                UserId = user2.Id,
+                BasePay = 30.00,
+                DaysWorkedJson = "{\"Monday\": 7, \"Tuesday\": 7, \"Wednesday\": 7, \"Thursday\": 7, \"Friday\": 7, \"Saturday\": 0, \"Sunday\": 0}",
+                CreatedAt = DateTime.UtcNow.AddDays(-25),
+                UpdatedAt = DateTime.UtcNow.AddDays(-2)
+            };
+
+            var schedule3 = new Schedule
+            {
+                Id = Guid.NewGuid(),
+                UserId = user3.Id,
+                BasePay = 20.00,
+                DaysWorkedJson = "{\"Monday\": 9, \"Tuesday\": 9, \"Wednesday\": 9, \"Thursday\": 9, \"Friday\": 9, \"Saturday\": 0, \"Sunday\": 0}",
+                CreatedAt = DateTime.UtcNow.AddDays(-20),
+                UpdatedAt = DateTime.UtcNow.AddDays(-3)
+            };
+
+            // Set navigation properties
+            user1.Schedule = schedule1;
+            user2.Schedule = schedule2;
+            user3.Schedule = schedule3;
+
+            // Calculate total hours for schedules
+            schedule1.RecalculateTotalHours();
+            schedule2.RecalculateTotalHours();
+            schedule3.RecalculateTotalHours();
+
+            users.AddRange([user1, user2, user3]);
+            return Task.FromResult(users);
         }
 
         private static Task<List<Service>> GetSampleServicesAsync()
         {
-            // In real implementation, get from your service repository
-            // For now, return sample services
-            return Task.FromResult(new List<Service>
+            var services = new List<Service>
             {
-                new() { Id = Guid.NewGuid(), Title = "Cloud Storage Service", Description = "Secure cloud storage" },
                 new()
                 {
-                    Id = Guid.NewGuid(), Title = "Video Streaming", Description = "Entertainment streaming platform"
+                    Id = Guid.NewGuid(),
+                    Title = "Cloud Storage Service",
+                    Description = "Secure cloud storage",
+                    Price = (decimal)9.99,
+                    DurationInMinutes = 0, // Subscription service
+                    CreatedAt = DateTime.UtcNow.AddDays(-60),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-10)
                 },
-                new() { Id = Guid.NewGuid(), Title = "Online Learning", Description = "Educational courses online" },
-                // Add more services as needed
-            });
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Video Streaming",
+                    Description = "Entertainment streaming platform",
+                    Price = (decimal)12.99,
+                    DurationInMinutes = 0, // Subscription service
+                    CreatedAt = DateTime.UtcNow.AddDays(-55),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-5)
+                },
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Online Learning",
+                    Description = "Educational courses online",
+                    Price = (decimal)29.99,
+                    DurationInMinutes = 0, // Subscription service
+                    CreatedAt = DateTime.UtcNow.AddDays(-50),
+                    UpdatedAt = DateTime.UtcNow.AddDays(-3)
+                }
+            };
+
+            return Task.FromResult(services);
         }
     }
 
@@ -149,17 +204,42 @@ public class RecommendationSeederAndTrainer(
         {
             logger.LogInformation("🔄 Starting recommendation database seeding...");
 
-            // Recreate database
+            // Ensure clean database - consistent cleanup approach
             await context.Database.EnsureDeletedAsync();
-            await context.Database.MigrateAsync();
+            await context.Database.EnsureCreatedAsync(); // Use EnsureCreatedAsync instead of MigrateAsync for consistency
 
-            // Add users and services to context
+            logger.LogInformation("🗄️ Database recreated successfully");
+
+            // Add users with their schedules first
+            foreach (var user in users)
+            {
+                // Ensure the user and schedule have proper timestamps
+                if (user.CreatedAt == default) user.CreatedAt = DateTime.UtcNow.AddDays(-30);
+                if (user.UpdatedAt == default) user.UpdatedAt = DateTime.UtcNow;
+
+                if (user.Schedule != null)
+                {
+                    if (user.Schedule.CreatedAt == default) user.Schedule.CreatedAt = user.CreatedAt;
+                    if (user.Schedule.UpdatedAt == default) user.Schedule.UpdatedAt = user.UpdatedAt;
+                    // Ensure proper foreign key relationship
+                    user.Schedule.UserId = user.Id;
+                }
+            }
+
             await context.Users.AddRangeAsync(users);
+            await context.SaveChangesAsync();
+            logger.LogInformation("👥 Added {UsersCount} users with schedules to context", users.Count);
+
+            // Add services
+            foreach (var service in services)
+            {
+                if (service.CreatedAt == default) service.CreatedAt = DateTime.UtcNow.AddDays(-60);
+                if (service.UpdatedAt == default) service.UpdatedAt = DateTime.UtcNow.AddDays(-5);
+            }
+
             await context.Services.AddRangeAsync(services);
             await context.SaveChangesAsync();
-
-            logger.LogInformation("👥 Added {UsersCount} users and 🎯 {ServicesCount} services to context", users.Count,
-                services.Count);
+            logger.LogInformation("🎯 Added {ServicesCount} services to context", services.Count);
 
             // Generate realistic recommendations and ratings
             var recommendations = GenerateRealisticRecommendations(users, services, includeRatings);

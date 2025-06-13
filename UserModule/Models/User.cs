@@ -12,5 +12,5 @@ public class User : BaseTableProperties
 
     [Column(TypeName = "varchar(255)")] public required string? Password { get; set; }
 
-    public Schedule? Schedule { get; init; }
+    public Schedule? Schedule { get; set; }
 }
