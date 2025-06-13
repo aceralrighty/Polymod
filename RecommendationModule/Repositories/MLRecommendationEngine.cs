@@ -112,8 +112,10 @@ public class MlRecommendationEngine(
                 Console.WriteLine(
                     "Model not trained or loaded. Generating popularity-based recommendations as fallback.");
                 var fallbackRecs = await GetPopularityBasedRecommendationsAsync(userId, maxResults);
-                await SaveRecommendationOutputsAsync(userId, fallbackRecs, batchId, "Popularity", context);
-                return fallbackRecs;
+                var generateRecommendationsAsync = fallbackRecs as Guid[] ?? fallbackRecs.ToArray();
+                await SaveRecommendationOutputsAsync(userId, generateRecommendationsAsync, batchId, "Popularity",
+                    context);
+                return generateRecommendationsAsync;
             }
         }
 
@@ -122,8 +124,9 @@ public class MlRecommendationEngine(
             Console.WriteLine(
                 "Prediction engine not initialized. Generating popularity-based recommendations as fallback.");
             var fallbackRecs = await GetPopularityBasedRecommendationsAsync(userId, maxResults);
-            await SaveRecommendationOutputsAsync(userId, fallbackRecs, batchId, "Popularity", context);
-            return fallbackRecs;
+            var generateRecommendationsAsync = fallbackRecs as Guid[] ?? fallbackRecs.ToArray();
+            await SaveRecommendationOutputsAsync(userId, generateRecommendationsAsync, batchId, "Popularity", context);
+            return generateRecommendationsAsync;
         }
 
         var allServiceIds = (await GetAllServiceIdsAsync()).ToList();
@@ -181,7 +184,6 @@ public class MlRecommendationEngine(
         return prediction.Score;
     }
 
-    // NEW METHOD: Save recommendation outputs to database
     private async Task SaveRecommendationOutputsAsync(
         Guid userId,
         IEnumerable<(Guid ServiceId, float Score)> recommendations,
@@ -216,7 +218,7 @@ public class MlRecommendationEngine(
         string strategy,
         string context)
     {
-        var recommendations = serviceIds.Select((serviceId, index) => (serviceId, Score: 0f));
+        var recommendations = serviceIds.Select((serviceId, _) => (serviceId, Score: 0f));
         await SaveRecommendationOutputsAsync(userId, recommendations, batchId, strategy, context);
     }
 
