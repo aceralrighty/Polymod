@@ -5,6 +5,7 @@
 User.db
 /Migrations
 appsettings.json
+Logs
 # User-specific files
 *.suo
 *.user
