@@ -5,15 +5,13 @@ using TBD.RecommendationModule.Models;
 
 namespace TBD.RecommendationModule.Repositories;
 
-public class MlRecommendationEngine(IRecommendationRepository repository, IMetricsServiceFactory serviceFactory)
-    : IMlRecommendationEngine
+public class MlRecommendationEngine(IRecommendationRepository repository, IMetricsServiceFactory serviceFactory) : IMlRecommendationEngine
 {
     private readonly MLContext _mlContext = new(seed: 0);
     private ITransformer? _model;
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Data", "RecommendationModel.zip");
     private PredictionEngine<ServiceRating, ServiceRatingPrediction>? _predictionEngine;
     private readonly IMetricsService _metricsService = serviceFactory.CreateMetricsService("Recommendation");
-
     public Task<bool> IsModelTrainedAsync()
     {
         _metricsService.IncrementCounter("rec.is_model_trained");
@@ -22,6 +20,8 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
     public async Task TrainModelAsync()
     {
+
+
         _metricsService.IncrementCounter("rec.train_model");
         var allRecommendations = await repository.GetAllWithRatingsAsync();
 
@@ -35,7 +35,9 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
 
         var trainingData = userRecommendations.Select(r => new ServiceRating
         {
-            UserId = HashGuid(r.UserId), ServiceId = HashGuid(r.ServiceId), Label = r.Rating
+            UserId = HashGuid(r.UserId),
+            ServiceId = HashGuid(r.ServiceId),
+            Label = r.Rating
         }).ToList();
 
         var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
@@ -52,13 +54,14 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
                     MatrixRowIndexColumnName = "ServiceIdEncoded",
                     LabelColumnName = "Label",
                     NumberOfIterations = 20,
-                    ApproximationRank = 100
+                    ApproximationRank = 100,
+
                 }));
 
-        _metricsService.IncrementCounter("rec.fit_model_training_pipeline");
+        // Train the model
         _model = pipeline.Fit(dataView);
 
-        _metricsService.IncrementCounter("rec.save_model");
+        // Save the trained model
         try
         {
             // Ensure the directory exists before saving the model
@@ -83,7 +86,7 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
                 Console.WriteLine($"DEBUG: modelDirectory is null or empty. Cannot create directory.");
             }
 
-            _metricsService.IncrementCounter("rec.save_model_dataView_modelSchema_modelPath");
+            // This is the line where the error consistently occurs
             _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
             Console.WriteLine($"=============== Model saved to {_modelPath} ===============");
         }
@@ -175,7 +178,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
     {
         if (!File.Exists(_modelPath))
         {
-            _metricsService.IncrementCounter("rec.model_file_not_found");
             Console.WriteLine($"Model file not found at {_modelPath}.");
             return Task.FromResult(false);
         }
@@ -222,6 +224,6 @@ public class MlRecommendationEngine(IRecommendationRepository repository, IMetri
     // Helper method to convert Guid to float for ML.NET
     private float HashGuid(Guid guid)
     {
-        return Math.Abs(guid.GetHashCode()) % 100000;
+        return Math.Abs(guid.GetHashCode()) % 100000; // Simple hash to float conversion
     }
 }

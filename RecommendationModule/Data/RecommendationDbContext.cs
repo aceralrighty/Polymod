@@ -10,9 +10,8 @@ namespace TBD.RecommendationModule.Data;
 public class RecommendationDbContext : DbContext
 {
     public DbSet<UserRecommendation> UserRecommendations { get; set; }
-    public DbSet<Service> Services { get; set; }
     public DbSet<User> Users { get; set; }
-    public DbSet<Schedule> Schedules { get; set; }
+    public DbSet<Service> Services { get; set; }
 
     public RecommendationDbContext(DbContextOptions<RecommendationDbContext> options) : base(options) { }
     public RecommendationDbContext() { }
@@ -75,22 +74,20 @@ public class RecommendationDbContext : DbContext
                 .HasPrecision(18, 2);
 
             entity.Property(s => s.TotalPay)
-                .HasPrecision(18, 2);
-        });
-
-        // Service configuration (same as ServiceDbContext)
-        modelBuilder.Entity<Service>(entity =>
-        {
-            entity.Property(s => s.Price)
-                .HasPrecision(18, 2);
-
-            entity.Property(s => s.TotalPrice)
-                .HasPrecision(18, 2)
                 .HasComputedColumnSql(
-                    "CAST(ROUND(CASE " +
-                    "WHEN [DurationInMinutes] < 60 THEN ([Price] / 60.0 * [DurationInMinutes]) " +
-                    "ELSE [Price] * ([DurationInMinutes] / 60.0) END, 2) AS DECIMAL(18,2))",
-                    stored: true
+                    "CASE " +
+                    // No overtime (≤40 hours)
+                    "WHEN [TotalHoursWorked] <= 40 THEN [BasePay] * [TotalHoursWorked] " +
+                    // Regular overtime only (41-60 hours): 1.5x rate
+                    "WHEN [TotalHoursWorked] <= 60 THEN " +
+                    "([BasePay] * 40) + " + // Regular pay for the first 40 hours
+                    "(([BasePay] * 1.5) * ([TotalHoursWorked] - 40)) " + // 1.5x for hours 41-60
+                    // Double overtime (61+ hours): 1.5x for 41-60, 2x for 61+
+                    "ELSE " +
+                    "([BasePay] * 40) + " + // Regular pay for the first 40 hours
+                    "(([BasePay] * 1.5) * 20) + " + // 1.5x for hours 41-60 (20-hour max)
+                    "(([BasePay] * 2.0) * ([TotalHoursWorked] - 60)) " + // 2x for hours 61+
+                    "END"
                 );
         });
     }

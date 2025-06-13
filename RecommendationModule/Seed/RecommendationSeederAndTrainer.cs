@@ -2,10 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
 using TBD.RecommendationModule.Data;
 using TBD.RecommendationModule.Models;
-using TBD.RecommendationModule.Services;
 using TBD.ScheduleModule.Models;
 using TBD.ServiceModule.Models;
-using TBD.Shared.Utils;
 using TBD.UserModule.Models;
 
 namespace TBD.RecommendationModule.Seed;
@@ -16,360 +14,192 @@ public class RecommendationSeederAndTrainer(
 {
     private readonly Random _random = new();
 
-    public static class RecommendationSeederUsage
-    {
-        public static async Task ExampleUsageAsync(IServiceProvider serviceProvider)
-        {
-            var users = await GetSampleUsersAsync();
-            var services = await GetSampleServicesAsync();
-            using var scope = serviceProvider.CreateScope();
-            var recContext = scope.ServiceProvider.GetRequiredService<RecommendationDbContext>();
-
-            var logger = serviceProvider.GetRequiredService<ILogger<RecommendationSeederAndTrainer>>();
-            var seeder = new RecommendationSeederAndTrainer(serviceProvider, logger);
-            await recContext.Database.EnsureDeletedAsync();
-            await recContext.Database.EnsureCreatedAsync();
-
-            await seeder.SeedAndTrainAsync(users, services, includeRatings: true);
-            // Option 2: Seed the database
-            await seeder.SeedRecommendationsWithRatingsAsync(users, services, includeRatings: true);
-
-            // Option 3: Train the model (if data already exists)
-            // await seeder.TrainRecommendationModelAsync();
-
-            // Option 4: Add more ratings to existing data
-            // await seeder.AddAdditionalRatingsAsync(500);
-        }
-
-        private static Task<List<User>> GetSampleUsersAsync()
-        {
-            var hashedPassword = new Hasher();
-            var users = new List<User>();
-
-            // Create users with proper schedule relationships
-            var user1 = new User
-            {
-                Id = Guid.NewGuid(),
-                Username = "john_doe",
-                Email = "john@example.com",
-                Password = hashedPassword.HashPassword("Sinners"),
-                CreatedAt = DateTime.UtcNow.AddDays(-30),
-                UpdatedAt = DateTime.UtcNow.AddDays(-1)
-            };
-
-            var user2 = new User
-            {
-                Id = Guid.NewGuid(),
-                Username = "jane_smith",
-                Email = "jane@example.com",
-                Password = hashedPassword.HashPassword("Froogaloop"),
-                CreatedAt = DateTime.UtcNow.AddDays(-25),
-                UpdatedAt = DateTime.UtcNow.AddDays(-2)
-            };
-
-            var user3 = new User
-            {
-                Id = Guid.NewGuid(),
-                Username = "bob_wilson",
-                Email = "bob@example.com",
-                Password = hashedPassword.HashPassword("why lord why"),
-                CreatedAt = DateTime.UtcNow.AddDays(-20),
-                UpdatedAt = DateTime.UtcNow.AddDays(-3)
-            };
-
-            // Create schedules with proper foreign key relationships
-            var schedule1 = new Schedule
-            {
-                Id = Guid.NewGuid(),
-                UserId = user1.Id,
-                BasePay = 25.00,
-                DaysWorkedJson = "{\"Monday\": 8, \"Tuesday\": 8, \"Wednesday\": 8, \"Thursday\": 8, \"Friday\": 8, \"Saturday\": 0, \"Sunday\": 0}",
-                CreatedAt = DateTime.UtcNow.AddDays(-30),
-                UpdatedAt = DateTime.UtcNow.AddDays(-1)
-            };
-
-            var schedule2 = new Schedule
-            {
-                Id = Guid.NewGuid(),
-                UserId = user2.Id,
-                BasePay = 30.00,
-                DaysWorkedJson = "{\"Monday\": 7, \"Tuesday\": 7, \"Wednesday\": 7, \"Thursday\": 7, \"Friday\": 7, \"Saturday\": 0, \"Sunday\": 0}",
-                CreatedAt = DateTime.UtcNow.AddDays(-25),
-                UpdatedAt = DateTime.UtcNow.AddDays(-2)
-            };
-
-            var schedule3 = new Schedule
-            {
-                Id = Guid.NewGuid(),
-                UserId = user3.Id,
-                BasePay = 20.00,
-                DaysWorkedJson = "{\"Monday\": 9, \"Tuesday\": 9, \"Wednesday\": 9, \"Thursday\": 9, \"Friday\": 9, \"Saturday\": 0, \"Sunday\": 0}",
-                CreatedAt = DateTime.UtcNow.AddDays(-20),
-                UpdatedAt = DateTime.UtcNow.AddDays(-3)
-            };
-
-            // Set navigation properties
-            user1.Schedule = schedule1;
-            user2.Schedule = schedule2;
-            user3.Schedule = schedule3;
-
-            // Calculate total hours for schedules
-            schedule1.RecalculateTotalHours();
-            schedule2.RecalculateTotalHours();
-            schedule3.RecalculateTotalHours();
-
-            users.AddRange([user1, user2, user3]);
-            return Task.FromResult(users);
-        }
-
-        private static Task<List<Service>> GetSampleServicesAsync()
-        {
-            var services = new List<Service>
-            {
-                new()
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Cloud Storage Service",
-                    Description = "Secure cloud storage",
-                    Price = (decimal)9.99,
-                    DurationInMinutes = 0, // Subscription service
-                    CreatedAt = DateTime.UtcNow.AddDays(-60),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-10)
-                },
-                new()
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Video Streaming",
-                    Description = "Entertainment streaming platform",
-                    Price = (decimal)12.99,
-                    DurationInMinutes = 0, // Subscription service
-                    CreatedAt = DateTime.UtcNow.AddDays(-55),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-5)
-                },
-                new()
-                {
-                    Id = Guid.NewGuid(),
-                    Title = "Online Learning",
-                    Description = "Educational courses online",
-                    Price = (decimal)29.99,
-                    DurationInMinutes = 0, // Subscription service
-                    CreatedAt = DateTime.UtcNow.AddDays(-50),
-                    UpdatedAt = DateTime.UtcNow.AddDays(-3)
-                }
-            };
-
-            return Task.FromResult(services);
-        }
-    }
-
     /// <summary>
-    /// Complete workflow: Seed database with realistic data and train an ML model
+    /// Main seeding method - handles the complete seeding process
     /// </summary>
-    public async Task SeedAndTrainAsync(List<User> users, List<Service> services, bool includeRatings = true)
-    {
-        try
-        {
-            logger.LogInformation("🚀 Starting complete recommendation system seeding and training...");
-
-            // Step 1: Seed database with recommendations and ratings
-            await SeedRecommendationsWithRatingsAsync(users, services, includeRatings);
-
-            // Step 2: Train the ML model
-            await TrainRecommendationModelAsync();
-
-            // Step 3: Validate the system
-            await ValidateRecommendationSystemAsync(users.Take(3).ToList(), services);
-
-            logger.LogInformation("✅ Complete recommendation system setup finished successfully!");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "❌ Error during recommendation system setup");
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Seed database with realistic user-service interactions and ratings
-    /// </summary>
-    private async Task SeedRecommendationsWithRatingsAsync(List<User> users, List<Service> services,
+    public async Task SeedRecommendationsAsync(
+        List<User> users,
+        List<Service> services,
+        bool recreateDatabase = true,
         bool includeRatings = true)
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<RecommendationDbContext>();
-        var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
-        var metricsService = factory.CreateMetricsService("RecommendationSeeder");
+        var metricsService = GetMetricsService(scope);
 
         try
         {
-            logger.LogInformation("🔄 Starting recommendation database seeding...");
+            logger.LogInformation("🚀 Starting recommendation seeding process...");
 
-            // Ensure clean database - consistent cleanup approach
-            await context.Database.EnsureDeletedAsync();
-            await context.Database.EnsureCreatedAsync(); // Use EnsureCreatedAsync instead of MigrateAsync for consistency
-
-            logger.LogInformation("🗄️ Database recreated successfully");
-
-            // Add users with their schedules first
-            foreach (var user in users)
+            // Step 1: Database preparation
+            if (recreateDatabase)
             {
-                // Ensure the user and schedule have proper timestamps
-                if (user.CreatedAt == default) user.CreatedAt = DateTime.UtcNow.AddDays(-30);
-                if (user.UpdatedAt == default) user.UpdatedAt = DateTime.UtcNow;
-
-                if (user.Schedule != null)
-                {
-                    if (user.Schedule.CreatedAt == default) user.Schedule.CreatedAt = user.CreatedAt;
-                    if (user.Schedule.UpdatedAt == default) user.Schedule.UpdatedAt = user.UpdatedAt;
-                    // Ensure proper foreign key relationship
-                    user.Schedule.UserId = user.Id;
-                }
+                await PrepareDatabase(context);
             }
 
-            await context.Users.AddRangeAsync(users);
-            await context.SaveChangesAsync();
-            logger.LogInformation("👥 Added {UsersCount} users with schedules to context", users.Count);
+            // Step 2: Validate input data
+            ValidateInputData(users, services);
 
-            // Add services
-            foreach (var service in services)
-            {
-                if (service.CreatedAt == default) service.CreatedAt = DateTime.UtcNow.AddDays(-60);
-                if (service.UpdatedAt == default) service.UpdatedAt = DateTime.UtcNow.AddDays(-5);
-            }
+            // Step 3: Seed base entities (users and services)
+            await SeedBaseEntities(context, users, services);
 
-            await context.Services.AddRangeAsync(services);
-            await context.SaveChangesAsync();
-            logger.LogInformation("🎯 Added {ServicesCount} services to context", services.Count);
+            // Step 4: Generate and seed recommendations
+            var recommendations = await GenerateRecommendations(users, services, includeRatings);
+            await SeedRecommendations(context, recommendations);
 
-            // Generate realistic recommendations and ratings
-            var recommendations = GenerateRealisticRecommendations(users, services, includeRatings);
+            // Step 5: Log statistics
+            await LogSeedingStatistics(context);
 
-            logger.LogInformation($"📝 Generated {recommendations.Count} recommendations with ratings");
-
-            await context.UserRecommendations.AddRangeAsync(recommendations);
-            var savedCount = await context.SaveChangesAsync();
-
-            logger.LogInformation($"💾 Successfully saved {savedCount} recommendations to database");
-
-            // Log statistics
-            await LogSeededDataStatisticsAsync(context);
-
-            metricsService.IncrementCounter("seeding.complete_with_ratings");
+            logger.LogInformation("✅ Recommendation seeding completed successfully!");
+            metricsService.IncrementCounter("seeding.recommendation_success");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "❌ Error during database seeding");
+            logger.LogError(ex, "❌ Error during recommendation seeding");
+            metricsService.IncrementCounter("seeding.recommendation_error");
             throw;
         }
     }
 
     /// <summary>
-    /// Generate realistic user-service interactions with ratings following realistic patterns
+    /// Prepare database - clean slate approach
     /// </summary>
-    private List<UserRecommendation> GenerateRealisticRecommendations(List<User> users, List<Service> services,
-        bool includeRatings)
+    private async Task PrepareDatabase(RecommendationDbContext context)
     {
-        var recommendations = new List<UserRecommendation>();
-        var serviceCategories = CreateServiceCategories(services);
+        logger.LogInformation("🗄️ Preparing database...");
 
+        try
+        {
+            // Ensure the database is deleted and recreated
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
+
+            logger.LogInformation("✅ Database prepared successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "❌ Error preparing database");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Validate input data before seeding
+    /// </summary>
+    private void ValidateInputData(List<User> users, List<Service> services)
+    {
+        if (users == null || users.Count == 0)
+        {
+            throw new ArgumentException("Users list cannot be null or empty", nameof(users));
+        }
+
+        if (services == null || !services.Any())
+        {
+            throw new ArgumentException("Services list cannot be null or empty", nameof(services));
+        }
+
+        // Validate users have proper IDs
+        var invalidUsers = users.Where(u => u.Id == Guid.Empty).ToList();
+        if (invalidUsers.Any())
+        {
+            throw new ArgumentException($"Found {invalidUsers.Count} users with empty GUIDs");
+        }
+
+        // Validate services have proper IDs
+        var invalidServices = services.Where(s => s.Id == Guid.Empty).ToList();
+        if (invalidServices.Count != 0)
+        {
+            throw new ArgumentException($"Found {invalidServices.Count} services with empty GUIDs");
+        }
+
+        logger.LogInformation("✅ Input data validation passed - {UserCount} users, {ServiceCount} services",
+            users.Count, services.Count);
+    }
+
+    /// <summary>
+    /// Seed base entities (users and services) with proper relationship handling
+    /// </summary>
+    private async Task SeedBaseEntities(RecommendationDbContext context, List<User> users, List<Service> services)
+    {
+        logger.LogInformation("👥 Seeding base entities...");
+
+        // Prepare users with proper timestamps
         foreach (var user in users)
         {
-            // Each user gets 5-15 recommendations with varied interaction patterns
-            var numberOfRecommendations = _random.Next(5, 16);
+            EnsureProperTimestamps(user);
 
-            // Create user preferences (some users prefer certain categories)
-            var userPreferredCategories = GetUserPreferences(serviceCategories.Keys.ToList());
-
-            // Select services based on preferences and randomness
-            var userServices = SelectServicesForUser(services, serviceCategories, userPreferredCategories,
-                numberOfRecommendations);
-
-            foreach (var service in userServices)
+            // Handle schedule relationship
+            if (user.Schedule == null)
             {
-                var daysAgo = _random.Next(0, 90); // Spread interactions over 3 months
-                var recommendedAt = DateTime.UtcNow.AddDays(-daysAgo);
-
-                var recommendation = new UserRecommendation
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = user.Id,
-                    ServiceId = service.Id,
-                    RecommendedAt = recommendedAt,
-                    ClickCount = GenerateRealisticClickCount(),
-                    CreatedAt = recommendedAt,
-                    UpdatedAt = recommendedAt
-                };
-
-                // Add realistic ratings if requested
-                if (includeRatings)
-                {
-                    recommendation.Rating =
-                        GenerateRealisticRating(recommendation.ClickCount, userPreferredCategories, service);
-                }
-
-                recommendations.Add(recommendation);
+                continue;
             }
+
+            EnsureProperTimestamps(user.Schedule);
+            user.Schedule.UserId = user.Id; // Ensure FK is set
         }
 
-        return recommendations;
+        // Prepare services with proper timestamps
+        foreach (var servicesId in services)
+        {
+            EnsureProperTimestamps(servicesId);
+        }
+
+        // Add entities to context
+        await context.Users.AddRangeAsync(users);
+        await context.Services.AddRangeAsync(services);
+        await context.SaveChangesAsync();
+        // Save in one transaction
+        var savedCount = await context.SaveChangesAsync();
+
+        logger.LogInformation("💾 Saved {SavedCount} base entities ({UserCount} users, {ServiceCount} services)",
+            savedCount, users.Count, services.Count);
     }
 
     /// <summary>
-    /// Train the ML recommendation model using seeded data
+    /// Generate realistic recommendations with proper distribution
     /// </summary>
-    private async Task TrainRecommendationModelAsync()
+    private Task<List<UserRecommendation>> GenerateRecommendations(List<User> users,
+        List<Service> services,
+        bool includeRatings)
     {
-        using var scope = serviceProvider.CreateScope();
-        var recommendationService = scope.ServiceProvider.GetRequiredService<IRecommendationService>();
+        logger.LogInformation("📝 Generating recommendations...");
 
-        try
-        {
-            logger.LogInformation("🤖 Starting ML model training...");
+        var serviceIds = services.Select(s => s.Id).ToList();
 
-            await recommendationService.TrainRecommendationModelAsync();
+        var recommendations = (from user in users
+            let recommendationCount = _random.Next(3, 13)
+            let selectedServiceIds = serviceIds.OrderBy(_ => _random.Next())
+                .Take(recommendationCount)
+                .ToList()
+            from serviceId in selectedServiceIds
+            select CreateRecommendation(user.Id, serviceId, includeRatings)).ToList();
 
-            logger.LogInformation("✅ ML model training completed successfully!");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "❌ Error during ML model training");
-            throw;
-        }
+        logger.LogInformation("✅ Generated {RecommendationCount} recommendations", recommendations.Count);
+        return Task.FromResult(recommendations);
     }
 
     /// <summary>
-    /// Validate the recommendation system by testing predictions
+    /// Create a single recommendation with realistic data
     /// </summary>
-    private async Task ValidateRecommendationSystemAsync(List<User> testUsers, List<Service> services)
+    private UserRecommendation CreateRecommendation(Guid userId, Guid serviceId, bool includeRatings)
     {
-        using var scope = serviceProvider.CreateScope();
-        var recommendationService = scope.ServiceProvider.GetRequiredService<IRecommendationService>();
+        var daysAgo = _random.Next(0, 90); // Spread over 3 months
+        var recommendedAt = DateTime.UtcNow.AddDays(-daysAgo);
 
-        logger.LogInformation("🔍 Validating recommendation system...");
+        var clickCount = GenerateRealisticClickCount();
+        var rating = includeRatings ? GenerateRealisticRating(clickCount) : 0f;
 
-        foreach (var user in testUsers)
+        return new UserRecommendation
         {
-            try
-            {
-                // Test ML recommendations
-                var mlRecommendations = await recommendationService.GetMlRecommendationsAsync(user.Id, 5);
-                logger.LogInformation(
-                    "👤 User {UserUsername}: Generated {Count} ML recommendations", user.Username,
-                    mlRecommendations.Count());
-
-                // Test rating predictions for a few services
-                var testServices = services.Take(3);
-                foreach (var service in testServices)
-                {
-                    var predictedRating = await recommendationService.PredictRatingAsync(user.Id, service.Id);
-                    logger.LogInformation($"   📊 Predicted rating for '{service.Title}': {predictedRating:F2}");
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "⚠️ Validation issue for user {UserUsername}", user.Username);
-            }
-        }
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            ServiceId = serviceId,
+            RecommendedAt = recommendedAt,
+            ClickCount = clickCount,
+            Rating = rating,
+            CreatedAt = recommendedAt,
+            UpdatedAt = recommendedAt
+        };
     }
 
     /// <summary>
@@ -381,41 +211,34 @@ public class RecommendationSeederAndTrainer(
 
         return random switch
         {
-            < 0.4 => 0, // 40% no clicks (just recommended)
-            < 0.7 => 1, // 30% one click
-            < 0.85 => _random.Next(2, 4), // 15% moderate engagement
-            < 0.95 => _random.Next(4, 8), // 10% high engagement
-            _ => _random.Next(8, 15) // 5% very high engagement
+            < 0.5 => 0, // 50% no clicks
+            < 0.75 => 1, // 25% one click
+            < 0.9 => _random.Next(2, 5), // 15% moderate engagement (2-4 clicks)
+            < 0.98 => _random.Next(5, 10), // 8% high engagement (5-9 clicks)
+            _ => _random.Next(10, 20) // 2% very high engagement (10-19 clicks)
         };
     }
 
     /// <summary>
-    /// Generate realistic ratings based on click behavior and user preferences
+    /// Generate realistic ratings based on engagement
     /// </summary>
-    private float GenerateRealisticRating(int clickCount, List<string> userPreferences, Service service)
+    private float GenerateRealisticRating(int clickCount)
     {
-        // Base rating influenced by engagement
+        // Base rating influenced by engagement level
         var baseRating = clickCount switch
         {
-            0 => GenerateRatingInRange(1.0f, 3.0f), // Low rating if no clicks
-            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed rating for a single click
-            >= 2 and <= 4 => GenerateRatingInRange(3.0f, 5.0f), // Good rating for moderate engagement
-            >= 5 and <= 8 => GenerateRatingInRange(3.5f, 5.0f), // High rating for high engagement
-            _ => GenerateRatingInRange(4.0f, 5.0f) // Excellent rating for very high engagement
+            0 => GenerateRatingInRange(1.0f, 2.5f), // Low rating for no engagement
+            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed for single click
+            >= 2 and <= 4 => GenerateRatingInRange(3.0f, 5.0f), // Good for moderate
+            >= 5 and <= 9 => GenerateRatingInRange(3.5f, 5.0f), // High for good engagement
+            _ => GenerateRatingInRange(4.0f, 5.0f) // Excellent for very high engagement
         };
 
-        // Adjust rating based on user preferences (simulate user liking certain service types more)
-        var serviceCategory = GetServiceCategory(service);
-        if (userPreferences.Contains(serviceCategory))
-        {
-            baseRating = Math.Min(5.0f, baseRating + _random.Next(0, 10) * 0.1f); // Boost for a preferred category
-        }
-
-        // Add some randomness but keep it realistic
-        var noise = (_random.NextSingle() - 0.5f) * 0.4f; // ±0.2 rating noise
+        // Add some randomness but keep realistic
+        var noise = (_random.NextSingle() - 0.5f) * 0.3f; // ±0.15 rating noise
         baseRating = Math.Max(1.0f, Math.Min(5.0f, baseRating + noise));
 
-        // Round to the nearest 0.5 for realistic ratings
+        // Round to nearest 0.5 for realistic ratings (1.0, 1.5, 2.0, etc.)
         return (float)(Math.Round(baseRating * 2) / 2.0);
     }
 
@@ -425,124 +248,100 @@ public class RecommendationSeederAndTrainer(
     }
 
     /// <summary>
-    /// Create service categories for better recommendation logic
+    /// Seed recommendations in batches for better performance
     /// </summary>
-    private Dictionary<string, List<Service>> CreateServiceCategories(List<Service> services)
+    private async Task SeedRecommendations(RecommendationDbContext context, List<UserRecommendation> recommendations)
     {
-        var categories = new Dictionary<string, List<Service>>();
-        var categoryNames = new[]
+        logger.LogInformation("💾 Seeding {RecommendationCount} recommendations...", recommendations.Count);
+
+        const int batchSize = 1000;
+        var totalBatches = (int)Math.Ceiling((double)recommendations.Count / batchSize);
+        var savedCount = 0;
+
+        for (var i = 0; i < totalBatches; i++)
         {
-            "Technology", "Healthcare", "Education", "Finance", "Entertainment", "Travel", "Food", "Fitness"
-        };
+            var batch = recommendations.Skip(i * batchSize).Take(batchSize).ToList();
 
-        // Simple categorization based on service index (in a real app, you'd use actual categories)
-        foreach (var service in services)
-        {
-            var categoryIndex = Math.Abs(service.Id.GetHashCode()) % categoryNames.Length;
-            var category = categoryNames[categoryIndex];
+            await context.UserRecommendations.AddRangeAsync(batch);
+            var batchSaved = await context.SaveChangesAsync();
+            savedCount += batchSaved;
 
-            if (!categories.ContainsKey(category))
-                categories[category] = new List<Service>();
-
-            categories[category].Add(service);
+            logger.LogInformation("📦 Saved batch {BatchNumber}/{TotalBatches} ({BatchSaved} recommendations)",
+                i + 1, totalBatches, batchSaved);
         }
 
-        return categories;
+        logger.LogInformation("✅ Successfully seeded {SavedCount} recommendations", savedCount);
     }
 
     /// <summary>
-    /// Generate user preferences (which categories they prefer)
+    /// Log comprehensive seeding statistics
     /// </summary>
-    private List<string> GetUserPreferences(List<string> availableCategories)
+    private async Task LogSeedingStatistics(RecommendationDbContext context)
     {
-        var preferenceCount = _random.Next(2, 5); // Each user prefers 2-4 categories
-        return availableCategories.OrderBy(_ => _random.Next()).Take(preferenceCount).ToList();
-    }
+        logger.LogInformation("📊 Computing seeding statistics...");
 
-    /// <summary>
-    /// Select services for a user based on preferences and some randomness
-    /// </summary>
-    private List<Service> SelectServicesForUser(List<Service> allServices, Dictionary<string, List<Service>> categories,
-        List<string> userPreferences, int count)
-    {
-        var selectedServices = new List<Service>();
-
-        // 70% from preferred categories, 30% random
-        var preferredCount = (int)(count * 0.7);
-        var randomCount = count - preferredCount;
-
-        // Select from preferred categories
-        var preferredServices = userPreferences
-            .SelectMany(pref => categories.TryGetValue(pref, out var category) ? category : [])
-            .Distinct()
-            .OrderBy(_ => _random.Next())
-            .Take(preferredCount);
-
-        selectedServices.AddRange(preferredServices);
-
-        // Fill the remaining with random services
-        var remainingServices = allServices
-            .Except(selectedServices)
-            .OrderBy(_ => _random.Next())
-            .Take(randomCount);
-
-        selectedServices.AddRange(remainingServices);
-
-        return selectedServices.Take(count).ToList();
-    }
-
-    private string GetServiceCategory(Service service)
-    {
-        var categoryNames = new[]
+        try
         {
-            "Technology", "Healthcare", "Education", "Finance", "Entertainment", "Travel", "Food", "Fitness"
-        };
-        var categoryIndex = Math.Abs(service.Id.GetHashCode()) % categoryNames.Length;
-        return categoryNames[categoryIndex];
-    }
+            var totalUsers = await context.Users.CountAsync();
+            var totalRecommendations = await context.UserRecommendations.CountAsync();
+            var totalWithRatings = await context.UserRecommendations.CountAsync(r => r.Rating > 0);
+            var totalClicks = await context.UserRecommendations.SumAsync(r => r.ClickCount);
 
-    /// <summary>
-    /// Log statistics about the seeded data
-    /// </summary>
-    private async Task LogSeededDataStatisticsAsync(RecommendationDbContext context)
-    {
-        var totalRecommendations = await context.UserRecommendations.CountAsync();
-        var totalWithRatings = await context.UserRecommendations.CountAsync(r => r.Rating > 0);
-        var avgRating = await context.UserRecommendations
-            .Where(r => r.Rating > 0)
-            .AverageAsync(r => r.Rating);
-        var totalClicks = await context.UserRecommendations.SumAsync(r => r.ClickCount);
+            var avgRating = totalWithRatings > 0
+                ? await context.UserRecommendations.Where(r => r.Rating > 0).AverageAsync(r => r.Rating)
+                : 0;
 
-        logger.LogInformation("📊 Seeded Data Statistics:");
-        logger.LogInformation("   • Total Recommendations: {TotalRecommendations}", totalRecommendations);
-        logger.LogInformation("   • Recommendations with Ratings: {TotalWithRatings}", totalWithRatings);
-        logger.LogInformation("   • Average Rating: {AvgRating:F2}", avgRating);
-        logger.LogInformation("   • Total Clicks: {TotalClicks}", totalClicks);
-    }
+            var avgRecommendationsPerUser = totalUsers > 0 ? (double)totalRecommendations / totalUsers : 0;
 
-    /// <summary>
-    /// Add additional ratings to existing recommendations (useful for testing)
-    /// </summary>
-    public async Task AddAdditionalRatingsAsync(int numberOfRatings = 100)
-    {
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<RecommendationDbContext>();
-
-        var unratedRecommendations = await context.UserRecommendations
-            .Where(r => r.Rating == 0)
-            .Take(numberOfRatings)
-            .ToListAsync();
-
-        foreach (var rec in unratedRecommendations)
-        {
-            // Generate rating based on click count
-            rec.Rating =
-                GenerateRealisticRating(rec.ClickCount, [], new Service { Id = rec.ServiceId });
-            rec.UpdatedAt = DateTime.UtcNow;
+            logger.LogInformation("📈 Seeding Statistics:");
+            logger.LogInformation("   • Users: {TotalUsers}", totalUsers);
+            logger.LogInformation("   • Total Recommendations: {TotalRecommendations}", totalRecommendations);
+            logger.LogInformation("   • Recommendations with Ratings: {TotalWithRatings}", totalWithRatings);
+            logger.LogInformation("   • Rating Coverage: {RatingCoverage:P1}",
+                (double)totalWithRatings / totalRecommendations);
+            logger.LogInformation("   • Average Rating: {AvgRating:F2}", avgRating);
+            logger.LogInformation("   • Total Clicks: {TotalClicks}", totalClicks);
+            logger.LogInformation("   • Avg Recommendations per User: {AvgRecommendationsPerUser:F1}",
+                avgRecommendationsPerUser);
         }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "⚠️ Error computing statistics");
+        }
+    }
 
-        await context.SaveChangesAsync();
-        logger.LogInformation("📊 Added {UnratedRecommendationsCount} additional ratings",
-            unratedRecommendations.Count);
+    /// <summary>
+    /// Ensure entities have proper timestamps
+    /// </summary>
+    private void EnsureProperTimestamps(object entity)
+    {
+        var now = DateTime.UtcNow;
+
+        switch (entity)
+        {
+            case User user:
+                if (user.CreatedAt == default) user.CreatedAt = now.AddDays(-_random.Next(30, 365));
+                if (user.UpdatedAt == default) user.UpdatedAt = now.AddDays(-_random.Next(0, 30));
+                break;
+
+            case Service service:
+                if (service.CreatedAt == default) service.CreatedAt = now.AddDays(-_random.Next(60, 365));
+                if (service.UpdatedAt == default) service.UpdatedAt = now.AddDays(-_random.Next(0, 60));
+                break;
+
+            case Schedule schedule:
+                if (schedule.CreatedAt == default) schedule.CreatedAt = now.AddDays(-_random.Next(30, 365));
+                if (schedule.UpdatedAt == default) schedule.UpdatedAt = now.AddDays(-_random.Next(0, 30));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Get metrics service from scope
+    /// </summary>
+    private IMetricsService GetMetricsService(IServiceScope scope)
+    {
+        var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
+        return factory.CreateMetricsService("RecommendationSeeder");
     }
 }

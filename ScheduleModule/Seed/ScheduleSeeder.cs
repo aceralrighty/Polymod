@@ -12,7 +12,7 @@ public static class ScheduleSeeder
 {
     private static readonly Random Random = new();
 
-    public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider)
+    public static async Task<List<Schedule>> ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
         var scheduleContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
@@ -33,6 +33,7 @@ public static class ScheduleSeeder
         await SeedScheduleAsync(scheduleContext, metricsService);
 
         metricsService.IncrementCounter("seeding.schedule_reseed_completed");
+        return await scheduleContext.Schedules.ToListAsync();
     }
 
     private static async Task SeedScheduleAsync(ScheduleDbContext scheduleContext, IMetricsService metricsService)
@@ -335,7 +336,8 @@ public static class ScheduleSeeder
                 Id = Guid.NewGuid(),
                 DaysWorked = daysWorked,
                 BasePay = basePay,
-                User = CreateScheduleUser($"dynamic.user.{i + 1}", $"DynamicPass{i + 1}!", $"dynamic{i + 1}@test.com")
+                User = CreateScheduleUser($"dynamic.user.{i + 1}", $"DynamicPass{i + 1}!",
+                    $"dynamic{i + 1}@test.com")
             };
             schedules.Add(newSchedule);
         }
