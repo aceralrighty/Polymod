@@ -52,10 +52,8 @@ public class RecommendationController(RecommendationDbContext context) : Control
             {
                 return NotFound();
             }
-            else
-            {
-                throw;
-            }
+
+            throw;
         }
 
         return NoContent();
@@ -74,7 +72,7 @@ public class RecommendationController(RecommendationDbContext context) : Control
     }
 
     // DELETE: api/Recommendation/5
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteUserRecommendation(Guid id)
     {
         var userRecommendation = await context.UserRecommendations.FindAsync(id);
