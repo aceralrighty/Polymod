@@ -29,7 +29,8 @@ public static class RecommendationModule
 
         // Register repositories
         services.AddScoped<IRecommendationRepository, RecommendationRepository>();
-        services.AddScoped<IRecommendationOutputRepository, RecommendationOutputRepository>(); // Make sure this is registered!
+        services
+            .AddScoped<IRecommendationOutputRepository, RecommendationOutputRepository>();
 
         // Register services
         services.AddScoped<IRecommendationService, RecommendationService>();
