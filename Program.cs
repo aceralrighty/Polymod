@@ -54,7 +54,7 @@ if (app.Environment.IsDevelopment())
 
             // Seed schedules
             Console.WriteLine("📅 Seeding schedules...");
-            await ScheduleSeeder.ReseedForTestingAsync(scopedServices);
+            var seededSchedule = await ScheduleSeeder.ReseedForTestingAsync(scopedServices);
             Console.WriteLine("✅ Schedule seeding complete");
             await Task.Delay(1000);
 
@@ -75,7 +75,8 @@ if (app.Environment.IsDevelopment())
             Console.WriteLine(
                 "💡 Starting RecommendationSeederAndTrainer workflow (seeding recommendations and training model)...");
             var recommendationSeederAndTrainer = scopedServices.GetRequiredService<RecommendationSeederAndTrainer>();
-            await recommendationSeederAndTrainer.SeedAndTrainAsync(seededUsers, seededServices, includeRatings: true);
+            await recommendationSeederAndTrainer.SeedRecommendationsAsync(seededUsers, seededServices,
+                includeRatings: true);
             Console.WriteLine("✅ Recommendation Seeding and Training complete!");
         }
 
