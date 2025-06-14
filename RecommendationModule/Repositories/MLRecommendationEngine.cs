@@ -154,7 +154,7 @@ public class MlRecommendationEngine(
             .Select(s => s.ServiceId)
             .ToList();
 
-        // Save the recommendation outputs to database
+        // Save the recommendation outputs to a database
         await SaveRecommendationOutputsAsync(userId, scores.Take(maxResults), batchId, "MatrixFactorization", context);
 
         return recommendedServiceIds;
