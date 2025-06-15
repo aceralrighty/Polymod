@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using TBD.GenericDBProperties;
+using TBD.RecommendationModule.Exceptions;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
 
@@ -8,8 +9,13 @@ namespace TBD.RecommendationModule.Models;
 
 public class UserRecommendation : BaseTableProperties
 {
-    [Required] public Guid UserId { get; set; }
-    [Required] public Guid ServiceId { get; set; }
+    [Required]
+    [GuidNotEmpty(ErrorMessage = "UserId is Required")]
+    public Guid UserId { get; set; }
+
+    [Required]
+    [GuidNotEmpty(ErrorMessage = "ServiceId is required")]
+    public Guid ServiceId { get; set; }
 
     public float Rating { get; set; }
 
@@ -19,5 +25,4 @@ public class UserRecommendation : BaseTableProperties
 
     public DateTime RecommendedAt { get; set; }
     public int ClickCount { get; set; } = 0;
-
 }
