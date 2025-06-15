@@ -84,10 +84,10 @@ public class RecommendationSeederAndTrainer(
         var schedules = new List<Schedule>();
 
         // Create specific test case schedules (boundary testing)
-        schedules.AddRange(CreateBoundaryTestSchedules(users.Take(13).ToList()));
+        schedules.AddRange(CreateBoundaryTestSchedules(users.Take(14).ToList()));
 
         // Create realistic schedules for remaining users
-        var remainingUsers = users.Skip(13).ToList();
+        var remainingUsers = users.Skip(14).ToList();
         schedules.AddRange(CreateRealisticSchedules(remainingUsers));
 
         // Calculate total hours for all schedules
