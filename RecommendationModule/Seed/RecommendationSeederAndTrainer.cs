@@ -84,10 +84,10 @@ public class RecommendationSeederAndTrainer(
         var schedules = new List<Schedule>();
 
         // Create specific test case schedules (boundary testing)
-        schedules.AddRange(CreateBoundaryTestSchedules(users.Take(13).ToList()));
+        schedules.AddRange(CreateBoundaryTestSchedules(users.Take(14).ToList()));
 
         // Create realistic schedules for remaining users
-        var remainingUsers = users.Skip(13).ToList();
+        var remainingUsers = users.Skip(14).ToList();
         schedules.AddRange(CreateRealisticSchedules(remainingUsers));
 
         // Calculate total hours for all schedules
@@ -100,7 +100,7 @@ public class RecommendationSeederAndTrainer(
         // Track schedule categories for metrics
         await TrackScheduleMetrics(schedules, metricsService);
 
-        // Save to database
+        // Save to the database
         await context.Schedules.AddRangeAsync(schedules);
         var savedCount = await context.SaveChangesAsync();
 
@@ -116,7 +116,7 @@ public class RecommendationSeederAndTrainer(
         var schedules = new List<Schedule>();
         var scheduleTemplates = GetBoundaryTestTemplates();
 
-        for (int i = 0; i < Math.Min(testUsers.Count, scheduleTemplates.Count); i++)
+        for (var i = 0; i < Math.Min(testUsers.Count, scheduleTemplates.Count); i++)
         {
             var user = testUsers[i];
             var template = scheduleTemplates[i];
@@ -203,7 +203,7 @@ public class RecommendationSeederAndTrainer(
                 { "Sunday", 0 }
             }, 20.00f),
 
-            // Single hour worked
+            // Single-hour worked
 
             (new Dictionary<string, int>
             {
@@ -305,21 +305,22 @@ public class RecommendationSeederAndTrainer(
                 { "Friday", 14 },
                 { "Saturday", 12 },
                 { "Sunday", 8 }
-            }, 12.50f)
+            }, 12.50f),
+            (new Dictionary<string, int>
+            {
+                { "Monday", 14 },
+                { "Tuesday", 14 },
+                { "Wednesday", 14 },
+                { "Thursday", 14 },
+                { "Friday", 14 },
+                { "Saturday", 0 },
+            }, 80.00f)
         ];
     }
 
     private List<Schedule> CreateRealisticSchedules(List<User> users)
     {
-        var schedules = new List<Schedule>();
-
-        foreach (var user in users)
-        {
-            var schedule = GenerateRealisticSchedule(user);
-            schedules.Add(schedule);
-        }
-
-        return schedules;
+        return users.Select(GenerateRealisticSchedule).ToList();
     }
 
     private Schedule GenerateRealisticSchedule(User user)
@@ -411,14 +412,17 @@ public class RecommendationSeederAndTrainer(
         if (workingDaysCount >= allDays.Length) return allDays;
 
         // Prefer weekdays for lower hour counts
-        if (workingDaysCount <= 5)
+        if (workingDaysCount > 5)
+        {
+            return allDays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
+        }
+
         {
             var weekdays = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
             return weekdays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
         }
 
         // For higher hour counts, include weekends
-        return allDays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
     }
 
     private int DetermineMaxHoursPerDay()
@@ -435,16 +439,16 @@ public class RecommendationSeederAndTrainer(
 
     private float GenerateRealisticBasePay() // Changed return type to float
     {
-        var random = _random.NextDouble();
+        var random = _random.NextSingle();
 
-        return (float)(random switch
+        return random switch
         {
-            < 0.20 => _random.Next(12, 18), // Cast to float
-            < 0.60 => _random.Next(18, 30),
-            < 0.85 => _random.Next(30, 45),
-            < 0.95 => _random.Next(45, 65),
+            < 0.20f => _random.Next(12, 18),
+            < 0.60f => _random.Next(18, 30),
+            < 0.85f => _random.Next(30, 45),
+            < 0.95f => _random.Next(45, 65),
             _ => _random.Next(65, 100)
-        });
+        };
     }
 
 
@@ -531,6 +535,7 @@ public class RecommendationSeederAndTrainer(
         var strategy = GenerateRecommendationStrategy();
 
         // Simulate some user interactions
+        var generatedAt = GenerateRealisticTimestamp(now);
         var hasBeenViewed = _random.NextDouble() < 0.7; // 70% viewed
         var hasBeenClicked = hasBeenViewed && _random.NextDouble() < 0.3; // 30% of viewed get clicked
 
@@ -544,16 +549,40 @@ public class RecommendationSeederAndTrainer(
             Strategy = strategy,
             Context = context,
             BatchId = batchId,
-            GeneratedAt = now.AddMinutes(-_random.Next(0, 1440)), // Generated within the last 24 hours
+            GeneratedAt = generatedAt,
             HasBeenViewed = hasBeenViewed,
             HasBeenClicked = hasBeenClicked,
-            ViewedAt = hasBeenViewed ? now.AddMinutes(-_random.Next(0, 720)) : null, // Viewed within the last 12 hours
+            ViewedAt = hasBeenViewed ? GenerateViewTime(generatedAt) : null, // Viewed within the last 12 hours
             ClickedAt =
                 hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within the last 6 hours
             CreatedAt = now,
             UpdatedAt = now
         };
     }
+
+    // helper method 1
+    private DateTime GenerateRealisticTimestamp(DateTime now)
+    {
+        // ML recommendations are usually generated in batches
+        var batchTimes = new[] { 6, 12, 18, 24 }; // Hours
+        var lastBatchHour = batchTimes[_random.Next(batchTimes.Length)];
+        return now.Date.AddHours(lastBatchHour).AddMinutes(-_random.Next(0, 60));
+    }
+
+    // helper method 2
+    private DateTime GenerateViewTime(DateTime generatedAt)
+    {
+        // Users typically view recommendations within hours of generation
+        var minutesAfter = _random.NextDouble() switch
+        {
+            < 0.4 => _random.Next(1, 60), // 40% within 1 hour
+            < 0.7 => _random.Next(60, 360), // 30% within 6 hours
+            < 0.9 => _random.Next(360, 1440), // 20% within 24 hours
+            _ => _random.Next(1440, 4320) // 10% within 3 days
+        };
+        return generatedAt.AddMinutes(minutesAfter);
+    }
+
 
     /// <summary>
     /// Generate realistic ML confidence scores (higher scores for better ranks)
@@ -582,14 +611,16 @@ public class RecommendationSeederAndTrainer(
         var contexts = new[]
         {
             "morning_routine", "evening_relaxation", "weekend_activities", "workday_break", "lunch_time",
-            "after_work", "weekend_morning", "late_night", "holiday_special", "seasonal_recommendation"
+            "after_work", "weekend_morning", "late_night", "holiday_special", "seasonal_recommendation",
+            "similar_users", "trending_in_area", "based_on_history", "cold_start_user", "popular_this_week",
+            "seasonal_boost", "cross_category", "price_sensitive", "quality_focused"
         };
 
         return contexts[_random.Next(contexts.Length)];
     }
 
     /// <summary>
-    /// Generate recommendation strategy
+    /// Generate a recommendation strategy
     /// </summary>
     private string GenerateRecommendationStrategy()
     {
@@ -669,7 +700,7 @@ public class RecommendationSeederAndTrainer(
         {
             EnsureProperTimestamps(user);
 
-            // Handle schedule relationship
+            // Handle a schedule relationship
             if (user.Schedule == null)
             {
                 continue;
@@ -768,19 +799,23 @@ public class RecommendationSeederAndTrainer(
         // Base rating influenced by engagement level
         var baseRating = clickCount switch
         {
-            0 => GenerateRatingInRange(1.0f, 2.5f), // Low rating for no engagement
-            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed for single click
+            0 => GenerateRatingInRange(1.0f, 3.0f), // Low rating for no engagement
+            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed for a single click
             >= 2 and <= 4 => GenerateRatingInRange(3.0f, 5.0f), // Good for moderate
-            >= 5 and <= 9 => GenerateRatingInRange(3.5f, 5.0f), // High for good engagement
-            _ => GenerateRatingInRange(4.0f, 5.0f) // Excellent for very high engagement
+            >= 5 and <= 9 => GenerateRatingInRange(4.0f, 5.0f), // High for good engagement
+            _ => GenerateRatingInRange(4.5f, 5.0f) // Excellent for very high engagement
         };
 
         // Add some randomness but keep realistic
         var noise = (_random.NextSingle() - 0.5f) * 0.3f; // ±0.15 rating noise
         baseRating = Math.Max(1.0f, Math.Min(5.0f, baseRating + noise));
+        if (_random.NextDouble() < 0.1)
+        {
+            baseRating = Math.Max(1.0f, baseRating - 2.0f);
+        }
 
-        // Round to nearest 0.5 for realistic ratings (1.0, 1.5, 2.0, etc.)
-        return (float)(Math.Round(baseRating * 2) / 2.0);
+        // Round to the nearest 0.5 for realistic ratings (1.0, 1.5, 2.0, etc.)
+        return Math.Max(1.0f, Math.Min(5.0f, baseRating));
     }
 
     private float GenerateRatingInRange(float min, float max)

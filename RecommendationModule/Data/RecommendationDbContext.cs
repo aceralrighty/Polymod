@@ -56,7 +56,7 @@ public class RecommendationDbContext : DbContext
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries().Where(e =>
-            e.Entity is UserRecommendation or RecommendationOutput or Service or User);
+            e.Entity is UserRecommendation or RecommendationOutput or Service or User or Schedule);
 
         foreach (var entityEntry in entries)
         {

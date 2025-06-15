@@ -166,8 +166,8 @@ public class Schedule : BaseTableProperties
     public void RecalculateTotalHours()
     {
         TotalHoursWorked = 0;
-        Dictionary<string, int> daysWorked = DaysWorked; // Use the property to deserialize
-        foreach (int hours in daysWorked.Values)
+        var daysWorked = DaysWorked; // Use the property to deserialize
+        foreach (var hours in daysWorked.Values)
         {
             TotalHoursWorked += hours;
         }

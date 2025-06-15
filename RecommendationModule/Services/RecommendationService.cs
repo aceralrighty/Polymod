@@ -1,6 +1,5 @@
 using TBD.MetricsModule.Services;
 using TBD.RecommendationModule.Models;
-using TBD.RecommendationModule.Repositories;
 using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.ServiceModule.Models;
 using TBD.ServiceModule.Repositories;

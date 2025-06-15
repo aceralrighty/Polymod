@@ -6,6 +6,7 @@ User.db
 /Migrations
 appsettings.json
 Logs
+/TestProject/coverage
 # User-specific files
 *.suo
 *.user

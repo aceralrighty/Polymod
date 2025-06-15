@@ -2,19 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
-using FluentAssertions;
-using Microsoft.Extensions.Logging;
 
 namespace TBD.TestProject;
 
 [TestFixture]
-public class CachingRepositoryDecoratorTests : IDisposable
+public class CachingRepositoryDecoratorTests
+    : IDisposable
 {
     private Mock<IGenericRepository<TestEntity>> _mockInnerRepository;
     private IMemoryCache _memoryCache;
@@ -229,7 +230,7 @@ public class CachingRepositoryDecoratorTests : IDisposable
 
     public void Dispose()
     {
-        _memoryCache?.Dispose();
+        _memoryCache.Dispose();
         GC.SuppressFinalize(this);
     }
 }
