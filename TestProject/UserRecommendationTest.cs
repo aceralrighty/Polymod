@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using FluentAssertions;
+using Moq;
 using NUnit.Framework;
 using TBD.RecommendationModule.Models;
-using Moq;
-using TBD.RecommendationModule.Exceptions;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
 
