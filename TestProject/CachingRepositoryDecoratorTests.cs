@@ -2,25 +2,31 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
-using FluentAssertions;
-using Microsoft.Extensions.Logging;
 
 namespace TBD.TestProject;
 
 [TestFixture]
-public class CachingRepositoryDecoratorTests : IDisposable
+public class CachingRepositoryDecoratorTests(
+    Mock<IGenericRepository<TestEntity>> mockInnerRepository,
+    IMemoryCache memoryCache,
+    Mock<ILogger<CachingRepositoryDecorator<TestEntity>>> mockLogger,
+    CachingRepositoryDecorator<TestEntity> cachingRepository,
+    CacheOptions cachingOptions)
+    : IDisposable
 {
-    private Mock<IGenericRepository<TestEntity>> _mockInnerRepository;
-    private IMemoryCache _memoryCache;
-    private Mock<ILogger<CachingRepositoryDecorator<TestEntity>>> _mockLogger;
-    private CachingRepositoryDecorator<TestEntity> _cachingRepository;
-    private CacheOptions _cachingOptions;
+    private Mock<IGenericRepository<TestEntity>> _mockInnerRepository = mockInnerRepository;
+    private IMemoryCache _memoryCache = memoryCache;
+    private Mock<ILogger<CachingRepositoryDecorator<TestEntity>>> _mockLogger = mockLogger;
+    private CachingRepositoryDecorator<TestEntity> _cachingRepository = cachingRepository;
+    private CacheOptions _cachingOptions = cachingOptions;
 
     [SetUp]
     public void SetUp()
@@ -229,7 +235,7 @@ public class CachingRepositoryDecoratorTests : IDisposable
 
     public void Dispose()
     {
-        _memoryCache?.Dispose();
+        _memoryCache.Dispose();
         GC.SuppressFinalize(this);
     }
 }

@@ -24,5 +24,5 @@ public class UserRecommendation : BaseTableProperties
     [ForeignKey(nameof(ServiceId))] public Service? Service { get; set; }
 
     public DateTime RecommendedAt { get; set; }
-    public int ClickCount { get; set; } = 0;
+    public int ClickCount { get; set; }
 }
