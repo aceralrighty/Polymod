@@ -129,8 +129,6 @@ public class CachingRepositoryDecorator<T>(
     {
         if (!_options.EnableCaching) return;
 
-        var tasks = new List<Task>();
-
         // Always invalidate "All" cache
         var allKey = GenerateCacheKey("All");
         RemoveFromCache(allKey);

@@ -19,15 +19,20 @@ builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMetricsModule();
+// DI Containers
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
+
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
+
+// Mappers
 builder.Services.AddAutoMapper(typeof(ServiceMapping));
 builder.Services.AddAutoMapper(typeof(UserAddressMapping));
 builder.Services.AddAutoMapper(typeof(UserMapping));
