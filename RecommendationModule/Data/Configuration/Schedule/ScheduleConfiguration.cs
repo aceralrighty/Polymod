@@ -19,15 +19,19 @@ public class ScheduleConfiguration: IEntityTypeConfiguration<ScheduleModule.Mode
             .HasColumnName("DaysWorkedJson")
             .HasColumnType("nvarchar(255)");
 
-        // Ignore the computed property since it's not mapped
-        builder.Ignore(s => s.DaysWorkedJson);
+        // Ignore the computed properties since they're not mapped
+        builder.Ignore(s => s.DaysWorked);
+        builder.Ignore(s => s.TotalPayComputed);
 
-        // Configure precision for decimal/double properties
+        // ⭐ FIXED: Use HasColumnType("real") for float properties
         builder.Property(s => s.BasePay)
-            .HasPrecision(18, 2);
+            .HasColumnType("real"); // For float, use "real" not HasPrecision
+
+        builder.Property(s => s.TotalHoursWorked)
+            .HasColumnType("real"); // Add this for TotalHoursWorked too
 
         builder.Property(s => s.TotalPay)
-            .HasPrecision(18, 2)
+            .HasColumnType("real") // For float, use "real" not HasPrecision
             .HasComputedColumnSql(
                 "CASE " +
                 // No overtime (≤40 hours)

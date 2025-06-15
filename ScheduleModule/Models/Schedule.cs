@@ -7,7 +7,7 @@ namespace TBD.ScheduleModule.Models;
 
 public class Schedule : BaseTableProperties
 {
-    public double? TotalHoursWorked { get; set; }
+    public float? TotalHoursWorked { get; set; } // Changed from double? to float?
 
     // Have to explicitly call this constructor because my tests freak out when I don't
     public Schedule() { }
@@ -18,16 +18,15 @@ public class Schedule : BaseTableProperties
         User = user;
     }
 
-
     public Guid UserId { get; set; }
     [ForeignKey(nameof(UserId))] public User? User { get; set; }
 
-    public double? BasePay { get; set; }
+    public float? BasePay { get; set; } // Changed from double? to float?
 
     /// <summary>
     /// Gets the total overtime hours (anything over 40 hours)
     /// </summary>
-    public double? Overtime
+    public float? Overtime
     {
         get
         {
@@ -43,7 +42,7 @@ public class Schedule : BaseTableProperties
     /// <summary>
     /// Gets the overtime hours at 1.5x rate (hours 41-60)
     /// </summary>
-    public double? OvertimeRegular
+    public float? OvertimeRegular
     {
         get
         {
@@ -59,7 +58,7 @@ public class Schedule : BaseTableProperties
     /// <summary>
     /// Gets the overtime hours at 2x rate (hours 61+)
     /// </summary>
-    public double? OvertimeDouble
+    public float? OvertimeDouble
     {
         get
         {
@@ -71,7 +70,7 @@ public class Schedule : BaseTableProperties
     /// <summary>
     /// Calculates the total overtime pay using tiered rates
     /// </summary>
-    public double? OvertimeRate
+    public float? OvertimeRate
     {
         get
         {
@@ -80,33 +79,33 @@ public class Schedule : BaseTableProperties
                 return 0;
             }
 
-            double overtimePay = 0;
+            float overtimePay = 0;
 
             // Calculate 1.5x overtime pay (hours 41-60)
             var regularOvertimeHours = OvertimeRegular.GetValueOrDefault();
             if (regularOvertimeHours > 0)
             {
-                overtimePay += BasePay.Value * 1.5 * regularOvertimeHours;
+                overtimePay += BasePay.Value * 1.5f * regularOvertimeHours;
             }
 
             // Calculate 2x overtime pay (hours 61+)
             var doubleOvertimeHours = OvertimeDouble.GetValueOrDefault();
             if (doubleOvertimeHours > 0)
             {
-                overtimePay += BasePay.Value * 2.0 * doubleOvertimeHours;
+                overtimePay += BasePay.Value * 2.0f * doubleOvertimeHours;
             }
 
             return overtimePay;
         }
     }
 
-    public double? TotalPay { get; set; }
+    public float? TotalPay { get; set; } // Changed from double? to float?
 
     /// <summary>
     /// Computes total pay including tiered overtime rates
     /// </summary>
     [NotMapped]
-    public double TotalPayComputed
+    public float TotalPayComputed // Changed from double to float
     {
         get
         {
@@ -115,8 +114,8 @@ public class Schedule : BaseTableProperties
                 return 0;
             }
 
-            double regularPay = BasePay.Value * Math.Min(TotalHoursWorked.Value, 40);
-            double overtimePay = OvertimeRate.GetValueOrDefault();
+            var regularPay = BasePay.Value * Math.Min(TotalHoursWorked.Value, 40);
+            var overtimePay = OvertimeRate.GetValueOrDefault();
 
             return regularPay + overtimePay;
         }

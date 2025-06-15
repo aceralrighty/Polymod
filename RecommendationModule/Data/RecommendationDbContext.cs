@@ -5,6 +5,7 @@ using TBD.RecommendationModule.Data.Configuration.Schedule;
 using TBD.RecommendationModule.Data.Configuration.Service;
 using TBD.RecommendationModule.Data.Configuration.User;
 using TBD.RecommendationModule.Models;
+using TBD.ScheduleModule.Models;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
 
@@ -12,10 +13,11 @@ namespace TBD.RecommendationModule.Data;
 
 public class RecommendationDbContext : DbContext
 {
-     public DbSet<UserRecommendation> UserRecommendations { get; set; }
+    public DbSet<UserRecommendation> UserRecommendations { get; set; }
     public DbSet<RecommendationOutput> RecommendationOutputs { get; set; } // New table
     public DbSet<User> Users { get; set; }
     public DbSet<Service> Services { get; set; }
+    public DbSet<Schedule> Schedules { get; set; }
 
     public RecommendationDbContext(DbContextOptions<RecommendationDbContext> options) : base(options) { }
     public RecommendationDbContext() { }

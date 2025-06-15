@@ -43,7 +43,7 @@ public static class ScheduleSeeder
         var schedules = new List<Schedule>();
 
         // Standard 40-hour work week (no overtime)
-        // Add these additional test cases to your existing seed data for comprehensive edge case testing
+        // Adds these additional test cases to your existing seed data for comprehensive edge case testing
 
         // EXACT THRESHOLD TESTS - These are critical for testing boundary conditions
 
@@ -61,11 +61,11 @@ public static class ScheduleSeeder
                 { "Saturday", 0 },
                 { "Sunday", 0 }
             },
-            BasePay = 25.00,
+            BasePay = 25.00f,
             User = CreateScheduleUser("exact.forty", "Exactly40!", "exact40@test.com")
         };
 
-        // Exactly 40.5 hours - minimal overtime (just over threshold)
+        // Exactly 40.5 hours - minimal overtime (just over a threshold)
         var scheduleJustOver40 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -79,7 +79,7 @@ public static class ScheduleSeeder
                 { "Saturday", 0 },
                 { "Sunday", 1 } // 41 hours total
             },
-            BasePay = 30.00,
+            BasePay = 30.00f,
             User = CreateScheduleUser("just.over.forty", "JustOver40!", "justover40@test.com")
         };
 
@@ -97,11 +97,11 @@ public static class ScheduleSeeder
                 { "Saturday", 10 },
                 { "Sunday", 0 }
             },
-            BasePay = 35.00,
+            BasePay = 35.00f,
             User = CreateScheduleUser("exact.sixty", "Exactly60!", "exact60@test.com")
         };
 
-        // Exactly 61 hours - minimal 2x overtime (just over 60 threshold)
+        // Exactly 61 hours - minimal 2x overtime (just over threshold 60)
         var scheduleJustOver60 = new Schedule
         {
             Id = Guid.NewGuid(),
@@ -115,7 +115,7 @@ public static class ScheduleSeeder
                 { "Saturday", 10 },
                 { "Sunday", 1 }
             },
-            BasePay = 32.00,
+            BasePay = 32.00f,
             User = CreateScheduleUser("just.over.sixty", "JustOver60!", "justover60@test.com")
         };
 
@@ -135,7 +135,7 @@ public static class ScheduleSeeder
                 { "Saturday", 0 },
                 { "Sunday", 0 }
             },
-            BasePay = 20.00,
+            BasePay = 20.00f,
             User = CreateScheduleUser("zero.hours", "NoWork123!", "zero@test.com")
         };
 
@@ -153,7 +153,7 @@ public static class ScheduleSeeder
                 { "Saturday", 0 },
                 { "Sunday", 0 }
             },
-            BasePay = 15.00,
+            BasePay = 15.00f,
             User = CreateScheduleUser("one.hour", "SingleHour!", "onehour@test.com")
         };
 
@@ -171,7 +171,7 @@ public static class ScheduleSeeder
                 { "Saturday", 16 },
                 { "Sunday", 16 }
             }, // 112 hours total
-            BasePay = 25.00,
+            BasePay = 25.00f,
             User = CreateScheduleUser("workaholic.extreme", "Work247365!", "extreme@test.com")
         };
 
@@ -191,7 +191,7 @@ public static class ScheduleSeeder
                 { "Saturday", 0 },
                 { "Sunday", 1 } // 40 hours (or use 7.5 + 0.5 if you support decimals)
             },
-            BasePay = 22.50,
+            BasePay = 22.50f,
             User = CreateScheduleUser("just.under.forty", "AlmostForty!", "under40@test.com")
         };
 
@@ -209,7 +209,7 @@ public static class ScheduleSeeder
                 { "Saturday", 9 },
                 { "Sunday", 5 }
             }, // 59 hours
-            BasePay = 28.00,
+            BasePay = 28.00f,
             User = CreateScheduleUser("just.under.sixty", "AlmostSixty!", "under60@test.com")
         };
 
@@ -229,7 +229,7 @@ public static class ScheduleSeeder
                 { "Saturday", 10 },
                 { "Sunday", 0 }
             },
-            BasePay = 75.00, // High rate to test large dollar calculations
+            BasePay = 75.00f, // High rate to test large dollar calculations
             User = CreateScheduleUser("executive.sixty", "HighPay60!", "exec60@test.com")
         };
 
@@ -247,7 +247,7 @@ public static class ScheduleSeeder
                 { "Saturday", 12 },
                 { "Sunday", 8 }
             }, // 90 hours
-            BasePay = 12.50, // Minimum wage scenario
+            BasePay = 12.50f, // Minimum wage scenario
             User = CreateScheduleUser("minimum.wage.hero", "WorkHard!", "minwage@test.com")
         };
 
@@ -267,7 +267,7 @@ public static class ScheduleSeeder
                 { "Saturday", 0 },
                 { "Sunday", 0 }
             },
-            BasePay = 30.00,
+            BasePay = 30.00f,
             User = CreateScheduleUser("marathon.worker", "OneDay65!", "marathon@test.com")
         };
 
@@ -285,7 +285,7 @@ public static class ScheduleSeeder
                 { "Saturday", 10 },
                 { "Sunday", 12 }
             }, // 62 hours: 40 regular + 20 at 1.5x + 2 at 2x
-            BasePay = 25.00,
+            BasePay = 25.00f,
             User = CreateScheduleUser("perfect.tiers", "AllTiers!", "tiers@test.com")
         };
 
@@ -296,7 +296,7 @@ public static class ScheduleSeeder
         ]);
 
         // --- NEW: Generate more realistic schedules ---
-        for (int i = 0; i < 15; i++) // Add 15 more varied schedules
+        for (var i = 0; i < 15; i++) // Add 15 more varied schedules
         {
             var totalHours = Random.Next(20, 70); // Total hours between 20 and 70
             var daysWorked = new Dictionary<string, int>();
@@ -316,13 +316,10 @@ public static class ScheduleSeeder
             // Ensure all days are present, even if 0 hours
             foreach (var day in days)
             {
-                if (!daysWorked.ContainsKey(day))
-                {
-                    daysWorked[day] = 0;
-                }
+                daysWorked.TryAdd(day, 0);
             }
 
-            // Ensure remaining hours are distributed if any (e.g., if initial random distribution didn't hit totalHours)
+            // Ensure remaining hours are distributed if any (e.g., if the initial random distribution didn't hit totalHours)
             if (remainingHours > 0)
             {
                 var dayToAddTo = days[Random.Next(days.Length)];
@@ -335,7 +332,7 @@ public static class ScheduleSeeder
             {
                 Id = Guid.NewGuid(),
                 DaysWorked = daysWorked,
-                BasePay = basePay,
+                BasePay = (float?)basePay,
                 User = CreateScheduleUser($"dynamic.user.{i + 1}", $"DynamicPass{i + 1}!",
                     $"dynamic{i + 1}@test.com")
             };
@@ -357,65 +354,65 @@ public static class ScheduleSeeder
         var extremeHourSchedules = schedules.Count(s => GetTotalHours(s) > 80);
         var highPaySchedules = schedules.Count(s => s.BasePay > 50.00);
         var lowPaySchedules = schedules.Count(s => s.BasePay < 20.00);
-        var boundarySchedules = schedules.Count(s => IsBoundarySchedule(s));
-        var weekendWorkSchedules = schedules.Count(s => HasWeekendWork(s));
-        var singleDaySchedules = schedules.Count(s => IsSingleDaySchedule(s));
+        var boundarySchedules = schedules.Count(IsBoundarySchedule);
+        var weekendWorkSchedules = schedules.Count(HasWeekendWork);
+        var singleDaySchedules = schedules.Count(IsSingleDaySchedule);
 
         // Log total schedules created
-        for (int i = 0; i < schedules.Count; i++)
+        for (var i = 0; i < schedules.Count; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_total");
         }
 
         // Log hour-based categories
-        for (int i = 0; i < regularTimeSchedules; i++)
+        for (var i = 0; i < regularTimeSchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_regular_time");
         }
 
-        for (int i = 0; i < overtimeSchedules; i++)
+        for (var i = 0; i < overtimeSchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_overtime");
         }
 
-        for (int i = 0; i < doubleOvertimeSchedules; i++)
+        for (var i = 0; i < doubleOvertimeSchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_double_overtime");
         }
 
-        for (int i = 0; i < zeroHourSchedules; i++)
+        for (var i = 0; i < zeroHourSchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_zero_hours");
         }
 
-        for (int i = 0; i < extremeHourSchedules; i++)
+        for (var i = 0; i < extremeHourSchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_extreme_hours");
         }
 
         // Log pay-based categories
-        for (int i = 0; i < highPaySchedules; i++)
+        for (var i = 0; i < highPaySchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_high_pay");
         }
 
-        for (int i = 0; i < lowPaySchedules; i++)
+        for (var i = 0; i < lowPaySchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_low_pay");
         }
 
         // Log pattern-based categories
-        for (int i = 0; i < boundarySchedules; i++)
+        for (var i = 0; i < boundarySchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_boundary_test");
         }
 
-        for (int i = 0; i < weekendWorkSchedules; i++)
+        for (var i = 0; i < weekendWorkSchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_weekend_work");
         }
 
-        for (int i = 0; i < singleDaySchedules; i++)
+        for (var i = 0; i < singleDaySchedules; i++)
         {
             metricsService.IncrementCounter("seeding.schedules_created_single_day");
         }

@@ -53,12 +53,12 @@ public class ScheduleTest
 
     #region Overtime Logic
 
-    [TestCase(41, 1)]
-    [TestCase(50, 10)]
-    [TestCase(60, 20)]
-    [TestCase(39.5, 0)]
+    [TestCase(41f, 1)]
+    [TestCase(50f, 10)]
+    [TestCase(60f, 20)]
+    [TestCase(39.5f, 0)]
     [TestCase(null, 0)]
-    public void Overtime_CorrectlyCalculates(double? totalHours, double expectedOvertime)
+    public void Overtime_CorrectlyCalculates(float? totalHours, double expectedOvertime)
     {
         var schedule = new Schedule { TotalHoursWorked = totalHours };
         Assert.That(schedule.Overtime, Is.EqualTo(expectedOvertime));
@@ -191,14 +191,14 @@ public class ScheduleTest
     [Test]
     public void BasePay_Property_SetAndGet_WorksCorrectly()
     {
-        var schedule = new Schedule { BasePay = 25.75 };
+        var schedule = new Schedule { BasePay = 25.75f };
         Assert.That(schedule.BasePay, Is.EqualTo(25.75));
     }
 
     [Test]
     public void TotalHoursWorked_Property_SetAndGet_WorksCorrectly()
     {
-        var schedule = new Schedule { TotalHoursWorked = 39.5 };
+        var schedule = new Schedule { TotalHoursWorked = 39.5f };
         Assert.That(schedule.TotalHoursWorked, Is.EqualTo(39.5));
     }
 
