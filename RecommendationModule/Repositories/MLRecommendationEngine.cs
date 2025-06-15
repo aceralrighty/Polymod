@@ -39,7 +39,6 @@ public class MlRecommendationEngine(
     /// evaluation, and model management.
     /// </summary>
     private readonly MLContext _mlContext = new(seed: 0);
-
     private ITransformer? _model;
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Data", "RecommendationModel.zip");
     private PredictionEngine<ServiceRating, ServiceRatingPrediction>? _predictionEngine;
