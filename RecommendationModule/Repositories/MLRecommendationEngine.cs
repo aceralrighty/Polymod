@@ -6,12 +6,40 @@ using TBD.RecommendationModule.Repositories.Interfaces;
 
 namespace TBD.RecommendationModule.Repositories;
 
+/// <summary>
+/// The MlRecommendationEngine class provides functionality for generating
+/// personalized recommendations, model training, and prediction of ratings.
+/// Implements the IMlRecommendationEngine interface.
+/// </summary>
+/// <remarks>
+/// This class uses dependency injection to include implementations of:
+/// - IRecommendationRepository for interaction with recommendation-related data.
+/// - IRecommendationOutputRepository for outputting recommendation data.
+/// - IMetricsServiceFactory for tracking metrics.
+/// </remarks>
+/// <dependencies>
+/// Requires instances of IRecommendationRepository, IRecommendationOutputRepository,
+/// and IMetricsServiceFactory to be provided via dependency injection.
+/// </dependencies>
+/// <methods>
+/// - IsModelTrainedAsync: Determines if the recommendation model is trained and available.
+/// - TrainModelAsync: Trains the recommendation model using the provided data repository.
+/// - GenerateRecommendationsAsync: Generates a list of recommendations for a specific user.
+/// - PredictRatingAsync: Predicts the rating a user would give to a particular service.
+/// </methods>
 public class MlRecommendationEngine(
     IRecommendationRepository repository,
     IRecommendationOutputRepository outputRepository,
     IMetricsServiceFactory serviceFactory) : IMlRecommendationEngine
 {
+    /// <summary>
+    /// Represents an instance of the ML.NET machine learning context which is used as the
+    /// primary entry point for machine learning operations within the MLRecommendationEngine class.
+    /// It provides methods and utilities for data loading, transformations, training, testing,
+    /// evaluation, and model management.
+    /// </summary>
     private readonly MLContext _mlContext = new(seed: 0);
+
     private ITransformer? _model;
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Data", "RecommendationModel.zip");
     private PredictionEngine<ServiceRating, ServiceRatingPrediction>? _predictionEngine;
@@ -133,25 +161,18 @@ public class MlRecommendationEngine(
         var userInteractions = await repository.GetByUserIdAsync(userId);
         var interactedServiceIds = userInteractions.Select(r => r.ServiceId).ToHashSet();
 
-        var scores = new List<(Guid ServiceId, float Score)>();
-
-        foreach (var serviceId in allServiceIds)
-        {
-            if (interactedServiceIds.Contains(serviceId))
-            {
-                continue;
-            }
-
-            var prediction = _predictionEngine.Predict(new ServiceRating
-            {
-                UserId = HashGuid(userId), ServiceId = HashGuid(serviceId)
-            });
-            scores.Add((serviceId, prediction.Score));
-        }
+        var scores = (from serviceId in allServiceIds
+            where !interactedServiceIds.Contains(serviceId)
+            let prediction =
+                _predictionEngine.Predict(new ServiceRating
+                {
+                    UserId = HashGuid(userId), ServiceId = HashGuid(serviceId)
+                })
+            select (serviceId, prediction.Score)).ToList();
 
         var recommendedServiceIds = scores.OrderByDescending(s => s.Score)
             .Take(maxResults)
-            .Select(s => s.ServiceId)
+            .Select(s => s.serviceId)
             .ToList();
 
         // Save the recommendation outputs to a database
