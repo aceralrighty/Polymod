@@ -46,17 +46,20 @@ public class RecommendationSeederAndTrainer(
             // Step 3: Seed base entities (users and services)
             await SeedBaseEntities(context, users, services);
 
-            // Step 4: Generate and seed user recommendations (historical data)
+            // Step 4: ⭐ NEW - Seed schedules for users
+            await SeedSchedulesIntoRecommendationContext(context, users);
+
+            // Step 5: Generate and seed user recommendations (historical data)
             var recommendations = await GenerateRecommendations(users, services, includeRatings);
             await SeedRecommendations(context, recommendations);
 
-            // Step 5: Generate and seed recommendation outputs (ML generated recommendations)
+            // Step 6: Generate and seed recommendation outputs (ML generated recommendations)
             if (generateRecommendationOutputs)
             {
                 await GenerateAndSeedRecommendationOutputs(users, services);
             }
 
-            // Step 6: Log statistics
+            // Step 7: Log statistics
             await LogSeedingStatistics(context);
 
             logger.LogInformation("✅ Recommendation seeding completed successfully!");
@@ -69,6 +72,426 @@ public class RecommendationSeederAndTrainer(
             throw;
         }
     }
+
+    private async Task SeedSchedulesIntoRecommendationContext(RecommendationDbContext context,
+        List<User> users)
+    {
+        logger.LogInformation("📅 Seeding schedules into recommendation context...");
+        var metricsService = GetMetricsService(serviceProvider.CreateScope());
+
+        metricsService.IncrementCounter("seeding.schedule_seed_started");
+
+        var schedules = new List<Schedule>();
+
+        // Create specific test case schedules (boundary testing)
+        schedules.AddRange(CreateBoundaryTestSchedules(users.Take(13).ToList()));
+
+        // Create realistic schedules for remaining users
+        var remainingUsers = users.Skip(13).ToList();
+        schedules.AddRange(CreateRealisticSchedules(remainingUsers));
+
+        // Calculate total hours for all schedules
+        foreach (var schedule in schedules)
+        {
+            schedule.RecalculateTotalHours();
+            EnsureProperTimestamps(schedule);
+        }
+
+        // Track schedule categories for metrics
+        await TrackScheduleMetrics(schedules, metricsService);
+
+        // Save to database
+        await context.Schedules.AddRangeAsync(schedules);
+        var savedCount = await context.SaveChangesAsync();
+
+        metricsService.IncrementCounter("seeding.schedule_database_save_completed");
+        metricsService.IncrementCounter("seeding.schedule_seed_completed");
+
+        logger.LogInformation("✅ Seeded {ScheduleCount} schedules with varied overtime patterns (saved {SavedCount})",
+            schedules.Count, savedCount);
+    }
+
+    private List<Schedule> CreateBoundaryTestSchedules(List<User> testUsers)
+    {
+        var schedules = new List<Schedule>();
+        var scheduleTemplates = GetBoundaryTestTemplates();
+
+        for (int i = 0; i < Math.Min(testUsers.Count, scheduleTemplates.Count); i++)
+        {
+            var user = testUsers[i];
+            var template = scheduleTemplates[i];
+
+            var schedule = new Schedule
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                User = user,
+                BasePay = (float?)template.BasePay,
+                DaysWorked = template.DaysWorked
+            };
+
+            schedules.Add(schedule);
+        }
+
+        return schedules;
+    }
+
+    private List<(Dictionary<string, int> DaysWorked, double BasePay)> GetBoundaryTestTemplates()
+    {
+        return
+        [
+            (new Dictionary<string, int>
+            {
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 8 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
+            }, 25.00f),
+
+            // Just over 40 hours - minimal overtime
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 8 },
+                { "Saturday", 0 },
+                { "Sunday", 1 }
+            }, 30.00f),
+
+            // Exactly 60 hours - maximum 1.5x overtime, no 2x yet
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 10 },
+                { "Tuesday", 10 },
+                { "Wednesday", 10 },
+                { "Thursday", 10 },
+                { "Friday", 10 },
+                { "Saturday", 10 },
+                { "Sunday", 0 }
+            }, 35.00f),
+
+            // Just over 60 hours - minimal 2x overtime
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 10 },
+                { "Tuesday", 10 },
+                { "Wednesday", 10 },
+                { "Thursday", 10 },
+                { "Friday", 10 },
+                { "Saturday", 10 },
+                { "Sunday", 1 }
+            }, 32.00f),
+
+            // Zero hours worked
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 0 },
+                { "Tuesday", 0 },
+                { "Wednesday", 0 },
+                { "Thursday", 0 },
+                { "Friday", 0 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
+            }, 20.00f),
+
+            // Single hour worked
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 1 },
+                { "Tuesday", 0 },
+                { "Wednesday", 0 },
+                { "Thursday", 0 },
+                { "Friday", 0 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
+            }, 15.00f),
+
+            // Massive overtime - 100+ hours
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 16 },
+                { "Tuesday", 16 },
+                { "Wednesday", 16 },
+                { "Thursday", 16 },
+                { "Friday", 16 },
+                { "Saturday", 16 },
+                { "Sunday", 16 }
+            }, 25.00f),
+
+            // Just under 40 hours
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 7 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
+            }, 22.50f),
+
+            // Just under 60 hours
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 9 },
+                { "Tuesday", 9 },
+                { "Wednesday", 9 },
+                { "Thursday", 9 },
+                { "Friday", 9 },
+                { "Saturday", 9 },
+                { "Sunday", 5 }
+            }, 28.00),
+
+            // High pay with exact 60 hours
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 10 },
+                { "Tuesday", 10 },
+                { "Wednesday", 10 },
+                { "Thursday", 10 },
+                { "Friday", 10 },
+                { "Saturday", 10 },
+                { "Sunday", 0 }
+            }, 75.00f),
+
+            // All hours on one day
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 65 },
+                { "Tuesday", 0 },
+                { "Wednesday", 0 },
+                { "Thursday", 0 },
+                { "Friday", 0 },
+                { "Saturday", 0 },
+                { "Sunday", 0 }
+            }, 30.00f),
+
+            // Perfect tier distribution (40 regular + 20 at 1.5x + 2 at 2x)
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 8 },
+                { "Tuesday", 8 },
+                { "Wednesday", 8 },
+                { "Thursday", 8 },
+                { "Friday", 8 },
+                { "Saturday", 10 },
+                { "Sunday", 12 }
+            }, 25.00f),
+
+            // Low pay with massive overtime
+
+            (new Dictionary<string, int>
+            {
+                { "Monday", 14 },
+                { "Tuesday", 14 },
+                { "Wednesday", 14 },
+                { "Thursday", 14 },
+                { "Friday", 14 },
+                { "Saturday", 12 },
+                { "Sunday", 8 }
+            }, 12.50f)
+        ];
+    }
+
+    private List<Schedule> CreateRealisticSchedules(List<User> users)
+    {
+        var schedules = new List<Schedule>();
+
+        foreach (var user in users)
+        {
+            var schedule = GenerateRealisticSchedule(user);
+            schedules.Add(schedule);
+        }
+
+        return schedules;
+    }
+
+    private Schedule GenerateRealisticSchedule(User user)
+    {
+        var totalHours = GenerateRealisticTotalHours();
+        var daysWorked = DistributeHoursAcrossDays(totalHours);
+        var basePay = GenerateRealisticBasePay();
+
+        return new Schedule
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            User = user,
+            BasePay = basePay,
+            DaysWorked = daysWorked
+        };
+    }
+
+    private int GenerateRealisticTotalHours()
+    {
+        var random = _random.NextDouble();
+
+        return random switch
+        {
+            < 0.05 => _random.Next(0, 20), // 5% part-time/minimal
+            < 0.60 => _random.Next(35, 45), // 55% standard full-time (35-44 hours)
+            < 0.85 => _random.Next(45, 55), // 25% moderate overtime (45-54 hours)
+            < 0.95 => _random.Next(55, 70), // 10% high overtime (55-69 hours)
+            _ => _random.Next(70, 90) // 5% extreme hours (70-89 hours)
+        };
+    }
+
+    private Dictionary<string, int> DistributeHoursAcrossDays(int totalHours)
+    {
+        var days = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+        var daysWorked = new Dictionary<string, int>();
+        var remainingHours = totalHours;
+
+        // Initialize all days to 0
+        foreach (var day in days)
+        {
+            daysWorked[day] = 0;
+        }
+
+        // If zero hours, return empty schedule
+        if (totalHours == 0) return daysWorked;
+
+        // Distribute hours with realistic patterns
+        var workingDays = DetermineWorkingDaysCount(totalHours);
+        var selectedDays = SelectWorkingDays(days, workingDays);
+
+        // Distribute hours among selected days
+        foreach (var day in selectedDays.OrderBy(_ => _random.Next()))
+        {
+            if (remainingHours <= 0) break;
+
+            var maxHoursForDay = Math.Min(remainingHours, DetermineMaxHoursPerDay());
+            var hoursToday = _random.Next(1, maxHoursForDay + 1);
+
+            daysWorked[day] = hoursToday;
+            remainingHours -= hoursToday;
+        }
+
+        // Distribute any remaining hours
+        while (remainingHours > 0)
+        {
+            var dayToAddTo = selectedDays[_random.Next(selectedDays.Length)];
+            daysWorked[dayToAddTo]++;
+            remainingHours--;
+        }
+
+        return daysWorked;
+    }
+
+    private int DetermineWorkingDaysCount(int totalHours)
+    {
+        return totalHours switch
+        {
+            0 => 0,
+            <= 20 => _random.Next(1, 4), // 1-3 days for part-time
+            <= 40 => _random.Next(4, 6), // 4-5 days for standard
+            <= 60 => _random.Next(5, 7), // 5-6 days for overtime
+            _ => _random.Next(6, 8) // 6-7 days for extreme hours
+        };
+    }
+
+    private string[] SelectWorkingDays(string[] allDays, int workingDaysCount)
+    {
+        if (workingDaysCount >= allDays.Length) return allDays;
+
+        // Prefer weekdays for lower hour counts
+        if (workingDaysCount <= 5)
+        {
+            var weekdays = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
+            return weekdays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
+        }
+
+        // For higher hour counts, include weekends
+        return allDays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
+    }
+
+    private int DetermineMaxHoursPerDay()
+    {
+        var random = _random.NextDouble();
+
+        return random switch
+        {
+            < 0.70 => 12, // 70% normal days (up to 12 hours)
+            < 0.90 => 16, // 20% long days (up to 16 hours)
+            _ => 20 // 10% extreme days (up to 20 hours)
+        };
+    }
+
+    private float GenerateRealisticBasePay() // Changed return type to float
+    {
+        var random = _random.NextDouble();
+
+        return (float)(random switch
+        {
+            < 0.20 => _random.Next(12, 18), // Cast to float
+            < 0.60 => _random.Next(18, 30),
+            < 0.85 => _random.Next(30, 45),
+            < 0.95 => _random.Next(45, 65),
+            _ => _random.Next(65, 100)
+        });
+    }
+
+
+    private async Task TrackScheduleMetrics(List<Schedule> schedules, IMetricsService metricsService)
+    {
+        var regularTimeSchedules = schedules.Count(s => GetTotalHours(s) <= 40);
+        var overtimeSchedules = schedules.Count(s => GetTotalHours(s) > 40 && GetTotalHours(s) <= 60);
+        var doubleOvertimeSchedules = schedules.Count(s => GetTotalHours(s) > 60);
+        var zeroHourSchedules = schedules.Count(s => GetTotalHours(s) == 0);
+        var extremeHourSchedules = schedules.Count(s => GetTotalHours(s) > 80);
+        var highPaySchedules = schedules.Count(s => s.BasePay > 50.00);
+        var lowPaySchedules = schedules.Count(s => s.BasePay < 20.00);
+        var boundarySchedules = schedules.Count(IsBoundarySchedule);
+        var weekendWorkSchedules = schedules.Count(HasWeekendWork);
+        var singleDaySchedules = schedules.Count(IsSingleDaySchedule);
+
+        // Log metrics
+        metricsService.IncrementCounter($"seeding.schedules_created_total.{schedules.Count}");
+        metricsService.IncrementCounter($"seeding.schedules_created_regular_time.{regularTimeSchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_overtime.{overtimeSchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_double_overtime.{doubleOvertimeSchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_zero_hours.{zeroHourSchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_extreme_hours.{extremeHourSchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_high_pay.{highPaySchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_low_pay.{lowPaySchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_boundary_test.{boundarySchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_weekend_work.{weekendWorkSchedules}");
+        metricsService.IncrementCounter($"seeding.schedules_created_single_day.{singleDaySchedules}");
+
+        await Task.CompletedTask; // For async consistency
+    }
+
+    private static int GetTotalHours(Schedule schedule) => schedule.DaysWorked.Values.Sum();
+
+    private static bool IsBoundarySchedule(Schedule schedule)
+    {
+        var totalHours = GetTotalHours(schedule);
+        return totalHours is 40 or 41 or 60 or 61;
+    }
+
+    private static bool HasWeekendWork(Schedule schedule) =>
+        schedule.DaysWorked.GetValueOrDefault("Saturday", 0) > 0 ||
+        schedule.DaysWorked.GetValueOrDefault("Sunday", 0) > 0;
+
+    private static bool IsSingleDaySchedule(Schedule schedule) =>
+        schedule.DaysWorked.Values.Count(hours => hours > 0) == 1;
+
 
     /// <summary>
     /// Generate and seed recommendation outputs (ML-generated recommendations)
@@ -86,12 +509,8 @@ public class RecommendationSeederAndTrainer(
             var recommendationCount = _random.Next(5, 16);
             var selectedServices = services.OrderBy(_ => _random.Next()).Take(recommendationCount).ToList();
 
-            for (int i = 0; i < selectedServices.Count; i++)
-            {
-                var service = selectedServices[i];
-                var output = CreateRecommendationOutput(user.Id, service.Id, batchId, i + 1);
-                recommendationOutputs.Add(output);
-            }
+            recommendationOutputs.AddRange(selectedServices.Select((service, i) =>
+                CreateRecommendationOutput(user.Id, service.Id, batchId, i + 1)));
         }
 
         // Save using the repository
@@ -125,11 +544,12 @@ public class RecommendationSeederAndTrainer(
             Strategy = strategy,
             Context = context,
             BatchId = batchId,
-            GeneratedAt = now.AddMinutes(-_random.Next(0, 1440)), // Generated within last 24 hours
+            GeneratedAt = now.AddMinutes(-_random.Next(0, 1440)), // Generated within the last 24 hours
             HasBeenViewed = hasBeenViewed,
             HasBeenClicked = hasBeenClicked,
-            ViewedAt = hasBeenViewed ? now.AddMinutes(-_random.Next(0, 720)) : null, // Viewed within last 12 hours
-            ClickedAt = hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within last 6 hours
+            ViewedAt = hasBeenViewed ? now.AddMinutes(-_random.Next(0, 720)) : null, // Viewed within the last 12 hours
+            ClickedAt =
+                hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within the last 6 hours
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -406,6 +826,7 @@ public class RecommendationSeederAndTrainer(
         try
         {
             var totalUsers = await context.Users.CountAsync();
+            var totalSchedules = await context.Schedules.CountAsync(); // ⭐ NEW
             var totalRecommendations = await context.UserRecommendations.CountAsync();
             var totalOutputs = await context.RecommendationOutputs.CountAsync();
             var totalWithRatings = await context.UserRecommendations.CountAsync(r => r.Rating > 0);
@@ -420,21 +841,19 @@ public class RecommendationSeederAndTrainer(
             var avgRecommendationsPerUser = totalUsers > 0 ? (double)totalRecommendations / totalUsers : 0;
             var avgOutputsPerUser = totalUsers > 0 ? (double)totalOutputs / totalUsers : 0;
 
+            // ⭐ NEW - Schedule statistics
+            var scheduleStats = totalSchedules > 0 ? await GetScheduleStatistics(context) : null;
+
             logger.LogInformation("📈 Seeding Statistics:");
             service.IncrementCounter("========================>📈 Seeding Statistics<========================");
             logger.LogInformation("   • Users: {TotalUsers}", totalUsers);
-            service.IncrementCounter($"stats.total_users_{totalUsers}");
+            logger.LogInformation("   • Schedules: {TotalSchedules}", totalSchedules); // ⭐ NEW
             logger.LogInformation("   • User Recommendations: {TotalRecommendations}", totalRecommendations);
-            service.IncrementCounter($"stats.total_recommendations_{totalRecommendations}");
             logger.LogInformation("   • ML Recommendation Outputs: {TotalOutputs}", totalOutputs);
-            service.IncrementCounter($"stats.total_outputs_{totalOutputs}");
             logger.LogInformation("   • Recommendations with Ratings: {TotalWithRatings}", totalWithRatings);
-            service.IncrementCounter($"stats.recommendations_with_ratings_{totalWithRatings}");
             logger.LogInformation("   • Rating Coverage: {RatingCoverage:P1}",
                 (double)totalWithRatings / totalRecommendations);
-            service.IncrementCounter($"stats.rating_coverage_{(double)totalWithRatings / totalRecommendations}");
             logger.LogInformation("   • Average Rating: {AvgRating:F2}", avgRating);
-            service.IncrementCounter($"avg.AverageRating_{avgRating:F2}");
             logger.LogInformation("   • Total Clicks: {TotalClicks}", totalClicks);
             logger.LogInformation("   • Outputs Viewed: {TotalViewed}", totalViewed);
             logger.LogInformation("   • Outputs Clicked: {TotalClicked}", totalClicked);
@@ -442,14 +861,48 @@ public class RecommendationSeederAndTrainer(
                 avgRecommendationsPerUser);
             logger.LogInformation("   • Avg ML Outputs per User: {AvgOutputsPerUser:F1}",
                 avgOutputsPerUser);
+
+            // ⭐ NEW - Log schedule statistics
+            if (scheduleStats != null)
+            {
+                logger.LogInformation("📅 Schedule Statistics:");
+                logger.LogInformation("   • Average Hours per Schedule: {AvgHours:F1}", scheduleStats.AvgHours);
+                logger.LogInformation("   • Average Base Pay: ${AvgPay:F2}", scheduleStats.AvgBasePay);
+                logger.LogInformation("   • Regular Time Schedules: {RegularTime}", scheduleStats.RegularTimeCount);
+                logger.LogInformation("   • Overtime Schedules: {Overtime}", scheduleStats.OvertimeCount);
+                logger.LogInformation("   • Double Overtime Schedules: {DoubleOvertime}",
+                    scheduleStats.DoubleOvertimeCount);
+            }
+
+            // Log to metrics service
+            service.IncrementCounter($"stats.total_users_{totalUsers}");
+            service.IncrementCounter($"stats.total_schedules_{totalSchedules}"); // ⭐ NEW
+            service.IncrementCounter($"stats.total_recommendations_{totalRecommendations}");
+            service.IncrementCounter($"stats.total_outputs_{totalOutputs}");
             service.IncrementCounter($"avg.AverageRecommendationsPerUser_{avgRecommendationsPerUser:F1}");
             service.IncrementCounter($"avg.AverageOutputsPerUser_{avgOutputsPerUser:F1}");
+            service.IncrementCounter($"avg.AverageRating_{avgRating:F2}");
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "⚠️ Error computing statistics");
         }
     }
+
+    private async Task<ScheduleStatistics> GetScheduleStatistics(RecommendationDbContext context)
+    {
+        var schedules = await context.Schedules.ToListAsync();
+
+        return new ScheduleStatistics
+        {
+            AvgHours = schedules.Average(s => s.DaysWorked.Values.Sum()),
+            AvgBasePay = schedules.Average(s => s.BasePay ?? 0),
+            RegularTimeCount = schedules.Count(s => GetTotalHours(s) <= 40),
+            OvertimeCount = schedules.Count(s => GetTotalHours(s) > 40 && GetTotalHours(s) <= 60),
+            DoubleOvertimeCount = schedules.Count(s => GetTotalHours(s) > 60)
+        };
+    }
+
 
     /// <summary>
     /// Ensure entities have proper timestamps

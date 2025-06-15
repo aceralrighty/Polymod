@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.GenericDBProperties;
 using TBD.RecommendationModule.Data.Configuration.Recommendation;
 using TBD.RecommendationModule.Data.Configuration.Schedule;
+using TBD.RecommendationModule.Data.Configuration.Service;
 using TBD.RecommendationModule.Data.Configuration.User;
 using TBD.RecommendationModule.Models;
 using TBD.ScheduleModule.Models;
@@ -12,10 +13,11 @@ namespace TBD.RecommendationModule.Data;
 
 public class RecommendationDbContext : DbContext
 {
-     public DbSet<UserRecommendation> UserRecommendations { get; set; }
+    public DbSet<UserRecommendation> UserRecommendations { get; set; }
     public DbSet<RecommendationOutput> RecommendationOutputs { get; set; } // New table
     public DbSet<User> Users { get; set; }
     public DbSet<Service> Services { get; set; }
+    public DbSet<Schedule> Schedules { get; set; }
 
     public RecommendationDbContext(DbContextOptions<RecommendationDbContext> options) : base(options) { }
     public RecommendationDbContext() { }
@@ -31,12 +33,12 @@ public class RecommendationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfiguration(new UserRecommendationConfiguration());
         modelBuilder.ApplyConfiguration(new RecommendationOutputConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new ScheduleConfiguration());
+        modelBuilder.ApplyConfiguration(new ServiceConfiguration());
     }
 
     public override int SaveChanges()
@@ -54,28 +56,34 @@ public class RecommendationDbContext : DbContext
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries().Where(e =>
-            e.Entity is UserRecommendation or RecommendationOutput or Service or User or Schedule);
+            e.Entity is UserRecommendation or RecommendationOutput or Service or User);
 
         foreach (var entityEntry in entries)
         {
-            // Handle UserRecommendation
-            if (entityEntry.Entity is UserRecommendation recommendation)
+            switch (entityEntry.Entity)
             {
-                recommendation.UpdatedAt = DateTime.UtcNow;
-                if (entityEntry.State == EntityState.Added)
+                // Handle UserRecommendation
+                case UserRecommendation recommendation:
                 {
-                    recommendation.CreatedAt = DateTime.UtcNow;
-                }
-            }
+                    recommendation.UpdatedAt = DateTime.UtcNow;
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        recommendation.CreatedAt = DateTime.UtcNow;
+                    }
 
-            // Handle RecommendationOutput
-            if (entityEntry.Entity is RecommendationOutput output)
-            {
-                output.UpdatedAt = DateTime.UtcNow;
-                if (entityEntry.State == EntityState.Added)
+                    break;
+                }
+                // Handle RecommendationOutput
+                case RecommendationOutput output:
                 {
-                    output.CreatedAt = DateTime.UtcNow;
-                    output.GeneratedAt = DateTime.UtcNow;
+                    output.UpdatedAt = DateTime.UtcNow;
+                    if (entityEntry.State == EntityState.Added)
+                    {
+                        output.CreatedAt = DateTime.UtcNow;
+                        output.GeneratedAt = DateTime.UtcNow;
+                    }
+
+                    break;
                 }
             }
 
