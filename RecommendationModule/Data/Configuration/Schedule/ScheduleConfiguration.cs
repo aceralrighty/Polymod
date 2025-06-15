@@ -20,7 +20,7 @@ public class ScheduleConfiguration: IEntityTypeConfiguration<ScheduleModule.Mode
             .HasColumnType("nvarchar(255)");
 
         // Ignore the computed property since it's not mapped
-        builder.Ignore(s => s.DaysWorked);
+        builder.Ignore(s => s.DaysWorkedJson);
 
         // Configure precision for decimal/double properties
         builder.Property(s => s.BasePay)
