@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace TBD.RecommendationModule.Data.Configuration.Schedule;
 
-public class ScheduleConfiguration: IEntityTypeConfiguration<ScheduleModule.Models.Schedule>
+public class ScheduleConfiguration : IEntityTypeConfiguration<ScheduleModule.Models.Schedule>
 {
     public void Configure(EntityTypeBuilder<ScheduleModule.Models.Schedule> builder)
     {
@@ -23,15 +23,14 @@ public class ScheduleConfiguration: IEntityTypeConfiguration<ScheduleModule.Mode
         builder.Ignore(s => s.DaysWorked);
         builder.Ignore(s => s.TotalPayComputed);
 
-        // ⭐ FIXED: Use HasColumnType("real") for float properties
         builder.Property(s => s.BasePay)
-            .HasColumnType("real"); // For float, use "real" not HasPrecision
+            .HasColumnType("real");
 
         builder.Property(s => s.TotalHoursWorked)
-            .HasColumnType("real"); // Add this for TotalHoursWorked too
+            .HasColumnType("real");
 
         builder.Property(s => s.TotalPay)
-            .HasColumnType("real") // For float, use "real" not HasPrecision
+            .HasColumnType("real")
             .HasComputedColumnSql(
                 "CASE " +
                 // No overtime (≤40 hours)
