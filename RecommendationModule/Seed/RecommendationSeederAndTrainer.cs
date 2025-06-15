@@ -86,12 +86,8 @@ public class RecommendationSeederAndTrainer(
             var recommendationCount = _random.Next(5, 16);
             var selectedServices = services.OrderBy(_ => _random.Next()).Take(recommendationCount).ToList();
 
-            for (int i = 0; i < selectedServices.Count; i++)
-            {
-                var service = selectedServices[i];
-                var output = CreateRecommendationOutput(user.Id, service.Id, batchId, i + 1);
-                recommendationOutputs.Add(output);
-            }
+            recommendationOutputs.AddRange(selectedServices.Select((service, i) =>
+                CreateRecommendationOutput(user.Id, service.Id, batchId, i + 1)));
         }
 
         // Save using the repository
@@ -125,11 +121,12 @@ public class RecommendationSeederAndTrainer(
             Strategy = strategy,
             Context = context,
             BatchId = batchId,
-            GeneratedAt = now.AddMinutes(-_random.Next(0, 1440)), // Generated within last 24 hours
+            GeneratedAt = now.AddMinutes(-_random.Next(0, 1440)), // Generated within the last 24 hours
             HasBeenViewed = hasBeenViewed,
             HasBeenClicked = hasBeenClicked,
-            ViewedAt = hasBeenViewed ? now.AddMinutes(-_random.Next(0, 720)) : null, // Viewed within last 12 hours
-            ClickedAt = hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within last 6 hours
+            ViewedAt = hasBeenViewed ? now.AddMinutes(-_random.Next(0, 720)) : null, // Viewed within the last 12 hours
+            ClickedAt =
+                hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within the last 6 hours
             CreatedAt = now,
             UpdatedAt = now
         };
