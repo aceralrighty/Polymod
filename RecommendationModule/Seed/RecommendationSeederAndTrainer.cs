@@ -305,7 +305,16 @@ public class RecommendationSeederAndTrainer(
                 { "Friday", 14 },
                 { "Saturday", 12 },
                 { "Sunday", 8 }
-            }, 12.50f)
+            }, 12.50f),
+            (new Dictionary<string, int>
+            {
+                { "Monday", 14 },
+                { "Tuesday", 14 },
+                { "Wednesday", 14 },
+                { "Thursday", 14 },
+                { "Friday", 14 },
+                { "Saturday", 0 },
+            }, 80.00f)
         ];
     }
 
@@ -403,14 +412,17 @@ public class RecommendationSeederAndTrainer(
         if (workingDaysCount >= allDays.Length) return allDays;
 
         // Prefer weekdays for lower hour counts
-        if (workingDaysCount <= 5)
+        if (workingDaysCount > 5)
+        {
+            return allDays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
+        }
+
         {
             var weekdays = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" };
             return weekdays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
         }
 
         // For higher hour counts, include weekends
-        return allDays.OrderBy(_ => _random.Next()).Take(workingDaysCount).ToArray();
     }
 
     private int DetermineMaxHoursPerDay()
