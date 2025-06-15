@@ -535,6 +535,7 @@ public class RecommendationSeederAndTrainer(
         var strategy = GenerateRecommendationStrategy();
 
         // Simulate some user interactions
+        var generatedAt = GenerateRealisticTimestamp(now);
         var hasBeenViewed = _random.NextDouble() < 0.7; // 70% viewed
         var hasBeenClicked = hasBeenViewed && _random.NextDouble() < 0.3; // 30% of viewed get clicked
 
@@ -548,16 +549,40 @@ public class RecommendationSeederAndTrainer(
             Strategy = strategy,
             Context = context,
             BatchId = batchId,
-            GeneratedAt = now.AddMinutes(-_random.Next(0, 1440)), // Generated within the last 24 hours
+            GeneratedAt = generatedAt,
             HasBeenViewed = hasBeenViewed,
             HasBeenClicked = hasBeenClicked,
-            ViewedAt = hasBeenViewed ? now.AddMinutes(-_random.Next(0, 720)) : null, // Viewed within the last 12 hours
+            ViewedAt = hasBeenViewed ? GenerateViewTime(generatedAt) : null, // Viewed within the last 12 hours
             ClickedAt =
                 hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within the last 6 hours
             CreatedAt = now,
             UpdatedAt = now
         };
     }
+
+    // helper method 1
+    private DateTime GenerateRealisticTimestamp(DateTime now)
+    {
+        // ML recommendations are usually generated in batches
+        var batchTimes = new[] { 6, 12, 18, 24 }; // Hours
+        var lastBatchHour = batchTimes[_random.Next(batchTimes.Length)];
+        return now.Date.AddHours(lastBatchHour).AddMinutes(-_random.Next(0, 60));
+    }
+
+    // helper method 2
+    private DateTime GenerateViewTime(DateTime generatedAt)
+    {
+        // Users typically view recommendations within hours of generation
+        var minutesAfter = _random.NextDouble() switch
+        {
+            < 0.4 => _random.Next(1, 60), // 40% within 1 hour
+            < 0.7 => _random.Next(60, 360), // 30% within 6 hours
+            < 0.9 => _random.Next(360, 1440), // 20% within 24 hours
+            _ => _random.Next(1440, 4320) // 10% within 3 days
+        };
+        return generatedAt.AddMinutes(minutesAfter);
+    }
+
 
     /// <summary>
     /// Generate realistic ML confidence scores (higher scores for better ranks)
@@ -586,7 +611,9 @@ public class RecommendationSeederAndTrainer(
         var contexts = new[]
         {
             "morning_routine", "evening_relaxation", "weekend_activities", "workday_break", "lunch_time",
-            "after_work", "weekend_morning", "late_night", "holiday_special", "seasonal_recommendation"
+            "after_work", "weekend_morning", "late_night", "holiday_special", "seasonal_recommendation",
+            "similar_users", "trending_in_area", "based_on_history", "cold_start_user", "popular_this_week",
+            "seasonal_boost", "cross_category", "price_sensitive", "quality_focused"
         };
 
         return contexts[_random.Next(contexts.Length)];
@@ -772,19 +799,23 @@ public class RecommendationSeederAndTrainer(
         // Base rating influenced by engagement level
         var baseRating = clickCount switch
         {
-            0 => GenerateRatingInRange(1.0f, 2.5f), // Low rating for no engagement
+            0 => GenerateRatingInRange(1.0f, 3.0f), // Low rating for no engagement
             1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed for a single click
             >= 2 and <= 4 => GenerateRatingInRange(3.0f, 5.0f), // Good for moderate
-            >= 5 and <= 9 => GenerateRatingInRange(3.5f, 5.0f), // High for good engagement
-            _ => GenerateRatingInRange(4.0f, 5.0f) // Excellent for very high engagement
+            >= 5 and <= 9 => GenerateRatingInRange(4.0f, 5.0f), // High for good engagement
+            _ => GenerateRatingInRange(4.5f, 5.0f) // Excellent for very high engagement
         };
 
         // Add some randomness but keep realistic
         var noise = (_random.NextSingle() - 0.5f) * 0.3f; // ±0.15 rating noise
         baseRating = Math.Max(1.0f, Math.Min(5.0f, baseRating + noise));
+        if (_random.NextDouble() < 0.1)
+        {
+            baseRating = Math.Max(1.0f, baseRating - 2.0f);
+        }
 
         // Round to the nearest 0.5 for realistic ratings (1.0, 1.5, 2.0, etc.)
-        return (float)(Math.Round(baseRating * 2) / 2.0);
+        return Math.Max(1.0f, Math.Min(5.0f, baseRating));
     }
 
     private float GenerateRatingInRange(float min, float max)
