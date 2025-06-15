@@ -100,7 +100,7 @@ public class RecommendationSeederAndTrainer(
         // Track schedule categories for metrics
         await TrackScheduleMetrics(schedules, metricsService);
 
-        // Save to database
+        // Save to the database
         await context.Schedules.AddRangeAsync(schedules);
         var savedCount = await context.SaveChangesAsync();
 
@@ -116,7 +116,7 @@ public class RecommendationSeederAndTrainer(
         var schedules = new List<Schedule>();
         var scheduleTemplates = GetBoundaryTestTemplates();
 
-        for (int i = 0; i < Math.Min(testUsers.Count, scheduleTemplates.Count); i++)
+        for (var i = 0; i < Math.Min(testUsers.Count, scheduleTemplates.Count); i++)
         {
             var user = testUsers[i];
             var template = scheduleTemplates[i];
@@ -203,7 +203,7 @@ public class RecommendationSeederAndTrainer(
                 { "Sunday", 0 }
             }, 20.00f),
 
-            // Single hour worked
+            // Single-hour worked
 
             (new Dictionary<string, int>
             {
@@ -311,15 +311,7 @@ public class RecommendationSeederAndTrainer(
 
     private List<Schedule> CreateRealisticSchedules(List<User> users)
     {
-        var schedules = new List<Schedule>();
-
-        foreach (var user in users)
-        {
-            var schedule = GenerateRealisticSchedule(user);
-            schedules.Add(schedule);
-        }
-
-        return schedules;
+        return users.Select(GenerateRealisticSchedule).ToList();
     }
 
     private Schedule GenerateRealisticSchedule(User user)
@@ -435,16 +427,16 @@ public class RecommendationSeederAndTrainer(
 
     private float GenerateRealisticBasePay() // Changed return type to float
     {
-        var random = _random.NextDouble();
+        var random = _random.NextSingle();
 
-        return (float)(random switch
+        return random switch
         {
-            < 0.20 => _random.Next(12, 18), // Cast to float
-            < 0.60 => _random.Next(18, 30),
-            < 0.85 => _random.Next(30, 45),
-            < 0.95 => _random.Next(45, 65),
+            < 0.20f => _random.Next(12, 18),
+            < 0.60f => _random.Next(18, 30),
+            < 0.85f => _random.Next(30, 45),
+            < 0.95f => _random.Next(45, 65),
             _ => _random.Next(65, 100)
-        });
+        };
     }
 
 
@@ -589,7 +581,7 @@ public class RecommendationSeederAndTrainer(
     }
 
     /// <summary>
-    /// Generate recommendation strategy
+    /// Generate a recommendation strategy
     /// </summary>
     private string GenerateRecommendationStrategy()
     {
@@ -669,7 +661,7 @@ public class RecommendationSeederAndTrainer(
         {
             EnsureProperTimestamps(user);
 
-            // Handle schedule relationship
+            // Handle a schedule relationship
             if (user.Schedule == null)
             {
                 continue;
@@ -769,7 +761,7 @@ public class RecommendationSeederAndTrainer(
         var baseRating = clickCount switch
         {
             0 => GenerateRatingInRange(1.0f, 2.5f), // Low rating for no engagement
-            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed for single click
+            1 => GenerateRatingInRange(2.0f, 4.0f), // Mixed for a single click
             >= 2 and <= 4 => GenerateRatingInRange(3.0f, 5.0f), // Good for moderate
             >= 5 and <= 9 => GenerateRatingInRange(3.5f, 5.0f), // High for good engagement
             _ => GenerateRatingInRange(4.0f, 5.0f) // Excellent for very high engagement
@@ -779,7 +771,7 @@ public class RecommendationSeederAndTrainer(
         var noise = (_random.NextSingle() - 0.5f) * 0.3f; // ±0.15 rating noise
         baseRating = Math.Max(1.0f, Math.Min(5.0f, baseRating + noise));
 
-        // Round to nearest 0.5 for realistic ratings (1.0, 1.5, 2.0, etc.)
+        // Round to the nearest 0.5 for realistic ratings (1.0, 1.5, 2.0, etc.)
         return (float)(Math.Round(baseRating * 2) / 2.0);
     }
 
