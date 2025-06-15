@@ -32,12 +32,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
 
-// Mappers
-builder.Services.AddAutoMapper(typeof(ServiceMapping));
-builder.Services.AddAutoMapper(typeof(UserAddressMapping));
-builder.Services.AddAutoMapper(typeof(UserMapping));
-builder.Services.AddAutoMapper(typeof(UserScheduleMapping));
-builder.Services.AddAutoMapper(typeof(AuthUserMapping));
+// Extension method to call the autoMappers for my modules
+builder.Services.AddAutoMapperExtension();
 builder.Services.AddMemoryCache();
 var app = builder.Build();
 
