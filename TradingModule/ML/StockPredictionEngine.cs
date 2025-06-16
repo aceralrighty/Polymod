@@ -1,7 +1,5 @@
 using Microsoft.ML;
 using TBD.TradingModule.Core.Entities;
-using TBD.TradingModule.Infrastructure.MarketData;
-using TBD.TradingModule.Model;
 using TBD.TradingModule.Preprocessing;
 
 namespace TBD.TradingModule.ML;
@@ -94,33 +92,68 @@ public class StockPredictionEngine
         };
     }
 
-    public async Task PredictAndSaveAsync(
-        IEnumerable<StockFeatureVector> inputs,
-        TradingDbContext dbContext)
-    {
-        foreach (var input in inputs)
-        {
-            var result = Predict(input);
-            dbContext.Predictions.Add(result);
-        }
-
-        await dbContext.SaveChangesAsync();
-    }
-
-    public async Task TrainAndPredictFromFeatureSetsAsync(
-        IEnumerable<FeatureEngineeringService.FeatureSet> sets,
-        TradingDbContext dbContext)
+    /// <summary>
+    /// Train model and generate predictions - returns predictions instead of saving directly
+    /// </summary>
+    public async Task<List<PredictionResult>> TrainAndPredictFromFeatureSetsAsync(
+        IEnumerable<FeatureEngineeringService.FeatureSet> sets)
     {
         var featureSets = sets as FeatureEngineeringService.FeatureSet[] ?? sets.ToArray();
         var featureVectors = featureSets.Select(f => f.Vector).ToList();
-        TrainAndSaveModel(featureVectors);
 
+        // Only retrain if necessary
+        if (ShouldRetrain())
+        {
+            TrainAndSaveModel(featureVectors);
+        }
+
+        var predictions = new List<PredictionResult>();
         foreach (var fs in featureSets)
         {
             var result = Predict(fs.Vector);
-            dbContext.Predictions.Add(result);
+            predictions.Add(result);
         }
 
-        await dbContext.SaveChangesAsync();
+        return await Task.FromResult(predictions);
+    }
+
+    /// <summary>
+    /// Generate predictions without training (assumes model exists)
+    /// </summary>
+    public async Task<List<PredictionResult>> PredictFromFeatureVectorsAsync(
+        IEnumerable<StockFeatureVector> inputs)
+    {
+        LoadModelIfNeeded();
+
+        if (_predictionEngine == null)
+        {
+            throw new InvalidOperationException("No trained model available. Please train the model first.");
+        }
+
+        var predictions = new List<PredictionResult>();
+        foreach (var input in inputs)
+        {
+            var result = Predict(input);
+            predictions.Add(result);
+        }
+
+        return await Task.FromResult(predictions);
+    }
+
+    private bool ShouldRetrain()
+    {
+        if (!File.Exists(_modelPath)) return true;
+
+        var modelAge = DateTime.UtcNow - File.GetLastWriteTime(_modelPath);
+        return modelAge > TimeSpan.FromDays(7); // Retrain weekly
+    }
+
+    /// <summary>
+    /// Force retrain the model with new data
+    /// </summary>
+    public async Task RetrainModelAsync(IEnumerable<StockFeatureVector> trainingData)
+    {
+        TrainAndSaveModel(trainingData);
+        await Task.CompletedTask;
     }
 }

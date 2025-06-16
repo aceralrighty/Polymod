@@ -8,8 +8,17 @@ public class FeatureEngineeringService
 
     public List<FeatureSet> GenerateFeatureSets(List<RawMarketData> rawData)
     {
+        if (rawData == null || rawData.Count < 51)
+        {
+            throw new ArgumentException("Insufficient data for feature generation. Need at least 51 data points.");
+        }
+
         var sorted = rawData.OrderBy(r => r.Date).ToList();
         var output = new List<FeatureSet>();
+        if (sorted.Any(d => d.Close <= 0 || d.Volume < 0))
+        {
+            throw new ArgumentException("Invalid market data detected (negative prices or volumes).");
+        }
 
         for (var i = 50; i < sorted.Count - 1; i++)
         {
