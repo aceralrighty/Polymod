@@ -11,6 +11,7 @@ public class MarketDataFetcher(
     private readonly HttpClient _httpClient = new();
     private static readonly string? ApiKey = Environment.GetEnvironmentVariable("API_KEY");
     private const string BaseUrl = "https://www.alphavantage.co/query";
+    private const int MaxRequestsPerHour = 25; // Alpha Vantage free tier limit
     private const int MaxRequestsPerMinute = 5;
     private readonly SemaphoreSlim _rateLimiter = new(1, 1);
     private static readonly TimeSpan RequestDelay = TimeSpan.FromSeconds(12);
@@ -33,7 +34,7 @@ public class MarketDataFetcher(
         }
     }
 
-    private async Task<List<RawMarketData>> GetHistoricalDataAsync(
+    public async Task<List<RawMarketData>> GetHistoricalDataAsync(
         string symbol,
         DateTime startDate,
         DateTime endDate)
@@ -103,12 +104,17 @@ public class MarketDataFetcher(
     private async Task<bool> CanMakeRequestAsync()
     {
         var oneHourAgo = DateTime.UtcNow.AddHours(-1);
+        var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
 
-        var recentRequests = await dbContext.ApiRequestLogs
+        var hourlyRequests = await dbContext.ApiRequestLogs
             .Where(log => log.ApiProvider == "AlphaVantage" && log.RequestTime >= oneHourAgo)
-            .CountAsync(); // Count requests, not sum
+            .CountAsync();
 
-        return recentRequests < MaxRequestsPerMinute;
+        var minuteRequests = await dbContext.ApiRequestLogs
+            .Where(log => log.ApiProvider == "AlphaVantage" && log.RequestTime >= oneMinuteAgo)
+            .CountAsync();
+
+        return hourlyRequests < MaxRequestsPerHour && minuteRequests < MaxRequestsPerMinute;
     }
 
     private async Task LogApiRequestAsync(string provider, string requestType, string symbol, int responseCode,

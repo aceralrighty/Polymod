@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.Shared.CachingConfiguration;
-using TBD.TradingModule.DataAccess.Interfaces;
+using TBD.TradingModule.Core.Entities.Interfaces;
 using TBD.TradingModule.Infrastructure.MarketData;
+using TBD.TradingModule.ML;
+using TBD.TradingModule.Orchestration;
+using TBD.TradingModule.Preprocessing;
 
 namespace TBD.TradingModule;
 
@@ -12,16 +14,19 @@ public static class TradingModule
         services.AddDbContext<TradingDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("TradingDb")));
 
-        services.Configure<CacheOptions>("Trading", options =>
-        {
-            options.DefaultCacheDuration = TimeSpan.FromMinutes(10);
-            options.GetByIdCacheDuration = TimeSpan.FromMinutes(15);
-            options.GetAllCacheDuration = TimeSpan.FromMinutes(5);
-            options.EnableCaching = true;
-            options.CacheKeyPrefix = "Trading";
-        });
-
+        // Repository Pattern
         services.AddScoped<ITradingRepository, TradingRepository>();
+
+        // Core Services
+        services.AddScoped<MarketDataFetcher>();
+        services.AddScoped<FeatureEngineeringService>();
+        services.AddScoped<StockPredictionEngine>();
+
+        // Main Orchestrator
+        services.AddScoped<TrainingOrchestrator>();
+
+        // HttpClient for API calls
+        services.AddHttpClient();
 
         return services;
     }
