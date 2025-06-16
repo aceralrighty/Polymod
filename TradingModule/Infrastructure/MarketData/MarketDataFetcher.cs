@@ -19,7 +19,7 @@ public class MarketDataFetcher(
 
     private async Task<string> FetchAlphaVantageAsync(string symbol)
     {
-        var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={ApiKey}";
+        var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&interval=15min&apikey={ApiKey}";
         await _rateLimiter.WaitAsync();
         try
         {
@@ -34,66 +34,137 @@ public class MarketDataFetcher(
         }
     }
 
-    public async Task<List<RawMarketData>> GetHistoricalDataAsync(
+    public async Task<List<RawMarketData>> GetAndSaveHistoricalDataAsync(
         string symbol,
         DateTime startDate,
         DateTime endDate)
     {
-        await _rateLimiter.WaitAsync();
         try
         {
-            if (!await CanMakeRequestAsync())
+            logger.LogInformation("Starting data fetch for {Symbol}", symbol);
+
+            // Check if the API key exists
+            if (string.IsNullOrEmpty(ApiKey))
             {
-                throw new InvalidOperationException("Rate limit exceeded. Please wait before making more requests.");
+                throw new InvalidOperationException("API_KEY environment variable is not set");
             }
 
-            logger.LogInformation("Fetching historical data for {Symbol} from {StartDate} to {EndDate}",
-                symbol, startDate, endDate);
+            // Check if data already exists
+            var existingData = await dbContext.RawData
+                .Where(r => r.Symbol == symbol && r.Date >= startDate && r.Date <= endDate)
+                .CountAsync();
 
-            var json = await FetchAlphaVantageAsync(symbol);
-            var data = JsonDocument.Parse(json);
+            logger.LogInformation("Found {Count} existing records for {Symbol}", existingData, symbol);
 
-            await LogApiRequestAsync("AlphaVantage", "HistoricalData", symbol, 200);
+            var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={ApiKey}";
+            logger.LogInformation("Making API request to: {Url}", url.Replace(ApiKey, "***"));
 
-            var history = data.RootElement.GetProperty("Time Series (Daily)");
+            var response = await _httpClient.GetAsync(url);
+            var jsonContent = await response.Content.ReadAsStringAsync();
 
-            var marketData = new List<RawMarketData>();
-            foreach (var day in history.EnumerateObject())
+            logger.LogInformation("API Response Status: {StatusCode}", response.StatusCode);
+            logger.LogInformation("Response length: {Length} characters", jsonContent?.Length ?? 0);
+
+            if (!response.IsSuccessStatusCode)
             {
-                var date = DateTime.Parse(day.Name);
+                logger.LogError("API request failed with status {StatusCode}: {Content}",
+                    response.StatusCode, jsonContent);
+                throw new HttpRequestException($"API request failed: {response.StatusCode}");
+            }
+
+            // Log first 500 characters of response for debugging
+            if (jsonContent is { Length: > 0 })
+            {
+                var preview = jsonContent.Length > 500 ? jsonContent.Substring(0, 500) + "..." : jsonContent;
+                logger.LogInformation("Response preview: {Preview}", preview);
+            }
+
+            using var document = JsonDocument.Parse(jsonContent ?? throw new InvalidOperationException());
+            var root = document.RootElement;
+
+            // Check for API errors
+            if (root.TryGetProperty("Error Message", out var errorElement))
+            {
+                var errorMessage = errorElement.GetString();
+                logger.LogError("Alpha Vantage API error: {Error}", errorMessage);
+                throw new InvalidOperationException($"Alpha Vantage API error: {errorMessage}");
+            }
+
+            if (root.TryGetProperty("Note", out var noteElement))
+            {
+                var note = noteElement.GetString();
+                logger.LogWarning("Alpha Vantage API note: {Note}", note);
+                if (note?.Contains("rate limit") == true)
+                {
+                    throw new InvalidOperationException($"Rate limit exceeded: {note}");
+                }
+            }
+
+            if (!root.TryGetProperty("Time Series (Daily)", out var timeSeriesElement))
+            {
+                logger.LogError("Time Series (Daily) property not found in response");
+                throw new InvalidOperationException("Invalid API response: missing Time Series data");
+            }
+
+            var marketDataList = new List<RawMarketData>();
+            var processedCount = 0;
+
+            foreach (var dayProperty in timeSeriesElement.EnumerateObject())
+            {
+                if (!DateTime.TryParse(dayProperty.Name, out var date))
+                {
+                    logger.LogWarning("Failed to parse date: {DateString}", dayProperty.Name);
+                    continue;
+                }
+
                 if (date < startDate || date > endDate)
                     continue;
 
-                var values = day.Value;
-                marketData.Add(new RawMarketData
+                var values = dayProperty.Value;
+
+                try
                 {
-                    Symbol = symbol,
-                    Date = date,
-                    Open = decimal.Parse(values.GetProperty("1. open").GetString() ?? string.Empty),
-                    High = decimal.Parse(values.GetProperty("2. high").GetString() ?? string.Empty),
-                    Low = decimal.Parse(values.GetProperty("3. low").GetString() ?? string.Empty),
-                    Close = decimal.Parse(values.GetProperty("4. close").GetString() ?? string.Empty),
-                    AdjustedClose =
-                        decimal.Parse(values.GetProperty("5. adjusted close").GetString() ?? string.Empty),
-                    Volume = long.Parse(values.GetProperty("6. volume").GetString() ?? string.Empty)
-                });
+                    var marketData = new RawMarketData
+                    {
+                        Symbol = symbol,
+                        Date = date,
+                        Open = decimal.Parse(values.GetProperty("1. open").GetString() ?? "0"),
+                        High = decimal.Parse(values.GetProperty("2. high").GetString() ?? "0"),
+                        Low = decimal.Parse(values.GetProperty("3. low").GetString() ?? "0"),
+                        Close = decimal.Parse(values.GetProperty("4. close").GetString() ?? "0"),
+                        AdjustedClose = decimal.Parse(values.GetProperty("5. adjusted close").GetString() ?? "0"),
+                        Volume = long.Parse(values.GetProperty("6. volume").GetString() ?? "0")
+                    };
+
+                    marketDataList.Add(marketData);
+                    processedCount++;
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Failed to parse market data for {Date}", date);
+                }
             }
 
-            logger.LogInformation("Successfully fetched {Count} records for {Symbol}",
-                marketData.Count, symbol);
+            logger.LogInformation("Processed {Count} records for {Symbol}", processedCount, symbol);
 
-            return marketData;
+            if (marketDataList.Any())
+            {
+                // Save to the database
+                await dbContext.RawData.AddRangeAsync(marketDataList);
+                var savedCount = await dbContext.SaveChangesAsync();
+                logger.LogInformation("Saved {Count} records to database for {Symbol}", savedCount, symbol);
+            }
+            else
+            {
+                logger.LogWarning("No market data to save for {Symbol}", symbol);
+            }
+
+            return marketDataList;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to fetch historical data for {Symbol}", symbol);
-            await LogApiRequestAsync("AlphaVantage", "HistoricalData", symbol, 500, ex.Message);
+            logger.LogError(ex, "Failed to fetch and save historical data for {Symbol}", symbol);
             throw;
-        }
-        finally
-        {
-            await Task.Delay(RequestDelay);
-            _rateLimiter.Release();
         }
     }
 
@@ -152,7 +223,7 @@ public class MarketDataFetcher(
         var result = new Dictionary<string, List<RawMarketData>>();
         const int batchSize = 5; // Max 5 per minute
 
-        for (int i = 0; i < symbols.Count; i += batchSize)
+        for (var i = 0; i < symbols.Count; i += batchSize)
         {
             var batch = symbols.Skip(i).Take(batchSize).ToList();
 
@@ -160,7 +231,7 @@ public class MarketDataFetcher(
             {
                 try
                 {
-                    var data = await GetHistoricalDataAsync(symbol, startDate, endDate);
+                    var data = await GetAndSaveHistoricalDataAsync(symbol, startDate, endDate);
                     result[symbol] = data;
                 }
                 catch (Exception ex)

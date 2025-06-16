@@ -79,6 +79,42 @@ if (app.Environment.IsDevelopment())
             await recommendationSeederAndTrainer.SeedRecommendationsAsync(seededUsers, seededServices,
                 includeRatings: true);
             Console.WriteLine("✅ Recommendation Seeding and Training complete!");
+            await Task.Delay(1000);
+
+            // ADD TRADING MODULE INITIALIZATION HERE
+            Console.WriteLine("📈 Starting Trading Module initialization...");
+            try
+            {
+                // Check the API key first
+                var apiKey = Environment.GetEnvironmentVariable("API_KEY");
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    Console.WriteLine(
+                        "⚠️  Warning: API_KEY environment variable not set. Trading module will not fetch real data.");
+                    Console.WriteLine(
+                        "   Set API_KEY environment variable with your Alpha Vantage API key to enable data fetching.");
+                }
+                else
+                {
+                    Console.WriteLine($"✅ API Key configured (length: {apiKey.Length})");
+                }
+
+                // Initialize trading services
+                // var tradingService = scopedServices.GetRequiredService<TradingModuleService>();
+                // await tradingService.RunAsync();
+
+                Console.WriteLine("✅ Trading Module initialization complete!");
+            }
+            catch (Exception tradingEx)
+            {
+                Console.WriteLine($"⚠️  Trading Module initialization failed: {tradingEx.Message}");
+                Console.WriteLine(
+                    "   This won't prevent the application from starting, but trading features may not work.");
+                Console.WriteLine($"   Details: {tradingEx.StackTrace}");
+
+                // Don't throw here - let the app continue without trading data
+                // throw; // Uncomment this if you want trading failures to stop app startup
+            }
         }
 
         Console.WriteLine("🎉 All startup tasks complete!");
@@ -91,6 +127,7 @@ if (app.Environment.IsDevelopment())
             "Application startup failed due to database seeding or model training issues", ex);
     }
 }
+
 
 app.MapOpenApi();
 

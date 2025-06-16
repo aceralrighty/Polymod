@@ -165,7 +165,7 @@ public class TrainingOrchestrator(
                     }
 
                     // Fetch new data
-                    recentData = await marketDataFetcher.GetHistoricalDataAsync(symbol, startDate, endDate);
+                    recentData = await marketDataFetcher.GetAndSaveHistoricalDataAsync(symbol, startDate, endDate);
 
                     if (recentData.Any())
                     {
