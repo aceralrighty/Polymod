@@ -1,59 +1,27 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using TBD.TradingModule.Core.Entities;
+using TBD.TradingModule.Core.Entities.Interfaces;
 
 namespace TBD.TradingModule.Infrastructure.MarketData;
 
-public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpClient
+public class MarketDataFetcher(
+    ITradingRepository repository,
+    ILogger<MarketDataFetcher> logger,
+    IConfiguration configuration)
+    : IDisposable
 {
-    private readonly IConfiguration _configuration; // Make it non-static
-    private readonly HttpClient _httpClient; // No longer static, initialized in constructor or as field
-    private readonly string _apiKey; // Make it non-static and not nullable here
+    private readonly HttpClient _httpClient = new();
+
+    private readonly string _apiKey = configuration["API_KEY"] ??
+                                      throw new InvalidOperationException(
+                                          "API_KEY is not configured in application settings.");
 
     private const string BaseUrl = "https://www.alphavantage.co/query";
-    private const string GlobalFunction = "DIVIDENDS";
-    private const int MaxRequestsPerHour = 25; // Alpha Vantage free tier limit
+    private const string StockFunction = "TIME_SERIES_DAILY_ADJUSTED";
+    private const int MaxRequestsPerHour = 25;
     private const int MaxRequestsPerMinute = 5;
     private readonly SemaphoreSlim _rateLimiter = new(1, 1);
-    private static readonly TimeSpan RequestDelay = TimeSpan.FromSeconds(12); // This can remain static
-
-    private readonly TradingDbContext dbContext; // Fields to store injected services
-    private readonly ILogger<MarketDataFetcher> logger; // Fields to store injected services
-
-
-    // Constructor with injected services
-    public MarketDataFetcher(
-        TradingDbContext dbContext,
-        ILogger<MarketDataFetcher> logger,
-        IConfiguration configuration) // Inject IConfiguration
-    {
-        _httpClient = new HttpClient(); // Initialize HttpClient here
-        _configuration = configuration;
-        // Read API_KEY from the injected configuration here
-        _apiKey = _configuration["API_KEY"] ??
-                  throw new InvalidOperationException("API_KEY is not configured in application settings.");
-        this.dbContext = dbContext; // Assign dbContext
-        this.logger = logger; // Assign logger
-    }
-
-
-    private async Task<string> FetchAlphaVantageAsync(string symbol)
-    {
-        // Use the non-static _apiKey field
-        var url = $"{BaseUrl}?function={GlobalFunction}S&symbol={symbol}&interval=15min&apikey={_apiKey}";
-        await _rateLimiter.WaitAsync();
-        try
-        {
-            var response = await _httpClient.GetAsync(url);
-            await Task.Delay(RequestDelay);
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
-        }
-        finally
-        {
-            _rateLimiter.Release();
-        }
-    }
+    private static readonly TimeSpan RequestDelay = TimeSpan.FromSeconds(12);
 
     public async Task<List<RawMarketData>> GetAndSaveHistoricalDataAsync(
         string symbol,
@@ -62,248 +30,254 @@ public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpCl
     {
         try
         {
-            logger.LogInformation("Starting data fetch for {Symbol}", symbol);
+            logger.LogInformation("Starting stock data fetch for {Symbol}", symbol);
 
-            // This check is now redundant because the constructor will throw if _apiKey is null
-            // but you can keep it if you want an explicit check here.
-            if (string.IsNullOrEmpty(_apiKey))
+            // Check if data already exists using repository
+            var existingData = await repository.GetMarketDataAsync(symbol, startDate, endDate);
+            logger.LogInformation("Found {Count} existing records for {Symbol}", existingData.Count, symbol);
+
+            // Check rate limits
+            if (!await CanMakeRequestAsync())
             {
-                throw new InvalidOperationException(
-                    "API_KEY is not set (internal check). This should not happen if configured correctly).");
+                throw new InvalidOperationException("Rate limit exceeded. Cannot make request at this time.");
             }
 
-            // Check if data already exists
-            var existingData = await dbContext.RawData
-                .Where(r => r.Symbol == symbol && r.Date >= startDate && r.Date <= endDate)
-                .CountAsync();
+            var url = $"{BaseUrl}?function={StockFunction}&symbol={symbol}&apikey={_apiKey}";
+            logger.LogInformation("Making stock API request to: {Url}", url.Replace(_apiKey, "***"));
 
-            logger.LogInformation("Found {Count} existing records for {Symbol}", existingData, symbol);
+            await _rateLimiter.WaitAsync();
 
-            var url = $"{BaseUrl}?function={GlobalFunction}&symbol={symbol}&apikey={_apiKey}";
-            logger.LogInformation("Making API request to: {Url}", url.Replace(_apiKey, "***"));
-
-            var response = await _httpClient.GetAsync(url);
-            var jsonContent = await response.Content.ReadAsStringAsync();
-
-            logger.LogInformation("API Response Status: {StatusCode}", response.StatusCode);
-            logger.LogInformation("Response length: {Length} characters", jsonContent?.Length ?? 0);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                logger.LogError("API request failed with status {StatusCode}: {Content}",
-                    response.StatusCode, jsonContent);
-                throw new HttpRequestException($"API request failed: {response.StatusCode}");
-            }
+                await LogApiRequestAsync("AlphaVantage", StockFunction, symbol, 0);
 
-            // Log first 500 characters of response for debugging
-            if (jsonContent is { Length: > 0 })
-            {
-                var preview = jsonContent.Length > 500 ? jsonContent.Substring(0, 500) + "..." : jsonContent;
-                logger.LogInformation("Response preview: {Preview}", preview);
-            }
+                var response = await _httpClient.GetAsync(url);
+                await Task.Delay(RequestDelay);
 
-            using var document = JsonDocument.Parse(jsonContent ?? throw new InvalidOperationException());
-            var root = document.RootElement;
+                var jsonContent = await response.Content.ReadAsStringAsync();
 
-            // Check for API errors
-            if (root.TryGetProperty("Error Message", out var errorElement))
-            {
-                var errorMessage = errorElement.GetString();
-                logger.LogError("Alpha Vantage API error: {Error}", errorMessage);
-                throw new InvalidOperationException($"Alpha Vantage API error: {errorMessage}");
-            }
+                logger.LogInformation("API Response Status: {StatusCode}", response.StatusCode);
+                logger.LogInformation("Response length: {Length} characters", jsonContent?.Length ?? 0);
 
-            if (root.TryGetProperty("Note", out var noteElement))
-            {
-                var note = noteElement.GetString();
-                logger.LogWarning("Alpha Vantage API note: {Note}", note);
-                if (note?.Contains("rate limit") == true)
+                await LogApiRequestAsync("AlphaVantage", StockFunction, symbol, (int)response.StatusCode);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    throw new InvalidOperationException($"Rate limit exceeded: {note}");
+                    logger.LogError("API request failed with status {StatusCode}: {Content}",
+                        response.StatusCode, jsonContent);
+                    await LogApiRequestAsync("AlphaVantage", StockFunction, symbol, (int)response.StatusCode,
+                        jsonContent);
+                    throw new HttpRequestException($"API request failed: {response.StatusCode}");
                 }
-            }
 
-            // IMPORTANT: The root property name is "data" for dividends, not the function name itself.
-            // Ensure this matches the JSON preview you provided.
-            if (!root.TryGetProperty("data",
-                    out var dataArrayElement)) // Renamed timeSeriesElement to dataArrayElement for clarity
-            {
-                logger.LogError($"'data' property not found in response for {GlobalFunction} data.");
-                throw new InvalidOperationException(
-                    $"Invalid API response: missing 'data' property for {GlobalFunction} data.");
-            }
-
-            var marketDataList = new List<RawMarketData>();
-            var processedCount = 0;
-
-            // Iterate through the array of dividend objects
-            foreach (var dividendObject in
-                     dataArrayElement.EnumerateArray()) // Changed dayProperty to dividendObject. This is correct.
-            {
-                try
+                // Log response preview
+                if (jsonContent is { Length: > 0 })
                 {
-                    // Correctly extract the ex_dividend_date and amount from the current dividendObject
-                    var exDateString = dividendObject.GetProperty("ex_dividend_date").GetString();
-                    var amountString = dividendObject.GetProperty("amount").GetString();
+                    var preview = jsonContent.Length > 500 ? jsonContent.Substring(0, 500) + "..." : jsonContent;
+                    logger.LogInformation("Response preview: {Preview}", preview);
+                }
 
-                    if (!DateTime.TryParse(exDateString, out var date))
+                using var document = JsonDocument.Parse(jsonContent ?? throw new InvalidOperationException());
+                var root = document.RootElement;
+
+                // Check for API errors
+                if (root.TryGetProperty("Error Message", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString();
+                    logger.LogError("Alpha Vantage API error: {Error}", errorMessage);
+                    await LogApiRequestAsync("AlphaVantage", StockFunction, symbol, 400, errorMessage);
+                    throw new InvalidOperationException($"Alpha Vantage API error: {errorMessage}");
+                }
+
+                if (root.TryGetProperty("Note", out var noteElement))
+                {
+                    var note = noteElement.GetString();
+                    logger.LogWarning("Alpha Vantage API note: {Note}", note);
+                    if (note?.Contains("rate limit") == true)
                     {
-                        logger.LogWarning("Failed to parse ex_dividend_date: {DateString}. Skipping entry.",
-                            exDateString);
-                        continue; // Skip this entry if date cannot be parsed
+                        await LogApiRequestAsync("AlphaVantage", StockFunction, symbol, 429, note);
+                        throw new InvalidOperationException($"Rate limit exceeded: {note}");
                     }
-
-                    if (date < startDate || date > endDate)
-                        continue;
-
-                    if (!decimal.TryParse(amountString, out var amount))
-                    {
-                        logger.LogWarning("Failed to parse dividend amount: {AmountString}. Skipping entry.",
-                            amountString);
-                        continue; // Skip if amount cannot be parsed
-                    }
-
-                    // --- IMPORTANT DATA MAPPING ---
-                    // RawMarketData is designed for stock price data (Open, High, Low, Close, Volume).
-                    // Dividend data (ex_dividend_date, amount, payment_date, etc.) doesn't fit directly.
-                    //
-                    // RECOMMENDATION: Create a new entity (e.g., 'RawDividendData') to store dividend specific fields.
-                    // For now, if you MUST use RawMarketData, here's an arbitrary mapping:
-                    var marketData = new RawMarketData
-                    {
-                        Symbol = symbol,
-                        Date = date, // Map ex_dividend_date to Date
-                        Open = 0, // Set to 0 or null as no direct equivalent
-                        High = 0, // Set to 0 or null
-                        Low = 0, // Set to 0 or null
-                        Close = amount, // Map dividend 'amount' to 'Close'
-                        AdjustedClose = amount, // And 'AdjustedClose'
-                        Volume = 0 // Set to 0 or null
-                    };
-
-                    marketDataList.Add(marketData);
-                    processedCount++;
-
-                    logger.LogInformation("Successfully parsed dividend for {Symbol} on {Date} with Amount: {Amount}",
-                        symbol, date.ToShortDateString(), amount);
                 }
-                catch (Exception ex)
+
+                // Parse stock price data
+                if (!root.TryGetProperty("Time Series (Daily)", out var timeSeriesElement))
                 {
-                    // Log the full JSON of the problematic element for debugging
-                    logger.LogError(ex,
-                        "Failed to parse individual dividend entry for {Symbol}. Element JSON: {JsonElementText}",
-                        symbol, dividendObject.GetRawText());
+                    logger.LogError("'Time Series (Daily)' property not found in stock response");
+                    throw new InvalidOperationException(
+                        "Invalid API response: missing 'Time Series (Daily)' property for stock data");
                 }
+
+                var marketDataList = new List<RawMarketData>();
+                var processedCount = 0;
+
+                foreach (var dayProperty in timeSeriesElement.EnumerateObject())
+                {
+                    try
+                    {
+                        if (!DateTime.TryParse(dayProperty.Name, out var date))
+                        {
+                            logger.LogWarning("Failed to parse date: {DateString}", dayProperty.Name);
+                            continue;
+                        }
+
+                        // Apply date filters
+                        if (date < startDate || date > endDate) continue;
+
+                        var dayData = dayProperty.Value;
+
+                        // Parse stock price data correctly
+                        var open = decimal.Parse(dayData.GetProperty("1. open").GetString()!);
+                        var high = decimal.Parse(dayData.GetProperty("2. high").GetString()!);
+                        var low = decimal.Parse(dayData.GetProperty("3. low").GetString()!);
+                        var close = decimal.Parse(dayData.GetProperty("4. close").GetString()!);
+                        var adjustedClose = decimal.Parse(dayData.GetProperty("5. adjusted close").GetString()!);
+                        var volume = long.Parse(dayData.GetProperty("6. volume").GetString()!);
+
+                        // Check for duplicates using existing data
+                        var existingRecord = existingData.FirstOrDefault(d => d.Date == date);
+
+                        if (existingRecord != null)
+                        {
+                            logger.LogDebug("Stock data already exists for {Symbol} on {Date}, skipping",
+                                symbol, date);
+                            continue;
+                        }
+
+                        var marketData = new RawMarketData
+                        {
+                            Symbol = symbol,
+                            Date = date,
+                            Open = open,
+                            High = high,
+                            Low = low,
+                            Close = close,
+                            AdjustedClose = adjustedClose,
+                            Volume = volume
+                        };
+
+                        marketDataList.Add(marketData);
+                        processedCount++;
+
+                        logger.LogDebug("Successfully parsed stock data for {Symbol} on {Date}",
+                            symbol, date);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex,
+                            "Failed to parse individual stock data entry for {Symbol}. Element JSON: {JsonElementText}",
+                            symbol, dayProperty.Value.GetRawText());
+                    }
+                }
+
+                logger.LogInformation("Processed {Count} new stock records for {Symbol}", processedCount, symbol);
+
+                // Save to database using repository
+                if (marketDataList.Any())
+                {
+                    try
+                    {
+                        await repository.SaveMarketDataAsync(marketDataList);
+                        logger.LogInformation("Successfully saved {Count} stock records to database for {Symbol}",
+                            marketDataList.Count, symbol);
+                    }
+                    catch (Exception dbEx)
+                    {
+                        logger.LogError(dbEx, "Failed to save stock data to database for {Symbol}. Error: {Error}",
+                            symbol, dbEx.Message);
+                        throw;
+                    }
+                }
+                else
+                {
+                    logger.LogInformation("No new stock data to save for {Symbol}", symbol);
+                }
+
+                return marketDataList;
             }
-
-            logger.LogInformation("Processed {Count} records for {Symbol}", processedCount, symbol);
-
-            if (marketDataList.Any())
+            finally
             {
-                // Save to the database
-                await dbContext.RawData.AddRangeAsync(marketDataList);
-                var savedCount = await dbContext.SaveChangesAsync();
-                logger.LogInformation("Saved {Count} records to database for {Symbol}", savedCount, symbol);
+                _rateLimiter.Release();
             }
-            else
-            {
-                logger.LogWarning("No market data to save for {Symbol}", symbol);
-            }
-
-            return marketDataList;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to fetch and save historical data for {Symbol}", symbol);
+            logger.LogError(ex, "Failed to fetch and save stock data for {Symbol}", symbol);
             throw;
         }
     }
 
-    // Placeholder: Re-implement using Alpha Vantage GLOBAL_QUOTE endpoint if needed
-    public Task<RawMarketData> GetLatestQuoteAsync(string symbol) =>
-        throw new NotImplementedException("Use GLOBAL_QUOTE from Alpha Vantage or a real-time provider.");
+    /// <summary>
+    /// Batch fetch for multiple symbols - called by TrainingOrchestrator
+    /// </summary>
+    public async Task<Dictionary<string, List<RawMarketData>>> GetBatchHistoricalDataAsync(
+        List<string> symbols,
+        DateTime startDate,
+        DateTime endDate)
+    {
+        var results = new Dictionary<string, List<RawMarketData>>();
+
+        foreach (var symbol in symbols)
+        {
+            try
+            {
+                var data = await GetAndSaveHistoricalDataAsync(symbol, startDate, endDate);
+                results[symbol] = data;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to fetch data for symbol {Symbol}", symbol);
+                results[symbol] = new List<RawMarketData>(); // Empty list for failed symbols
+            }
+        }
+
+        return results;
+    }
 
     private async Task<bool> CanMakeRequestAsync()
     {
         var oneHourAgo = DateTime.UtcNow.AddHours(-1);
         var oneMinuteAgo = DateTime.UtcNow.AddMinutes(-1);
 
-        var hourlyRequests = await dbContext.ApiRequestLogs
-            .Where(log => log.ApiProvider == "AlphaVantage" && log.RequestTime >= oneHourAgo)
-            .CountAsync();
-
-        var minuteRequests = await dbContext.ApiRequestLogs
-            .Where(log => log.ApiProvider == "AlphaVantage" && log.RequestTime >= oneMinuteAgo)
-            .CountAsync();
+        var hourlyRequests = await repository.GetApiRequestCountAsync("AlphaVantage", oneHourAgo);
+        var minuteRequests = await repository.GetApiRequestCountAsync("AlphaVantage", oneMinuteAgo);
 
         return hourlyRequests < MaxRequestsPerHour && minuteRequests < MaxRequestsPerMinute;
-    }
-
-    private async Task LogApiRequestAsync(string provider, string requestType, string symbol, int responseCode,
-        string? errorMessage = null)
-    {
-        var log = new ApiRequestLog
-        {
-            ApiProvider = provider,
-            RequestType = requestType,
-            Symbol = symbol,
-            RequestTime = DateTime.UtcNow,
-            ResponseCode = responseCode,
-            ErrorMessage = errorMessage
-        };
-
-        dbContext.ApiRequestLogs.Add(log);
-        await dbContext.SaveChangesAsync();
     }
 
     public async Task<int> GetRemainingRequestsAsync()
     {
         var oneHourAgo = DateTime.UtcNow.AddHours(-1);
-        var recentRequests = await dbContext.ApiRequestLogs
-            .Where(log => log.ApiProvider == "AlphaVantage" && log.RequestTime >= oneHourAgo)
-            .CountAsync();
-
-        return Math.Max(0, MaxRequestsPerMinute - recentRequests);
+        var hourlyRequests = await repository.GetApiRequestCountAsync("AlphaVantage", oneHourAgo);
+        return Math.Max(0, MaxRequestsPerHour - hourlyRequests);
     }
 
-    public async Task<Dictionary<string, List<RawMarketData>>> GetBatchHistoricalDataAsync(
-        List<string> symbols,
-        DateTime startDate,
-        DateTime endDate)
+    private async Task LogApiRequestAsync(string provider, string requestType, string symbol, int responseCode,
+        string? errorMessage = null)
     {
-        var result = new Dictionary<string, List<RawMarketData>>();
-        const int batchSize = 5; // Max 5 per minute
-
-        for (var i = 0; i < symbols.Count; i += batchSize)
+        try
         {
-            var batch = symbols.Skip(i).Take(batchSize).ToList();
-
-            foreach (var symbol in batch)
+            var log = new ApiRequestLog
             {
-                try
-                {
-                    var data = await GetAndSaveHistoricalDataAsync(symbol, startDate, endDate);
-                    result[symbol] = data;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Failed to fetch data for {Symbol} in batch", symbol);
-                    result[symbol] = new List<RawMarketData>();
-                }
-            }
+                ApiProvider = provider,
+                RequestType = requestType,
+                Symbol = symbol,
+                RequestTime = DateTime.UtcNow,
+                ResponseCode = responseCode,
+                ErrorMessage = errorMessage
+            };
 
-            if (i + batchSize < symbols.Count)
-            {
-                await Task.Delay(TimeSpan.FromMinutes(1)); // Full minute delay to stay safe
-            }
+            await repository.SaveApiRequestLogAsync(log);
         }
-
-        return result;
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to log API request for {Symbol}", symbol);
+        }
     }
 
-    // Dispose HttpClient to release resources
     public void Dispose()
     {
-        _httpClient.Dispose();
+        _httpClient?.Dispose();
+        _rateLimiter?.Dispose();
     }
 }
