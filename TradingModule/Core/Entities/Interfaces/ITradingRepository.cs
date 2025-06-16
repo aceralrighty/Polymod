@@ -26,4 +26,6 @@ public interface ITradingRepository
     // Cleanup operations
     Task CleanupOldDataAsync(DateTime cutoffDate);
     Task CleanupOldPredictionsAsync(DateTime cutoffDate);
+    Task<int> GetApiRequestCountAsync(string provider, DateTime since);
+    Task SaveApiRequestLogAsync(ApiRequestLog log);
 }

@@ -10,11 +10,11 @@ using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils.EntityMappers;
 using TBD.TradingModule;
+using TBD.TradingModule.Infrastructure.MarketData;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
@@ -87,7 +87,7 @@ if (app.Environment.IsDevelopment())
             try
             {
                 // Check the API key first
-                var apiKey = Environment.GetEnvironmentVariable("API_KEY");
+                var apiKey = builder.Configuration["API_KEY"];
                 if (string.IsNullOrEmpty(apiKey))
                 {
                     Console.WriteLine(
@@ -100,9 +100,49 @@ if (app.Environment.IsDevelopment())
                     Console.WriteLine($"✅ API Key configured (length: {apiKey.Length})");
                 }
 
-                // Initialize trading services
-                // var tradingService = scopedServices.GetRequiredService<TradingModuleService>();
-                // await tradingService.RunAsync();
+                // Initialize dividend data fetcher
+                var dividendFetcher = scopedServices.GetRequiredService<DividendDataFetcher>();
+                var symbolsToFetch = new List<string> { "GOOGL" };
+                var endDate = DateTime.Now;
+                var startDate = endDate.AddYears(-2); // Get 2 years of dividend history
+
+                Console.WriteLine($"🚀 Fetching dividend data for: {string.Join(", ", symbolsToFetch)}");
+                Console.WriteLine($"📅 Date range: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
+
+                var fetchedDividendData =
+                    await dividendFetcher.GetBatchDividendDataAsync(symbolsToFetch, startDate, endDate);
+
+                foreach (var entry in fetchedDividendData)
+                {
+                    Console.WriteLine($"  -> Fetched {entry.Value.Count} dividend records for {entry.Key}");
+                    if (entry.Value.Count != 0)
+                    {
+                        var latest = entry.Value.OrderByDescending(d => d.ExDividendDate).First();
+                        Console.WriteLine(
+                            $"     Latest dividend: ${latest.Amount} on {latest.ExDividendDate:yyyy-MM-dd}");
+                    }
+                }
+
+                Console.WriteLine("📊 Fetching market data (OHLCV prices)...");
+                var marketDataFetcher = scopedServices.GetRequiredService<MarketDataFetcher>();
+
+                foreach (var symbol in symbolsToFetch)
+                {
+                    Console.WriteLine($"  -> Fetching price data for {symbol}");
+                    var marketData = await marketDataFetcher.GetAndSaveHistoricalDataAsync(symbol, startDate, endDate);
+                    Console.WriteLine($"     Fetched {marketData.Count} price records for {symbol}");
+
+                    if (marketData.Count > 0)
+                    {
+                        var latest = marketData.OrderByDescending(d => d.Date).First();
+                        Console.WriteLine(
+                            $"     Latest price: Open=${latest.Open}, Close=${latest.Close}, Volume={latest.Volume}");
+                    }
+                }
+
+                // Check remaining API requests
+                var remainingRequests = await dividendFetcher.GetRemainingRequestsAsync();
+                Console.WriteLine($"📊 Remaining API requests this hour: {remainingRequests}");
 
                 Console.WriteLine("✅ Trading Module initialization complete!");
             }

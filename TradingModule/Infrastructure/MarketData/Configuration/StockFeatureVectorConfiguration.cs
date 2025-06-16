@@ -13,5 +13,6 @@ public class StockFeatureVectorConfiguration : IEntityTypeConfiguration<StockFea
         builder.HasIndex(s => s.Date);
         builder.HasIndex(s => s.Symbol);
         builder.HasIndex(s => new { s.Symbol, s.Date });
+        builder.Property(s => s.MA5Ratio).HasPrecision(18, 4);
     }
 }

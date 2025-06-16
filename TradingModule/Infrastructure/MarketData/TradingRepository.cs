@@ -424,4 +424,38 @@ public class TradingRepository(TradingDbContext context, ILogger<TradingReposito
             throw;
         }
     }
+
+    // API Request Logging Methods - THESE WERE MISSING!
+    public async Task<int> GetApiRequestCountAsync(string provider, DateTime since)
+    {
+        try
+        {
+            return await context.ApiRequestLogs
+                .Where(log => log.ApiProvider == provider && log.RequestTime >= since)
+                .CountAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to get API request count for provider {Provider} since {Since}", provider, since);
+            throw;
+        }
+    }
+
+    public async Task SaveApiRequestLogAsync(ApiRequestLog log)
+    {
+        ArgumentNullException.ThrowIfNull(log);
+
+        try
+        {
+            context.ApiRequestLogs.Add(log);
+            await context.SaveChangesAsync();
+
+            logger.LogDebug("Saved API request log for {Provider} - {Symbol}", log.ApiProvider, log.Symbol);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to save API request log for {Provider} - {Symbol}", log.ApiProvider, log.Symbol);
+            throw;
+        }
+    }
 }

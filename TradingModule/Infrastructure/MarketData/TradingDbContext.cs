@@ -11,6 +11,7 @@ public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbCo
     public DbSet<PredictionResult> Predictions { get; set; }
 
     public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
+    public DbSet<RawDividendData> DividendData { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

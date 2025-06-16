@@ -19,6 +19,7 @@ public static class TradingModule
 
         // Core Services
         services.AddScoped<MarketDataFetcher>();
+        services.AddScoped<DividendDataFetcher>();
         services.AddScoped<FeatureEngineeringService>();
         services.AddScoped<StockPredictionEngine>();
 
