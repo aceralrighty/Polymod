@@ -17,7 +17,7 @@ public class MarketDataFetcher(
                                           "API_KEY is not configured in application settings.");
 
     private const string BaseUrl = "https://www.alphavantage.co/query";
-    private const string StockFunction = "TIME_SERIES_DAILY_ADJUSTED";
+    private const string StockFunction = "TIME_SERIES_DAILY";
     private const int MaxRequestsPerHour = 25;
     private const int MaxRequestsPerMinute = 5;
     private readonly SemaphoreSlim _rateLimiter = new(1, 1);
@@ -103,9 +103,11 @@ public class MarketDataFetcher(
                 // Parse stock price data
                 if (!root.TryGetProperty("Time Series (Daily)", out var timeSeriesElement))
                 {
-                    logger.LogError("'Time Series (Daily)' property not found in stock response");
-                    throw new InvalidOperationException(
-                        "Invalid API response: missing 'Time Series (Daily)' property for stock data");
+                    logger.LogError("'Time Series (Daily)' property not found. Available properties: {Properties}",
+                        string.Join(", ", root.EnumerateObject().Select(p => p.Name)));
+                    // Log the full response to see what properties are available
+                    logger.LogInformation("Full response: {Response}", jsonContent);
+                    throw new InvalidOperationException("Invalid API response format");
                 }
 
                 var marketDataList = new List<RawMarketData>();

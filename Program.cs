@@ -102,7 +102,7 @@ if (app.Environment.IsDevelopment())
 
                 // Initialize dividend data fetcher
                 var dividendFetcher = scopedServices.GetRequiredService<DividendDataFetcher>();
-                var symbolsToFetch = new List<string> { "MSFT", "AAPL", "GOOGL" };
+                var symbolsToFetch = new List<string> { "GOOGL" };
                 var endDate = DateTime.Now;
                 var startDate = endDate.AddYears(-2); // Get 2 years of dividend history
 
@@ -120,6 +120,23 @@ if (app.Environment.IsDevelopment())
                         var latest = entry.Value.OrderByDescending(d => d.ExDividendDate).First();
                         Console.WriteLine(
                             $"     Latest dividend: ${latest.Amount} on {latest.ExDividendDate:yyyy-MM-dd}");
+                    }
+                }
+
+                Console.WriteLine("📊 Fetching market data (OHLCV prices)...");
+                var marketDataFetcher = scopedServices.GetRequiredService<MarketDataFetcher>();
+
+                foreach (var symbol in symbolsToFetch)
+                {
+                    Console.WriteLine($"  -> Fetching price data for {symbol}");
+                    var marketData = await marketDataFetcher.GetAndSaveHistoricalDataAsync(symbol, startDate, endDate);
+                    Console.WriteLine($"     Fetched {marketData.Count} price records for {symbol}");
+
+                    if (marketData.Count > 0)
+                    {
+                        var latest = marketData.OrderByDescending(d => d.Date).First();
+                        Console.WriteLine(
+                            $"     Latest price: Open=${latest.Open}, Close=${latest.Close}, Volume={latest.Volume}");
                     }
                 }
 
