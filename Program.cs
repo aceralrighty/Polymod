@@ -14,7 +14,6 @@ using TBD.UserModule;
 using TBD.UserModule.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
