@@ -5,7 +5,7 @@ using TBD.AddressModule.Data;
 using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Repositories;
-using TBD.API.DTOs;
+using TBD.API.DTOs.UserDTO;
 using TBD.UserModule.Services;
 
 namespace TBD.AddressModule.Services;
@@ -13,7 +13,6 @@ namespace TBD.AddressModule.Services;
 public class UserAddressService(AddressDbContext context, IMapper mapper, IUserService userService)
     : IUserAddressService, IUserAddressRepository
 {
-    protected readonly AddressDbContext Context = context;
     private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
 
 
@@ -29,7 +28,7 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
         return groupedAddress;
     }
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByZipCodeAsync()
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByZipCodeAsync()
     {
         var allAddresses = await _dbSet.ToListAsync();
         var grouped = allAddresses.GroupBy(ua => ua.ZipCode).ToList();
@@ -86,7 +85,7 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
             throw new ArgumentNullException(nameof(entity), "The address collection cannot be null.");
 
         await _dbSet.AddRangeAsync(entity);
-        await Context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task AddRangeAsync(IEnumerable<UserAddress> entities)
@@ -97,19 +96,19 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
         }
 
         await _dbSet.AddRangeAsync(entities);
-        await Context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(UserAddress entity)
     {
         _dbSet.Update(entity);
-        await Context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task RemoveAsync(UserAddress entity)
     {
         _dbSet.Remove(entity);
-        await Context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task<UserAddress> UpdateUserAddress(UserAddressRequest userAddressDto)
@@ -132,7 +131,7 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
         mapper.Map(userAddressDto, existingAddress);
 
         // 4. Save changes to DB
-        await Context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return existingAddress;
     }

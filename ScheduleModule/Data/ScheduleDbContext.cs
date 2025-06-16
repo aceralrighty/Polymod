@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using TBD.ScheduleModule.Models;
 
 namespace TBD.ScheduleModule.Data;

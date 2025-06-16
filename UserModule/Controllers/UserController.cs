@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TBD.API.DTOs;
+using TBD.API.DTOs.UserDTO;
 using TBD.UserModule.Services;
 
 namespace TBD.UserModule.Controllers;

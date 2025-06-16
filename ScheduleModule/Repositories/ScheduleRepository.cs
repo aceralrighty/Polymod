@@ -14,6 +14,12 @@ public class ScheduleRepository(ScheduleDbContext context)
                throw new InvalidOperationException();
     }
 
+    public new async Task<Schedule?> GetByIdAsync(Guid id)
+    {
+        var foundScheduleId = await context.Schedules.FirstOrDefaultAsync(i => i.Id == id);
+        return foundScheduleId;
+    }
+
     public async Task RemoveAsync(Schedule schedule)
     {
         context.Remove(schedule);

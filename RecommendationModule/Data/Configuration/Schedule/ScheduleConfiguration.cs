@@ -19,9 +19,6 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<ScheduleModule.Mod
             .HasColumnName("DaysWorkedJson")
             .HasColumnType("nvarchar(255)");
 
-        // DON'T ignore DaysWorked - remove this line:
-        // builder.Ignore(s => s.DaysWorked);
-
         builder.Ignore(s => s.TotalPayComputed);
 
         builder.Property(s => s.BasePay)

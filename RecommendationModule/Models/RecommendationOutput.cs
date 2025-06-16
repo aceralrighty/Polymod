@@ -8,35 +8,35 @@ namespace TBD.RecommendationModule.Models;
 
 public class RecommendationOutput : BaseTableProperties
 {
-    [Required] public Guid UserId { get; set; }
-    [Required] public Guid ServiceId { get; set; }
+    [Required] public Guid UserId { get; init; }
+    [Required] public Guid ServiceId { get; init; }
 
     /// <summary>
     /// The ML model's confidence score for this recommendation
     /// </summary>
-    public float Score { get; set; }
+    public float Score { get; init; }
 
     /// <summary>
     /// Ranking position in the recommendation list (1-based)
     /// </summary>
-    public int Rank { get; set; }
+    public int Rank { get; init; }
 
     /// <summary>
     /// Which recommendation strategy was used
     /// </summary>
     [MaxLength(50)]
-    public string Strategy { get; set; } = "MatrixFactorization";
+    public string Strategy { get; init; } = "MatrixFactorization";
 
     /// <summary>
-    /// Context when recommendation was generated (morning, evening, weekend, etc.)
+    /// Context when the recommendation was generated (morning, evening, weekend, etc.)
     /// </summary>
     [MaxLength(100)]
-    public string? Context { get; set; }
+    public string? Context { get; init; }
 
     /// <summary>
     /// Batch identifier to group recommendations generated together
     /// </summary>
-    public Guid BatchId { get; set; }
+    public Guid BatchId { get; init; }
 
     /// <summary>
     /// When this recommendation was generated
@@ -46,12 +46,12 @@ public class RecommendationOutput : BaseTableProperties
     /// <summary>
     /// Has the user interacted with this recommendation?
     /// </summary>
-    public bool HasBeenViewed { get; set; } = false;
+    public bool HasBeenViewed { get; set; }
 
     /// <summary>
     /// Has the user clicked on this recommendation?
     /// </summary>
-    public bool HasBeenClicked { get; set; } = false;
+    public bool HasBeenClicked { get; set; }
 
     /// <summary>
     /// When the user first viewed this recommendation
@@ -64,6 +64,6 @@ public class RecommendationOutput : BaseTableProperties
     public DateTime? ClickedAt { get; set; }
 
     // Navigation properties
-    [ForeignKey(nameof(UserId))] public User? User { get; set; }
-    [ForeignKey(nameof(ServiceId))] public Service? Service { get; set; }
+    [ForeignKey(nameof(UserId))] public User? User { get; init; }
+    [ForeignKey(nameof(ServiceId))] public Service? Service { get; init; }
 }

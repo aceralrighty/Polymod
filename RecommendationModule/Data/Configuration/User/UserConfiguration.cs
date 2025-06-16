@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TBD.ScheduleModule.Models;
 
 namespace TBD.RecommendationModule.Data.Configuration.User;
 

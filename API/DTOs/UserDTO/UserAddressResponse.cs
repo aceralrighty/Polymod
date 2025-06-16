@@ -1,4 +1,4 @@
-namespace TBD.API.DTOs;
+namespace TBD.API.DTOs.UserDTO;
 
 public class UserAddressResponse
 {

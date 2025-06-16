@@ -201,7 +201,7 @@ public static class DataSeeder
     {
         Console.WriteLine("🌱 Starting address seeding...");
 
-        var users = await context.Set<User>().ToListAsync();
+        List<User?> users = await context.Set<User>().ToListAsync();
         Console.WriteLine($"👥 Found {users.Count} users for address seeding");
 
         if (users.Count == 0)

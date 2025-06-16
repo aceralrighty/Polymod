@@ -27,7 +27,7 @@ namespace TBD.RecommendationModule.Repositories;
 /// - GenerateRecommendationsAsync: Generates a list of recommendations for a specific user.
 /// - PredictRatingAsync: Predicts the rating a user would give to a particular service.
 /// </methods>
-public class MlRecommendationEngine(
+internal class MlRecommendationEngine(
     IRecommendationRepository repository,
     IRecommendationOutputRepository outputRepository,
     IMetricsServiceFactory serviceFactory) : IMlRecommendationEngine

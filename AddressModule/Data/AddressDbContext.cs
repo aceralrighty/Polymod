@@ -30,7 +30,6 @@ public class AddressDbContext : DbContext
         modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt)
             .ValueGeneratedOnAdd().Metadata
             .SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
-        ;
     }
 
     public override int SaveChanges()

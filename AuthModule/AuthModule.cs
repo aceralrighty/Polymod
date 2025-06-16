@@ -3,7 +3,6 @@ using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
 using TBD.AuthModule.Services;
-using TBD.MetricsModule;
 using TBD.MetricsModule.Services;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;

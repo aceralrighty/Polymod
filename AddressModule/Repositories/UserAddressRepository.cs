@@ -16,10 +16,10 @@ internal class UserAddressRepository(AddressDbContext context)
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync()
     {
-        return (await DbSet.GroupBy(ua => ua.State).ToListAsync())!;
+        return (await DbSet.GroupBy(ua => ua.State).ToListAsync());
     }
 
-    public async Task<List<IGrouping<string, UserAddress>>> GroupByZipCodeAsync()
+    public async Task<List<IGrouping<string?, UserAddress>>> GroupByZipCodeAsync()
     {
         return await DbSet.GroupBy(ua => ua.ZipCode).ToListAsync();
     }

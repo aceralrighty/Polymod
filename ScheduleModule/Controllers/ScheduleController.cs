@@ -85,7 +85,7 @@ public class ScheduleController(ScheduleDbContext context) : ControllerBase
             return NotFound();
         }
 
-        // Soft delete: set DeletedAt timestamp instead of removing
+        // Softly delete: set DeletedAt timestamp instead of removing
         schedule.DeletedAt = DateTime.UtcNow;
         schedule.UpdatedAt = DateTime.UtcNow;
 

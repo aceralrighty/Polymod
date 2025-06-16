@@ -1,10 +1,9 @@
 using Serilog;
-using Serilog.Formatting.Display;
 using ILogger = Serilog.ILogger;
 
 namespace TBD.MetricsModule.Services;
 
-public class MetricsService(string moduleName) : IMetricsService
+internal class MetricsService(string moduleName) : IMetricsService
 {
     private static string? _lastLogDate;
     private readonly ILogger _metricsLogger = new LoggerConfiguration()

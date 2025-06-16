@@ -11,6 +11,7 @@ using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Services;
 using TBD.API.DTOs;
+using TBD.API.DTOs.UserDTO;
 using TBD.UserModule.Models;
 using TBD.UserModule.Services;
 
@@ -24,7 +25,7 @@ public class UserAddressServiceTests
     private Mock<IUserService> _mockUserService;
     private UserAddressService _userAddressService;
     private List<UserAddress> _testAddresses;
-    private User _testUser;
+    private User? _testUser;
 
     [SetUp]
     public async Task Setup()

@@ -6,7 +6,6 @@ using TBD.ServiceModule.Repositories;
 using TBD.ServiceModule.Services;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
-using TBD.Shared.Utils;
 using TBD.Shared.Utils.EntityMappers;
 
 namespace TBD.ServiceModule;

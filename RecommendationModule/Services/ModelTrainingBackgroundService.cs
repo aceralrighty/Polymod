@@ -1,6 +1,6 @@
 namespace TBD.RecommendationModule.Services;
 
-public class ModelTrainingBackgroundService(
+internal class ModelTrainingBackgroundService(
     IServiceProvider serviceProvider,
     ILogger<ModelTrainingBackgroundService> logger)
     : BackgroundService
