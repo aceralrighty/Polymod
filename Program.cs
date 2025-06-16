@@ -9,6 +9,7 @@ using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils;
+using TBD.Shared.Utils.EntityMappers;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
 

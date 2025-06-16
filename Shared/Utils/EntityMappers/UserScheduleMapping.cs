@@ -2,7 +2,7 @@ using AutoMapper;
 using TBD.API.DTOs;
 using TBD.ScheduleModule.Models;
 
-namespace TBD.Shared.Utils;
+namespace TBD.Shared.Utils.EntityMappers;
 
 public class UserScheduleMapping : Profile
 {

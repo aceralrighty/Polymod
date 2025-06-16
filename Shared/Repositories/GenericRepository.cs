@@ -11,7 +11,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 {
     protected readonly DbContext Context = context;
     protected readonly DbSet<T> DbSet = context.Set<T>();
-    protected readonly IDbConnection DbConnection = context.Database.GetDbConnection();
+    private readonly IDbConnection _dbConnection = context.Database.GetDbConnection();
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
@@ -20,12 +20,12 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
     public virtual async Task<T> GetByIdAsync(Guid id)
     {
-        if (DbConnection.State != ConnectionState.Open)
-            await ((DbConnection)DbConnection).OpenAsync();
+        if (_dbConnection.State != ConnectionState.Open)
+            await ((DbConnection)_dbConnection).OpenAsync();
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} WHERE Id = @Id";
-        return await DbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ??
+        return await _dbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ??
                throw new NullReferenceException();
     }
 
@@ -55,7 +55,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     /**
      * A helper method to get the table name from the entity type. So I don't do SQL injection
      */
-    protected virtual string GetTableName()
+    private string GetTableName()
     {
         var entityType = Context.Model.FindEntityType(typeof(T));
         if (entityType == null)

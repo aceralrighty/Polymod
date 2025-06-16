@@ -325,65 +325,65 @@ public static class AuthSeeder
         // Track users by various categories
         var deletedUsers = auths.Count(u => u.DeletedAt.HasValue);
         var activeUsers = auths.Count - deletedUsers;
-        var secureUsers = auths.Count(u => IsSecureUser(u));
-        var riskUsers = auths.Count(u => IsRiskUser(u));
-        var recentUsers = auths.Count(u => IsRecentUser(u));
-        var longTokenUsers = auths.Count(u => IsLongTokenUser(u));
-        var shortTokenUsers = auths.Count(u => IsShortTokenUser(u));
+        var secureUsers = auths.Count(IsSecureUser);
+        var riskUsers = auths.Count(IsRiskUser);
+        var recentUsers = auths.Count(IsRecentUser);
+        var longTokenUsers = auths.Count(IsLongTokenUser);
+        var shortTokenUsers = auths.Count(IsShortTokenUser);
         var frequentFailedLoginUsers = auths.Count(u => u.FailedLoginAttempts >= 3);
-        var expiringSoonUsers = auths.Count(u => IsExpiringSoon(u));
+        var expiringSoonUsers = auths.Count(IsExpiringSoon);
 
         // Log total users created
-        for (int i = 0; i < auths.Count; i++)
+        for (var i = 0; i < auths.Count; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_total");
         }
 
         // Log user status categories
-        for (int i = 0; i < activeUsers; i++)
+        for (var i = 0; i < activeUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_active");
         }
 
-        for (int i = 0; i < deletedUsers; i++)
+        for (var i = 0; i < deletedUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_deleted");
         }
 
-        // Log security-related categories
-        for (int i = 0; i < secureUsers; i++)
+        // Log-security-related categories
+        for (var i = 0; i < secureUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_secure");
         }
 
-        for (int i = 0; i < riskUsers; i++)
+        for (var i = 0; i < riskUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_risk");
         }
 
-        for (int i = 0; i < frequentFailedLoginUsers; i++)
+        for (var i = 0; i < frequentFailedLoginUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_frequent_failed_logins");
         }
 
         // Log activity-related categories
-        for (int i = 0; i < recentUsers; i++)
+        for (var i = 0; i < recentUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_recent");
         }
 
-        for (int i = 0; i < expiringSoonUsers; i++)
+        for (var i = 0; i < expiringSoonUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_expiring_soon");
         }
 
         // Log token-related categories
-        for (int i = 0; i < longTokenUsers; i++)
+        for (var i = 0; i < longTokenUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_long_token");
         }
 
-        for (int i = 0; i < shortTokenUsers; i++)
+        for (var i = 0; i < shortTokenUsers; i++)
         {
             metricsService.IncrementCounter("seeding.users_created_short_token");
         }

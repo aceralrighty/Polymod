@@ -133,7 +133,7 @@ public class CachingRepositoryDecorator<T>(
         var allKey = GenerateCacheKey("All");
         RemoveFromCache(allKey);
 
-        // Try to invalidate specific entity cache if we can get its ID
+        // Try to invalidate a specific entity cache if we can get its ID
         var entityId = GetEntityId(entity);
         if (entityId != null)
         {
@@ -179,11 +179,13 @@ public class CachingRepositoryDecorator<T>(
 
     private void OnCacheItemEvicted(object key, object? value, EvictionReason reason, object? state)
     {
-        if (key is string keyStr)
+        if (key is not string keyStr)
         {
-            _cachedKeys.TryRemove(keyStr);
-            logger?.LogDebug("Cache item evicted: {Key}, Reason: {Reason}", keyStr, reason);
+            return;
         }
+
+        _cachedKeys.TryRemove(keyStr);
+        logger?.LogDebug("Cache item evicted: {Key}, Reason: {Reason}", keyStr, reason);
     }
 
     // Helper method for bulk cache invalidation (useful for testing or admin operations)

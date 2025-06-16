@@ -2,7 +2,7 @@ using AutoMapper;
 using TBD.AddressModule.Models;
 using TBD.API.DTOs;
 
-namespace TBD.Shared.Utils;
+namespace TBD.Shared.Utils.EntityMappers;
 
 public class UserAddressMapping : Profile
 {
@@ -10,7 +10,7 @@ public class UserAddressMapping : Profile
     {
         CreateMap<UserAddressRequest, UserAddress>()
             .ForMember(dest => dest.UserId, opt => opt.Condition(src => src.UserId != Guid.Empty))
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+            .ForAllMembers(opt => opt.Condition((_, _, srcMember) => srcMember != null));
         CreateMap<UserAddress, UserAddressResponse>();
     }
 }
