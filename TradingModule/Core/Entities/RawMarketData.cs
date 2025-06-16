@@ -1,6 +1,6 @@
 using TBD.GenericDBProperties;
 
-namespace TBD.TradingModule.DataAccess;
+namespace TBD.TradingModule.Core.Entities;
 
 public class RawMarketData : BaseTableProperties
 {

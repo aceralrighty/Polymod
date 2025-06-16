@@ -1,6 +1,6 @@
-using TBD.TradingModule.DataAccess;
+using TBD.TradingModule.Core.Entities;
 
-namespace TBD.TradingModule.Repository;
+namespace TBD.TradingModule.DataAccess.Interfaces;
 
 public interface ITradingRepository
 {
@@ -18,7 +18,6 @@ public interface ITradingRepository
     Task<List<PredictionResult>> GetPredictionsAsync(DateTime predictionDate);
     Task UpdateActualResultsAsync(string symbol, DateTime targetDate, float actualReturn, float actualVolatility);
 
-    // Symbol management
-    Task<List<SymbolList>> GetActiveSymbolsAsync();
-    Task<bool> HasDataForSymbolAsync(string symbol, DateTime date);
+
+
 }

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Shared.CachingConfiguration;
-using TBD.TradingModule.MarketData;
-using TBD.TradingModule.Repository;
+using TBD.TradingModule.DataAccess.Interfaces;
+using TBD.TradingModule.Infrastructure.MarketData;
 
 namespace TBD.TradingModule;
 

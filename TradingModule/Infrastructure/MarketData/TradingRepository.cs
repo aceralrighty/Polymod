@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.TradingModule.DataAccess;
-using TBD.TradingModule.MarketData;
+using TBD.TradingModule.Core.Entities;
+using TBD.TradingModule.DataAccess.Interfaces;
 
-namespace TBD.TradingModule.Repository;
+namespace TBD.TradingModule.Infrastructure.MarketData;
 
 public class TradingRepository(TradingDbContext context, ILogger<TradingRepository> logger)
     : ITradingRepository
 {
     public async Task SaveMarketDataAsync(List<RawMarketData> marketData)
     {
-        if (!marketData.Any()) return;
+        if (marketData.Count == 0) return;
 
         // Use bulk insert for better performance
         var existingKeys = await context.RawData
@@ -48,7 +48,7 @@ public class TradingRepository(TradingDbContext context, ILogger<TradingReposito
 
     public async Task SaveFeatureVectorsAsync(List<StockFeatureVector> features)
     {
-        if (!features.Any()) return;
+        if (features.Count == 0) return;
 
         // Remove existing features for the same dates/symbols to avoid duplicates
         var keysToRemove = features.Select(f => new { f.Symbol, f.Date }).ToList();
@@ -57,7 +57,7 @@ public class TradingRepository(TradingDbContext context, ILogger<TradingReposito
             .Where(f => keysToRemove.Any(k => k.Symbol == f.Symbol && k.Date == f.Date))
             .ToListAsync();
 
-        if (existingFeatures.Any())
+        if (existingFeatures.Count != 0)
         {
             context.StockFeatures.RemoveRange(existingFeatures);
         }
@@ -107,13 +107,6 @@ public class TradingRepository(TradingDbContext context, ILogger<TradingReposito
         await context.SaveChangesAsync();
     }
 
-    public async Task<List<SymbolList>> GetActiveSymbolsAsync()
-    {
-        return await context.Symbols
-            .Where(s => s.IsActive)
-            .OrderBy(s => s.Symbol)
-            .ToListAsync();
-    }
 
     public async Task<bool> HasDataForSymbolAsync(string symbol, DateTime date)
     {
