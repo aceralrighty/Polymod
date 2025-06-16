@@ -7,6 +7,7 @@ User.db
 appsettings.json
 Logs
 /TestProject/coverage
+.env
 # User-specific files
 *.suo
 *.user
