@@ -7,7 +7,7 @@ User.db
 appsettings.json
 Logs
 /TestProject/coverage
-.env
+/.env
 # User-specific files
 *.suo
 *.user
@@ -49,3 +49,4 @@ Thumbs.db
 
 # VS Code
 .vscode/
+.env
