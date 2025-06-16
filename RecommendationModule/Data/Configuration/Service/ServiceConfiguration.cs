@@ -7,7 +7,7 @@ public class ServiceConfiguration : IEntityTypeConfiguration<ServiceModule.Model
 {
     public void Configure(EntityTypeBuilder<ServiceModule.Models.Service> builder)
     {
-        // Configure primary key if not already configured elsewhere
+        // Configure the primary key if not already configured elsewhere
         builder.HasKey(s => s.Id);
 
         // Configure decimal properties with appropriate precision and scale

@@ -72,7 +72,7 @@ public static class JwtTokenGenerator
                 ClockSkew = TimeSpan.Zero
             };
 
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
             return principal;
         }
         catch

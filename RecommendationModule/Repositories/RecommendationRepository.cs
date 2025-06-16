@@ -6,7 +6,7 @@ using TBD.Shared.Repositories;
 
 namespace TBD.RecommendationModule.Repositories;
 
-public class RecommendationRepository(RecommendationDbContext context)
+internal class RecommendationRepository(RecommendationDbContext context)
     : GenericRepository<UserRecommendation>(context), IRecommendationRepository
 {
     public override async Task AddAsync(UserRecommendation userRecommendation)

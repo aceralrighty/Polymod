@@ -46,7 +46,7 @@ public class AuthServiceTests
             { "Jwt:Issuer", "TBD-API" },
             { "Jwt:Audience", "TBD-Client" }
         };
-        _configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict).Build();
+        _configuration = new ConfigurationBuilder().AddInMemoryCollection(configDict!).Build();
 
         _authService = new AuthService(
             _repositoryMock.Object,
@@ -82,8 +82,11 @@ public class AuthServiceTests
         var result = await _authService.AuthenticateAsync("testuser", "password");
 
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Username, Is.EqualTo("testuser"));
-        Assert.That(result.FailedLoginAttempts, Is.EqualTo(0));
+        Assert.That(result?.Username, Is.EqualTo("testuser"));
+        if (result != null)
+        {
+            Assert.That(result.FailedLoginAttempts, Is.EqualTo(0));
+        }
     }
 
     [Test]
@@ -122,7 +125,7 @@ public class AuthServiceTests
 
         var response = await _authService.RegisterAsync(request);
 
-        Assert.That(response.isSuccessful, Is.True);
+        Assert.That(response.IsSuccessful, Is.True);
         Assert.That(response.Message, Is.EqualTo("Registration successful"));
         Assert.That(response.Username, Is.EqualTo("newuser"));
     }
@@ -134,7 +137,7 @@ public class AuthServiceTests
 
         var response = await _authService.RegisterAsync(request);
 
-        Assert.That(response.isSuccessful, Is.False);
+        Assert.That(response.IsSuccessful, Is.False);
         Assert.That(response.Message, Does.Contain("All fields"));
     }
 
@@ -158,7 +161,7 @@ public class AuthServiceTests
 
         var response = await _authService.LoginAsync(request);
 
-        Assert.That(response.isSuccessful, Is.True);
+        Assert.That(response.IsSuccessful, Is.True);
         Assert.That(response.Username, Is.EqualTo("validuser"));
         Assert.That(response.Token, Is.Not.Null.Or.Empty);
         Assert.That(response.RefreshToken, Is.Not.Null.Or.Empty);
@@ -184,12 +187,11 @@ public class AuthServiceTests
 
         var authService = new AuthService(repoMock.Object, _dbContext, _configuration, _loggerMock.Object,
             _hasherMock.Object, MetricsServiceFactory());
-        ;
-        ;
+
 
         var response = await authService.RefreshTokenAsync("oldtoken");
 
-        Assert.That(response.isSuccessful, Is.False);
+        Assert.That(response.IsSuccessful, Is.False);
         Assert.That(response.Message, Does.Contain("expired"));
     }
 

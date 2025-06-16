@@ -38,7 +38,8 @@ public class AuthService(
             _metricsService.IncrementCounter("auth.authentication_failed_wrong_password");
             _metricsService.IncrementCounter("auth.failed_login_attempts_incremented");
 
-            logger.LogWarning("Authentication failed - Wrong password for user: {Username}. Failed attempts: {FailedAttempts}",
+            logger.LogWarning(
+                "Authentication failed - Wrong password for user: {Username}. Failed attempts: {FailedAttempts}",
                 username, authUser.FailedLoginAttempts);
 
             await repository.UpdateAsync(authUser);
@@ -86,7 +87,7 @@ public class AuthService(
                 _metricsService.IncrementCounter("auth.registration_failed_missing_fields");
                 logger.LogWarning("Registration failed - Missing required fields for username: {Username}",
                     request.Username);
-                return new AuthResponse { isSuccessful = false, Message = $"All fields are required to be filled in" };
+                return new AuthResponse { IsSuccessful = false, Message = $"All fields are required to be filled in"};
             }
 
             var existingUser = await repository.GetUserByUsername(request.Username);
@@ -96,16 +97,16 @@ public class AuthService(
                 logger.LogWarning("Registration failed - Username already exists: {Username}", request.Username);
                 return new AuthResponse
                 {
-                    isSuccessful = false,
-                    Message = $"Username {request.Username} already exists"
+                    IsSuccessful = false, Message = $"Username {request.Username} already exists"
                 };
             }
 
             if (request.Password.Length < 9)
             {
                 _metricsService.IncrementCounter("auth.registration_failed_weak_password");
-                logger.LogWarning("Registration failed - Password too short for username: {Username}", request.Username);
-                return new AuthResponse { isSuccessful = false, Message = $"Password must be at least 9 characters" };
+                logger.LogWarning("Registration failed - Password too short for username: {Username}",
+                    request.Username);
+                return new AuthResponse { IsSuccessful = false, Message = $"Password must be at least 9 characters" };
             }
 
             var createNewUser = new AuthUser
@@ -126,7 +127,7 @@ public class AuthService(
 
             return new AuthResponse
             {
-                isSuccessful = true,
+                IsSuccessful = true,
                 Message = "Registration successful",
                 Username = createNewUser.Username,
                 Token = createNewUser.RefreshToken!
@@ -136,7 +137,7 @@ public class AuthService(
         {
             _metricsService.IncrementCounter("auth.registration_failed_exception");
             logger.LogError(ex, "Registration failed with exception for username: {Username}", request.Username);
-            return new AuthResponse { isSuccessful = false, Message = ex.Message };
+            return new AuthResponse { IsSuccessful = false, Message = ex.Message };
         }
     }
 
@@ -152,7 +153,7 @@ public class AuthService(
                 _metricsService.IncrementCounter("auth.login_failed_missing_credentials");
                 logger.LogWarning("Login failed - Missing credentials for username: {Username}",
                     request.Username);
-                return new AuthResponse { isSuccessful = false, Message = "Username and password are required" };
+                return new AuthResponse { IsSuccessful = false, Message = "Username and password are required" };
             }
 
             var authUser = await AuthenticateAsync(request.Username, request.Password);
@@ -161,18 +162,19 @@ public class AuthService(
             {
                 _metricsService.IncrementCounter("auth.login_failed_authentication");
                 logger.LogWarning("Login failed - Authentication failed for user: {Username}", request.Username);
-                return new AuthResponse { isSuccessful = false, Message = "Invalid username or password" };
+                return new AuthResponse { IsSuccessful = false, Message = "Invalid username or password" };
             }
 
             // Check if the account is locked
             if (IsAccountLocked(authUser))
             {
                 _metricsService.IncrementCounter("auth.login_failed_account_locked");
-                logger.LogWarning("Login failed - Account locked for user: {Username}. Failed attempts: {FailedAttempts}",
+                logger.LogWarning(
+                    "Login failed - Account locked for user: {Username}. Failed attempts: {FailedAttempts}",
                     request.Username, authUser.FailedLoginAttempts);
                 return new AuthResponse
                 {
-                    isSuccessful = false,
+                    IsSuccessful = false,
                     Message = "Account is locked due to too many failed attempts. Try again later."
                 };
             }
@@ -195,7 +197,7 @@ public class AuthService(
 
             return new AuthResponse
             {
-                isSuccessful = true,
+                IsSuccessful = true,
                 Message = "Login successful",
                 Username = authUser.Username,
                 Token = accessToken,
@@ -206,7 +208,7 @@ public class AuthService(
         {
             _metricsService.IncrementCounter("auth.login_failed_exception");
             logger.LogError(ex, "Login failed with exception for username: {Username}", request.Username);
-            return new AuthResponse { isSuccessful = false, Message = "Login failed due to an internal error" };
+            return new AuthResponse { IsSuccessful = false, Message = "Login failed due to an internal error" };
         }
     }
 
@@ -222,7 +224,7 @@ public class AuthService(
             {
                 _metricsService.IncrementCounter("auth.token_refresh_failed_invalid_token");
                 logger.LogWarning("Token refresh failed - Invalid or expired refresh token");
-                return new AuthResponse { isSuccessful = false, Message = "Invalid or expired refresh token" };
+                return new AuthResponse { IsSuccessful = false, Message = "Invalid or expired refresh token" };
             }
 
             // Generate a new access token
@@ -241,7 +243,7 @@ public class AuthService(
 
             return new AuthResponse
             {
-                isSuccessful = true,
+                IsSuccessful = true,
                 Token = newAccessToken,
                 Username = user.Username,
                 Message = "Token refreshed successfully"
@@ -251,7 +253,7 @@ public class AuthService(
         {
             _metricsService.IncrementCounter("auth.token_refresh_failed_exception");
             logger.LogError(ex, "Token refresh failed with exception");
-            return new AuthResponse { isSuccessful = false, Message = "Token refresh failed" };
+            return new AuthResponse { IsSuccessful = false, Message = "Token refresh failed" };
         }
     }
 
@@ -284,6 +286,7 @@ public class AuthService(
         {
             _metricsService.IncrementCounter("auth.account_locked_check_positive");
         }
+
         return isLocked;
     }
 

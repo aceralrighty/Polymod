@@ -5,7 +5,7 @@ using TBD.Shared.Repositories;
 
 namespace TBD.AuthModule.Repositories;
 
-public class AuthRepository(AuthDbContext context) : GenericRepository<AuthUser>(context), IAuthRepository
+internal class AuthRepository(AuthDbContext context) : GenericRepository<AuthUser>(context), IAuthRepository
 {
     public async Task<IEnumerable<AuthUser>> GetAllUsers()
     {

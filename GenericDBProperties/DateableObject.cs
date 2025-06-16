@@ -11,5 +11,5 @@ public abstract class DateableObject
 
     [DisplayName("Update At")] public DateTime UpdatedAt { get; set; }
 
-    [DisplayName("Deleted At")] public DateTime? DeletedAt { get; set; } = null;
+    [DisplayName("Deleted At")] public DateTime? DeletedAt { get; set; }
 }

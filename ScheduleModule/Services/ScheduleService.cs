@@ -32,13 +32,19 @@ internal class ScheduleService(IScheduleRepository repository, IMetricsServiceFa
     {
         _metricsService.IncrementCounter("schedule.update_hours_count");
         var worker = await repository.GetByIdAsync(schedule.Id);
-        await repository.UpdateAsync(worker);
+        if (worker != null)
+        {
+            await repository.UpdateAsync(worker);
+        }
     }
 
     public async Task UpdateBasePayAsync(Guid id)
     {
         _metricsService.IncrementCounter("schedule.update_basepay_count");
         var worker = await repository.GetByIdAsync(id);
-        await repository.UpdateAsync(worker);
+        if (worker != null)
+        {
+            await repository.UpdateAsync(worker);
+        }
     }
 }

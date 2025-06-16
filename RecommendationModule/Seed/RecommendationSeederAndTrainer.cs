@@ -401,7 +401,7 @@ public class RecommendationSeederAndTrainer(
         {
             0 => 0,
             <= 20 => _random.Next(1, 4), // 1-3 days for part-time
-            <= 40 => _random.Next(4, 6), // 4-5 days for standard
+            <= 40 => _random.Next(4, 6), // 4-5 days for a standard
             <= 60 => _random.Next(5, 7), // 5-6 days for overtime
             _ => _random.Next(6, 8) // 6-7 days for extreme hours
         };

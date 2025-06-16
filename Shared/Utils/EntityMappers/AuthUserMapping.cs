@@ -2,7 +2,7 @@ using AutoMapper;
 using TBD.API.DTOs.AuthDTO;
 using TBD.AuthModule.Models;
 
-namespace TBD.Shared.Utils;
+namespace TBD.Shared.Utils.EntityMappers;
 
 public class AuthUserMapping : Profile
 {

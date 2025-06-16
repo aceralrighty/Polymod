@@ -3,6 +3,7 @@ using TBD.MetricsModule.Services;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
+using TBD.Shared.Utils.EntityMappers;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;
@@ -17,7 +18,7 @@ public static class UserModule
         services.AddDbContext<UserDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("UserDb")));
 
-        // Configure caching specifically for User module
+        // Configure caching specifically for the User module
         services.Configure<CacheOptions>("User", options =>
         {
             options.DefaultCacheDuration = TimeSpan.FromMinutes(10);

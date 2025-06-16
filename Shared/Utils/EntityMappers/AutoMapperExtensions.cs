@@ -1,4 +1,4 @@
-namespace TBD.Shared.Utils;
+namespace TBD.Shared.Utils.EntityMappers;
 
 public static class AutoMapperExtensions
 {

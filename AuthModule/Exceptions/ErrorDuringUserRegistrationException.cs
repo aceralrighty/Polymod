@@ -1,8 +1,7 @@
 namespace TBD.AuthModule.Exceptions;
 
-public class ErrorDuringUserRegistrationException : Exception
+public abstract class ErrorDuringUserRegistrationException : Exception
 {
-    public ErrorDuringUserRegistrationException() : base() { }
-    public ErrorDuringUserRegistrationException(string message) : base(message) { }
-    public ErrorDuringUserRegistrationException(string message, Exception inner) : base(message, inner) { }
+    protected ErrorDuringUserRegistrationException(string message) : base(message) { }
+    protected ErrorDuringUserRegistrationException(string message, Exception inner) : base(message, inner) { }
 }
