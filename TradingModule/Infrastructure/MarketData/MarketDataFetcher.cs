@@ -1,19 +1,25 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TBD.TradingModule.Core.Entities;
+
 namespace TBD.TradingModule.Infrastructure.MarketData;
 
 public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpClient
 {
     private readonly IConfiguration _configuration; // Make it non-static
-    private readonly HttpClient _httpClient = new();
+    private readonly HttpClient _httpClient; // No longer static, initialized in constructor or as field
     private readonly string _apiKey; // Make it non-static and not nullable here
 
     private const string BaseUrl = "https://www.alphavantage.co/query";
+    private const string GlobalFunction = "DIVIDENDS";
     private const int MaxRequestsPerHour = 25; // Alpha Vantage free tier limit
     private const int MaxRequestsPerMinute = 5;
     private readonly SemaphoreSlim _rateLimiter = new(1, 1);
-    private static readonly TimeSpan RequestDelay = TimeSpan.FromSeconds(12);
+    private static readonly TimeSpan RequestDelay = TimeSpan.FromSeconds(12); // This can remain static
+
+    private readonly TradingDbContext dbContext; // Fields to store injected services
+    private readonly ILogger<MarketDataFetcher> logger; // Fields to store injected services
+
 
     // Constructor with injected services
     public MarketDataFetcher(
@@ -21,6 +27,7 @@ public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpCl
         ILogger<MarketDataFetcher> logger,
         IConfiguration configuration) // Inject IConfiguration
     {
+        _httpClient = new HttpClient(); // Initialize HttpClient here
         _configuration = configuration;
         // Read API_KEY from the injected configuration here
         _apiKey = _configuration["API_KEY"] ??
@@ -29,14 +36,11 @@ public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpCl
         this.logger = logger; // Assign logger
     }
 
-    private readonly TradingDbContext dbContext; // Add these fields to store injected services
-    private readonly ILogger<MarketDataFetcher> logger; // Add these fields to store injected services
-
 
     private async Task<string> FetchAlphaVantageAsync(string symbol)
     {
         // Use the non-static _apiKey field
-        var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&interval=15min&apikey={_apiKey}";
+        var url = $"{BaseUrl}?function={GlobalFunction}S&symbol={symbol}&interval=15min&apikey={_apiKey}";
         await _rateLimiter.WaitAsync();
         try
         {
@@ -75,8 +79,7 @@ public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpCl
 
             logger.LogInformation("Found {Count} existing records for {Symbol}", existingData, symbol);
 
-            // Use the non-static _apiKey field
-            var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={_apiKey}";
+            var url = $"{BaseUrl}?function={GlobalFunction}&symbol={symbol}&apikey={_apiKey}";
             logger.LogInformation("Making API request to: {Url}", url.Replace(_apiKey, "***"));
 
             var response = await _httpClient.GetAsync(url);
@@ -120,48 +123,76 @@ public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpCl
                 }
             }
 
-            if (!root.TryGetProperty("Time Series (Daily)", out var timeSeriesElement))
+            // IMPORTANT: The root property name is "data" for dividends, not the function name itself.
+            // Ensure this matches the JSON preview you provided.
+            if (!root.TryGetProperty("data",
+                    out var dataArrayElement)) // Renamed timeSeriesElement to dataArrayElement for clarity
             {
-                logger.LogError("Time Series (Daily) property not found in response");
-                throw new InvalidOperationException("Invalid API response: missing Time Series data");
+                logger.LogError($"'data' property not found in response for {GlobalFunction} data.");
+                throw new InvalidOperationException(
+                    $"Invalid API response: missing 'data' property for {GlobalFunction} data.");
             }
 
             var marketDataList = new List<RawMarketData>();
             var processedCount = 0;
 
-            foreach (var dayProperty in timeSeriesElement.EnumerateObject())
+            // Iterate through the array of dividend objects
+            foreach (var dividendObject in
+                     dataArrayElement.EnumerateArray()) // Changed dayProperty to dividendObject. This is correct.
             {
-                if (!DateTime.TryParse(dayProperty.Name, out var date))
-                {
-                    logger.LogWarning("Failed to parse date: {DateString}", dayProperty.Name);
-                    continue;
-                }
-
-                if (date < startDate || date > endDate)
-                    continue;
-
-                var values = dayProperty.Value;
-
                 try
                 {
+                    // Correctly extract the ex_dividend_date and amount from the current dividendObject
+                    var exDateString = dividendObject.GetProperty("ex_dividend_date").GetString();
+                    var amountString = dividendObject.GetProperty("amount").GetString();
+
+                    if (!DateTime.TryParse(exDateString, out var date))
+                    {
+                        logger.LogWarning("Failed to parse ex_dividend_date: {DateString}. Skipping entry.",
+                            exDateString);
+                        continue; // Skip this entry if date cannot be parsed
+                    }
+
+                    if (date < startDate || date > endDate)
+                        continue;
+
+                    if (!decimal.TryParse(amountString, out var amount))
+                    {
+                        logger.LogWarning("Failed to parse dividend amount: {AmountString}. Skipping entry.",
+                            amountString);
+                        continue; // Skip if amount cannot be parsed
+                    }
+
+                    // --- IMPORTANT DATA MAPPING ---
+                    // RawMarketData is designed for stock price data (Open, High, Low, Close, Volume).
+                    // Dividend data (ex_dividend_date, amount, payment_date, etc.) doesn't fit directly.
+                    //
+                    // RECOMMENDATION: Create a new entity (e.g., 'RawDividendData') to store dividend specific fields.
+                    // For now, if you MUST use RawMarketData, here's an arbitrary mapping:
                     var marketData = new RawMarketData
                     {
                         Symbol = symbol,
-                        Date = date,
-                        Open = decimal.Parse(values.GetProperty("1. open").GetString() ?? "0"),
-                        High = decimal.Parse(values.GetProperty("2. high").GetString() ?? "0"),
-                        Low = decimal.Parse(values.GetProperty("3. low").GetString() ?? "0"),
-                        Close = decimal.Parse(values.GetProperty("4. close").GetString() ?? "0"),
-                        AdjustedClose = decimal.Parse(values.GetProperty("5. adjusted close").GetString() ?? "0"),
-                        Volume = long.Parse(values.GetProperty("6. volume").GetString() ?? "0")
+                        Date = date, // Map ex_dividend_date to Date
+                        Open = 0, // Set to 0 or null as no direct equivalent
+                        High = 0, // Set to 0 or null
+                        Low = 0, // Set to 0 or null
+                        Close = amount, // Map dividend 'amount' to 'Close'
+                        AdjustedClose = amount, // And 'AdjustedClose'
+                        Volume = 0 // Set to 0 or null
                     };
 
                     marketDataList.Add(marketData);
                     processedCount++;
+
+                    logger.LogInformation("Successfully parsed dividend for {Symbol} on {Date} with Amount: {Amount}",
+                        symbol, date.ToShortDateString(), amount);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to parse market data for {Date}", date);
+                    // Log the full JSON of the problematic element for debugging
+                    logger.LogError(ex,
+                        "Failed to parse individual dividend entry for {Symbol}. Element JSON: {JsonElementText}",
+                        symbol, dividendObject.GetRawText());
                 }
             }
 
@@ -270,7 +301,7 @@ public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpCl
         return result;
     }
 
-    // Dispose HttpClient
+    // Dispose HttpClient to release resources
     public void Dispose()
     {
         _httpClient.Dispose();
