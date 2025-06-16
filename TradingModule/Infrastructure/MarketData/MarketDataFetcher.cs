@@ -33,7 +33,7 @@ public class MarketDataFetcher(
         }
     }
 
-    private async Task<List<RawMarketData>> GetHistoricalDataAsync(
+    public async Task<List<RawMarketData>> GetHistoricalDataAsync(
         string symbol,
         DateTime startDate,
         DateTime endDate)
