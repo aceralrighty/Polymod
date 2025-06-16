@@ -9,7 +9,7 @@ public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbCo
     public DbSet<RawMarketData> RawData { get; set; }
     public DbSet<StockFeatureVector> StockFeatures { get; set; }
     public DbSet<PredictionResult> Predictions { get; set; }
-    public DbSet<SymbolList> Symbols { get; set; }
+
     public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -26,7 +26,6 @@ public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbCo
         modelBuilder.ApplyConfiguration(new PredictionResultConfiguration());
         modelBuilder.ApplyConfiguration(new RawMarketDataConfiguration());
         modelBuilder.ApplyConfiguration(new StockFeatureVectorConfiguration());
-        modelBuilder.ApplyConfiguration(new SymbolListConfiguration());
         modelBuilder.ApplyConfiguration(new ApiRequestLogConfiguration());
     }
 
@@ -45,7 +44,7 @@ public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbCo
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries().Where(e =>
-            e.Entity is RawMarketData or StockFeatureVector or PredictionResult or SymbolList or ApiRequestLog);
+            e.Entity is RawMarketData or StockFeatureVector or PredictionResult or ApiRequestLog);
 
         foreach (var entityEntry in entries)
         {
@@ -77,16 +76,6 @@ public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbCo
                     if (entityEntry.State == EntityState.Added)
                     {
                         predictionResult.CreatedAt = DateTime.UtcNow;
-                    }
-
-                    break;
-                }
-                case SymbolList symbolList:
-                {
-                    symbolList.UpdatedAt = DateTime.UtcNow;
-                    if (entityEntry.State == EntityState.Added)
-                    {
-                        symbolList.CreatedAt = DateTime.UtcNow;
                     }
 
                     break;

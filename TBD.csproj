@@ -52,7 +52,7 @@
     <Folder Include="ScheduleModule\Controllers\" />
     <Folder Include="ServiceModule\Controllers\" />
     <Folder Include="TradingModule\Output\" />
-    <Folder Include="TradingModule\Prediction\" />
+    <Folder Include="TradingModule\Repository\" />
     <Folder Include="TradingModule\Services\" />
     <Folder Include="UserModule\Controllers\" />
   </ItemGroup>

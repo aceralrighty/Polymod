@@ -13,7 +13,7 @@ public class StockFeatureVector : BaseTableProperties
     public float PriceReturn20Day { get; set; }
 
     // Moving averages (normalized as ratios to current price)
-    public float MA5Ratio { get; set; } // Current price / 5-day MA
+    public decimal MA5Ratio { get; set; } // Current price / 5-day MA
     public float MA10Ratio { get; set; }
     public float MA20Ratio { get; set; }
     public float MA50Ratio { get; set; }
