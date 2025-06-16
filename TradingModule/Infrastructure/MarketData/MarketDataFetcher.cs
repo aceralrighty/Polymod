@@ -1,25 +1,42 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using TBD.TradingModule.Core.Entities;
-
 namespace TBD.TradingModule.Infrastructure.MarketData;
 
-public class MarketDataFetcher(
-    TradingDbContext dbContext,
-    ILogger<MarketDataFetcher> logger)
+public class MarketDataFetcher : IDisposable // Implement IDisposable for HttpClient
 {
+    private readonly IConfiguration _configuration; // Make it non-static
     private readonly HttpClient _httpClient = new();
-    private static readonly string? ApiKey = Environment.GetEnvironmentVariable("API_KEY");
+    private readonly string _apiKey; // Make it non-static and not nullable here
+
     private const string BaseUrl = "https://www.alphavantage.co/query";
     private const int MaxRequestsPerHour = 25; // Alpha Vantage free tier limit
     private const int MaxRequestsPerMinute = 5;
     private readonly SemaphoreSlim _rateLimiter = new(1, 1);
     private static readonly TimeSpan RequestDelay = TimeSpan.FromSeconds(12);
 
+    // Constructor with injected services
+    public MarketDataFetcher(
+        TradingDbContext dbContext,
+        ILogger<MarketDataFetcher> logger,
+        IConfiguration configuration) // Inject IConfiguration
+    {
+        _configuration = configuration;
+        // Read API_KEY from the injected configuration here
+        _apiKey = _configuration["API_KEY"] ??
+                  throw new InvalidOperationException("API_KEY is not configured in application settings.");
+        this.dbContext = dbContext; // Assign dbContext
+        this.logger = logger; // Assign logger
+    }
+
+    private readonly TradingDbContext dbContext; // Add these fields to store injected services
+    private readonly ILogger<MarketDataFetcher> logger; // Add these fields to store injected services
+
 
     private async Task<string> FetchAlphaVantageAsync(string symbol)
     {
-        var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&interval=15min&apikey={ApiKey}";
+        // Use the non-static _apiKey field
+        var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&interval=15min&apikey={_apiKey}";
         await _rateLimiter.WaitAsync();
         try
         {
@@ -43,10 +60,12 @@ public class MarketDataFetcher(
         {
             logger.LogInformation("Starting data fetch for {Symbol}", symbol);
 
-            // Check if the API key exists
-            if (string.IsNullOrEmpty(ApiKey))
+            // This check is now redundant because the constructor will throw if _apiKey is null
+            // but you can keep it if you want an explicit check here.
+            if (string.IsNullOrEmpty(_apiKey))
             {
-                throw new InvalidOperationException("API_KEY environment variable is not set");
+                throw new InvalidOperationException(
+                    "API_KEY is not set (internal check). This should not happen if configured correctly).");
             }
 
             // Check if data already exists
@@ -56,8 +75,9 @@ public class MarketDataFetcher(
 
             logger.LogInformation("Found {Count} existing records for {Symbol}", existingData, symbol);
 
-            var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={ApiKey}";
-            logger.LogInformation("Making API request to: {Url}", url.Replace(ApiKey, "***"));
+            // Use the non-static _apiKey field
+            var url = $"{BaseUrl}?function=TIME_SERIES_DAILY_ADJUSTED&symbol={symbol}&apikey={_apiKey}";
+            logger.LogInformation("Making API request to: {Url}", url.Replace(_apiKey, "***"));
 
             var response = await _httpClient.GetAsync(url);
             var jsonContent = await response.Content.ReadAsStringAsync();
@@ -248,5 +268,11 @@ public class MarketDataFetcher(
         }
 
         return result;
+    }
+
+    // Dispose HttpClient
+    public void Dispose()
+    {
+        _httpClient.Dispose();
     }
 }
