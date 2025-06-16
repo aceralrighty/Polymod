@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.TradingModule.Core.Entities;
 using TBD.TradingModule.DataAccess;
 using TBD.TradingModule.MarketData.Configuration;
 
-namespace TBD.TradingModule.MarketData;
+namespace TBD.TradingModule.Infrastructure.MarketData;
 
 public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbContext(options)
 {

@@ -1,8 +1,8 @@
 using Microsoft.ML;
-using TBD.TradingModule.DataAccess;
-using TBD.TradingModule.MarketData;
+using TBD.TradingModule.Core.Entities;
+using TBD.TradingModule.Infrastructure.MarketData;
 using TBD.TradingModule.Model;
-using TBD.TradingModule.Services;
+using TBD.TradingModule.Preprocessing;
 
 namespace TBD.TradingModule.ML;
 

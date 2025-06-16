@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using TBD.TradingModule.Core.Entities;
 using TBD.TradingModule.DataAccess;
 
 namespace TBD.TradingModule.MarketData.Configuration;

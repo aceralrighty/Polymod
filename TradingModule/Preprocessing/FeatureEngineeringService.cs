@@ -1,7 +1,6 @@
-using TBD.TradingModule.DataAccess;
-using TBD.TradingModule.Preprocessing;
+using TBD.TradingModule.Core.Entities;
 
-namespace TBD.TradingModule.Services;
+namespace TBD.TradingModule.Preprocessing;
 
 public class FeatureEngineeringService
 {
@@ -12,7 +11,7 @@ public class FeatureEngineeringService
         var sorted = rawData.OrderBy(r => r.Date).ToList();
         var output = new List<FeatureSet>();
 
-        for (int i = 50; i < sorted.Count - 1; i++)
+        for (var i = 50; i < sorted.Count - 1; i++)
         {
             var current = sorted[i];
             var next = sorted[i + 1];
@@ -30,13 +29,13 @@ public class FeatureEngineeringService
                 PriceReturn1Day = CalcReturn(sorted[i - 1], current),
                 PriceReturn5Day = CalcReturn(sorted[i - 5], current),
                 PriceReturn20Day = CalcReturn(sorted[i - 20], current),
-                MA5Ratio = current.Close / (decimal)MA(sorted, i, 5),
-                MA10Ratio = (float)(current.Close / (decimal)MA(sorted, i, 10)),
-                MA20Ratio = (float)(current.Close / (decimal)MA(sorted, i, 20)),
-                MA50Ratio = (float)(current.Close / (decimal)MA(sorted, i, 50)),
-                RSI = CalcRSI(sorted, i, 14),
-                MACD = CalcMACD(sorted, i).macd,
-                MACDSignal = CalcMACD(sorted, i).signal,
+                MA5Ratio = current.Close / (decimal)Ma(sorted, i, 5),
+                MA10Ratio = (float)(current.Close / (decimal)Ma(sorted, i, 10)),
+                MA20Ratio = (float)(current.Close / (decimal)Ma(sorted, i, 20)),
+                MA50Ratio = (float)(current.Close / (decimal)Ma(sorted, i, 50)),
+                RSI = CalcRsi(sorted, i, 14),
+                MACD = CalcMacd(sorted, i).macd,
+                MACDSignal = CalcMacd(sorted, i).signal,
                 BollingerPosition = CalcBollingerPosition(closes, (float)current.Close),
                 VolumeRatio20Day = current.Volume / (float)volumes.Average(),
                 VolumeRatioMA = current.Volume / (float)sorted.Skip(i - 10).Take(10).Average(v => v.Volume),
@@ -65,15 +64,15 @@ public class FeatureEngineeringService
     private static float CalcReturn(RawMarketData prev, RawMarketData current)
         => (float)((current.Close - prev.Close) / prev.Close);
 
-    private static float MA(List<RawMarketData> data, int index, int period)
+    private static float Ma(List<RawMarketData> data, int index, int period)
         => (float)data.Skip(index - period).Take(period).Average(d => d.Close);
 
-    private static float CalcRSI(List<RawMarketData> data, int index, int period = 14)
+    private static float CalcRsi(List<RawMarketData> data, int index, int period = 14)
     {
         var gains = 0f;
         var losses = 0f;
 
-        for (int i = index - period + 1; i <= index; i++)
+        for (var i = index - period + 1; i <= index; i++)
         {
             var delta = data[i].Close - data[i - 1].Close;
             if (delta >= 0) gains += (float)delta;
@@ -85,22 +84,22 @@ public class FeatureEngineeringService
         return 100 - (100 / (1 + rs));
     }
 
-    private static (float macd, float signal) CalcMACD(List<RawMarketData> data, int index)
+    private static (float macd, float signal) CalcMacd(List<RawMarketData> data, int index)
     {
-        var ema12 = CalcEMA(data, index, 12);
-        var ema26 = CalcEMA(data, index, 26);
+        var ema12 = CalcEma(data, index, 12);
+        var ema26 = CalcEma(data, index, 26);
         var macdLine = ema12 - ema26;
 
-        var signalLine = CalcEMAFromArray(data, index, 9, x => CalcEMA(data, x, 12) - CalcEMA(data, x, 26));
+        var signalLine = CalcEmaFromArray(data, index, 9, x => CalcEma(data, x, 12) - CalcEma(data, x, 26));
         return ((float)macdLine, (float)signalLine);
     }
 
-    private static float CalcEMA(List<RawMarketData> data, int index, int period)
+    private static float CalcEma(List<RawMarketData> data, int index, int period)
     {
         var k = 2f / (period + 1);
         var ema = data[index - period].Close;
 
-        for (int i = index - period + 1; i <= index; i++)
+        for (var i = index - period + 1; i <= index; i++)
         {
             ema = data[i].Close * (decimal)k + ema * (decimal)(1 - k);
         }
@@ -108,12 +107,12 @@ public class FeatureEngineeringService
         return (float)ema;
     }
 
-    private static float CalcEMAFromArray(List<RawMarketData> data, int index, int period, Func<int, float> extractor)
+    private static float CalcEmaFromArray(List<RawMarketData> data, int index, int period, Func<int, float> extractor)
     {
         var k = 2f / (period + 1);
         var ema = extractor(index - period);
 
-        for (int i = index - period + 1; i <= index; i++)
+        for (var i = index - period + 1; i <= index; i++)
         {
             var value = extractor(i);
             ema = value * k + ema * (1 - k);

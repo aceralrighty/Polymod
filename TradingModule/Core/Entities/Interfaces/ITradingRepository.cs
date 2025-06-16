@@ -1,6 +1,6 @@
-using TBD.TradingModule.DataAccess;
+using TBD.TradingModule.Core.Entities;
 
-namespace TBD.TradingModule.Repository;
+namespace TBD.TradingModule.DataAccess.Interfaces;
 
 public interface ITradingRepository
 {

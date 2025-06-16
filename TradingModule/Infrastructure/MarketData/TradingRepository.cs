@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.TradingModule.DataAccess;
-using TBD.TradingModule.MarketData;
-using TBD.TradingModule.Repository;
+using TBD.TradingModule.Core.Entities;
+using TBD.TradingModule.DataAccess.Interfaces;
 
 namespace TBD.TradingModule.Infrastructure.MarketData;
 

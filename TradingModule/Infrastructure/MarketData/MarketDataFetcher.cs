@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using TBD.TradingModule.MarketData;
+using TBD.TradingModule.Core.Entities;
 
-namespace TBD.TradingModule.DataAccess;
+namespace TBD.TradingModule.Infrastructure.MarketData;
 
 public class MarketDataFetcher(
     TradingDbContext dbContext,
