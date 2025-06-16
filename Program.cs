@@ -27,13 +27,12 @@ builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
 
-
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
-
 // Extension method to call the autoMappers for my modules
 builder.Services.AddAutoMapperExtension();
+
 builder.Services.AddMemoryCache();
 var app = builder.Build();
 

@@ -9,13 +9,22 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 ## 🧱 Project Structure
 
 ```plaintext
+## 🧱 Project Structure
+
 .
 ├── API/                                    # Shared DTOs & contracts
 │   └── DTOs/
 │       ├── AuthDTO/
+│       │   ├── AuthResponse.cs
+│       │   ├── LoginRequest.cs
+│       │   └── RegisterRequest.cs
 │       ├── CreateServiceDTO.cs
 │       ├── PagedResult.cs
-│       └── [Other DTOs...]
+│       ├── ServiceDTO.cs
+│       ├── UserAddressRequest.cs
+│       ├── UserAddressResponse.cs
+│       ├── UserDTO.cs
+│       └── UserSchedule.cs
 │
 ├── AddressModule/                          # Geographic management
 │   ├── Controllers/
@@ -23,7 +32,8 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 │   ├── Models/
 │   ├── Repositories/
 │   ├── Services/
-│   └── Exceptions/
+│   ├── Exceptions/
+│   └── Seed/
 │
 ├── AuthModule/                             # Authentication
 │   ├── Controllers/
@@ -31,6 +41,7 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 │   ├── Models/
 │   ├── Repositories/
 │   ├── Services/
+│   ├── Exceptions/
 │   ├── Seed/
 │   └── Views/
 │
@@ -39,14 +50,16 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 │   ├── Data/
 │   ├── Models/
 │   ├── Repositories/
-│   └── Services/
+│   ├── Services/
+│   └── Seed/
 │
 ├── ServiceModule/                          # Service catalog
 │   ├── Controllers/
 │   ├── Data/
 │   ├── Models/
 │   ├── Repositories/
-│   └── Services/
+│   ├── Services/
+│   └── Seed/
 │
 ├── RecommendationModule/                   # ML recommendations
 │   ├── Controllers/
@@ -54,7 +67,8 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 │   ├── Models/
 │   ├── Repositories/Interfaces/
 │   ├── Services/
-│   └── Seed/
+│   ├── Seed/
+│   └── Exceptions/
 │
 ├── MetricsModule/                          # Analytics & monitoring
 │   └── Services/
@@ -67,15 +81,7 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 ├── GenericDBProperties/                    # Base DB properties
 ├── DesignTimeFactories/                    # EF Core factories
 ├── Migrations/                             # DB migrations by module
-├── Logs/                                   # Module-specific logs
-├── TestProject/                            # Testing suite
-│
-└── Configuration Files/
-    ├── Program.cs
-    ├── TBD.csproj
-    ├── TBD.sln
-    ├── Dockerfile
-    └── README.md
+├── Logs/                                   # Module-spec
 ```
 
 ---
