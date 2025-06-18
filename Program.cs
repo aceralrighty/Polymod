@@ -9,12 +9,10 @@ using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils.EntityMappers;
-using TBD.TradingModule;
-using TBD.TradingModule.ML;
-using TBD.TradingModule.Orchestration;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
-using TBD.TradingModule.Preprocessing; // Add this using directive
+
+// Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -29,7 +27,6 @@ builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
-builder.Services.AddTradingModule(builder.Configuration);
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
@@ -83,58 +80,6 @@ if (app.Environment.IsDevelopment())
                 includeRatings: true);
             Console.WriteLine("✅ Recommendation Seeding and Training complete!");
             await Task.Delay(1000);
-
-            // --- Start of Trading Module Training Pipeline Fix ---
-            var trainingOrchestrator = scopedServices.GetRequiredService<TrainingOrchestrator>();
-            var featureEngineeringService = scopedServices.GetRequiredService<FeatureEngineeringService>();
-            var stockPredictionEngine = scopedServices.GetRequiredService<StockPredictionEngine>();
-
-            var csvPath = Path.Combine(builder.Environment.ContentRootPath, "Dataset", "all_stocks_5yr.csv");
-
-            try
-            {
-                Console.WriteLine($"📈 Loading training data from: {csvPath}");
-                var marketData = await trainingOrchestrator.LoadTrainingDataFromCsvAsync(csvPath);
-
-                if (marketData.Count != 0)
-                {
-                    Console.WriteLine("⚙️ Generating feature sets...");
-                    var allFeatureSets = new List<FeatureEngineeringService.FeatureSet>();
-                    foreach (var symbolData in marketData.Values)
-                    {
-                        try
-                        {
-                            var featureSetsForSymbol = featureEngineeringService.GenerateFeatureSets(symbolData);
-                            allFeatureSets.AddRange(featureSetsForSymbol);
-                        }
-                        catch (ArgumentException ex)
-                        {
-                            Console.WriteLine($"⚠️ Skipping feature generation for a symbol due to: {ex.Message}");
-                        }
-                    }
-
-                    if (allFeatureSets.Any())
-                    {
-                        Console.WriteLine($"🚀 Training and predicting with {allFeatureSets.Count} feature sets...");
-                        var predictions = await stockPredictionEngine.TrainAndPredictAsync(allFeatureSets);
-                        Console.WriteLine($"✅ Prediction complete. Generated {predictions.Count} predictions.");
-                    }
-                    else
-                    {
-                        Console.WriteLine("❌ No feature sets generated for training.");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("⚠️ No market data loaded for training.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error during stock prediction model training: {ex.Message}");
-                Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
-            }
-            // --- End of Trading Module Training Pipeline Fix ---
         }
 
         Console.WriteLine("🎉 All startup tasks complete!");
