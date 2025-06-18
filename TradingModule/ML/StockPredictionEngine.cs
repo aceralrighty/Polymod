@@ -4,28 +4,72 @@ using TBD.TradingModule.Preprocessing;
 
 namespace TBD.TradingModule.ML;
 
-public class StockPredictionEngine
+public class StockPredictionEngine(ILogger<StockPredictionEngine> logger)
 {
     private readonly MLContext _mlContext = new(seed: 42);
     private ITransformer? _model;
     private PredictionEngine<StockFeatureVector, StockDirectionPrediction>? _predictionEngine;
 
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Models", "StockPredictionModel.zip");
-    private readonly string _trainingDataPath = Path.Combine(AppContext.BaseDirectory, "Dataset", "all_stocks_5yr.csv");
     private const string ModelVersion = "v1.0";
+
+    /// <summary>
+    /// Train model and generate predictions from engineered feature sets.
+    /// </summary>
+    public async Task<List<PredictionResult>> TrainAndPredictAsync(
+        IEnumerable<FeatureEngineeringService.FeatureSet> sets)
+    {
+        var featureSets = sets as FeatureEngineeringService.FeatureSet[] ?? sets.ToArray();
+        var vectors = featureSets.Select(f => f.Vector).Where(v => v.NextDayReturn.HasValue).ToList();
+
+        if (ShouldRetrain())
+        {
+            logger.LogInformation("Training model with {Count} vectors", vectors.Count);
+            TrainAndSaveModel(vectors);
+        }
+        else
+        {
+            logger.LogInformation("Using cached model for predictions");
+            LoadModelIfNeeded();
+        }
+
+        var predictions = featureSets.Select(set => Predict(set.Vector)).ToList();
+
+        return await Task.FromResult(predictions);
+    }
+
+    /// <summary>
+    /// Predict using existing trained model only.
+    /// </summary>
+    public async Task<List<PredictionResult>> PredictOnlyAsync(IEnumerable<StockFeatureVector> inputs)
+    {
+        LoadModelIfNeeded();
+
+        if (_predictionEngine == null)
+            throw new InvalidOperationException("No trained model available. Please train the model first.");
+
+        var results = inputs.Select(Predict).ToList();
+        return await Task.FromResult(results);
+    }
+
+    /// <summary>
+    /// Retrains and saves model using raw vectors.
+    /// </summary>
+    public async Task RetrainModelAsync(IEnumerable<StockFeatureVector> vectors)
+    {
+        TrainAndSaveModel(vectors.Where(v => v.NextDayReturn.HasValue).ToList());
+        await Task.CompletedTask;
+    }
 
     private void TrainAndSaveModel(IEnumerable<StockFeatureVector> data)
     {
-        var trainingData = data
-            .Where(f => f.NextDayReturn.HasValue)
-            .Select(f =>
-            {
-                f.NextDayReturn = f.NextDayReturn > 0 ? 1f : 0f;
-                return f;
-            })
-            .ToList();
+        var processedData = data.Select(f =>
+        {
+            f.NextDayReturn = f.NextDayReturn > 0 ? 1f : 0f;
+            return f;
+        }).ToList();
 
-        var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
+        var dataView = _mlContext.Data.LoadFromEnumerable(processedData);
 
         var pipeline = _mlContext.Transforms.Concatenate("Features",
                 nameof(StockFeatureVector.PriceReturn1Day),
@@ -50,25 +94,13 @@ public class StockPredictionEngine
                 labelColumnName: nameof(StockFeatureVector.NextDayReturn)));
 
         _model = pipeline.Fit(dataView);
-
         Directory.CreateDirectory(Path.GetDirectoryName(_modelPath)!);
         _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
 
         _predictionEngine = _mlContext.Model
             .CreatePredictionEngine<StockFeatureVector, StockDirectionPrediction>(_model);
-    }
 
-    private void LoadModelIfNeeded()
-    {
-        if (_model != null || !File.Exists(_modelPath))
-        {
-            return;
-        }
-
-        using var stream = new FileStream(_modelPath, FileMode.Open, FileAccess.Read);
-        _model = _mlContext.Model.Load(stream, out _);
-        _predictionEngine =
-            _mlContext.Model.CreatePredictionEngine<StockFeatureVector, StockDirectionPrediction>(_model);
+        logger.LogInformation("Model trained and saved to {Path}", _modelPath);
     }
 
     private PredictionResult Predict(StockFeatureVector input)
@@ -76,7 +108,7 @@ public class StockPredictionEngine
         LoadModelIfNeeded();
         var prediction = _predictionEngine!.Predict(input);
 
-        var assumedVolatility = input.NextDayVolatility ?? 0.02f; // fallback
+        var assumedVolatility = input.NextDayVolatility ?? 0.02f;
         var assumedReturn = prediction.PredictedLabel ? 0.01f : -0.005f;
 
         return new PredictionResult
@@ -93,68 +125,21 @@ public class StockPredictionEngine
         };
     }
 
-    /// <summary>
-    /// Train model and generate predictions - returns predictions instead of saving directly
-    /// </summary>
-    public async Task<List<PredictionResult>> TrainAndPredictFromFeatureSetsAsync(
-        IEnumerable<FeatureEngineeringService.FeatureSet> sets)
+    private void LoadModelIfNeeded()
     {
-        var featureSets = sets as FeatureEngineeringService.FeatureSet[] ?? sets.ToArray();
-        var featureVectors = featureSets.Select(f => f.Vector).ToList();
+        if (_model != null || !File.Exists(_modelPath))
+            return;
 
-        // Only retrain if necessary
-        if (ShouldRetrain())
-        {
-            TrainAndSaveModel(featureVectors);
-        }
-
-        var predictions = new List<PredictionResult>();
-        foreach (var fs in featureSets)
-        {
-            var result = Predict(fs.Vector);
-            predictions.Add(result);
-        }
-
-        return await Task.FromResult(predictions);
-    }
-
-    /// <summary>
-    /// Generate predictions without training (assumes model exists)
-    /// </summary>
-    public async Task<List<PredictionResult>> PredictFromFeatureVectorsAsync(
-        IEnumerable<StockFeatureVector> inputs)
-    {
-        LoadModelIfNeeded();
-
-        if (_predictionEngine == null)
-        {
-            throw new InvalidOperationException("No trained model available. Please train the model first.");
-        }
-
-        var predictions = new List<PredictionResult>();
-        foreach (var input in inputs)
-        {
-            var result = Predict(input);
-            predictions.Add(result);
-        }
-
-        return await Task.FromResult(predictions);
+        using var stream = new FileStream(_modelPath, FileMode.Open, FileAccess.Read);
+        _model = _mlContext.Model.Load(stream, out _);
+        _predictionEngine = _mlContext.Model
+            .CreatePredictionEngine<StockFeatureVector, StockDirectionPrediction>(_model);
     }
 
     private bool ShouldRetrain()
     {
         if (!File.Exists(_modelPath)) return true;
-
-        var modelAge = DateTime.UtcNow - File.GetLastWriteTime(_modelPath);
-        return modelAge > TimeSpan.FromDays(7); // Retrain weekly
-    }
-
-    /// <summary>
-    /// Force retrain the model with new data
-    /// </summary>
-    public async Task RetrainModelAsync(IEnumerable<StockFeatureVector> trainingData)
-    {
-        TrainAndSaveModel(trainingData);
-        await Task.CompletedTask;
+        var modelAge = DateTime.UtcNow - File.GetLastWriteTimeUtc(_modelPath);
+        return modelAge > TimeSpan.FromDays(7);
     }
 }

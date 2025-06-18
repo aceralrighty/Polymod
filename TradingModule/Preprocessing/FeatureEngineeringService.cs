@@ -42,7 +42,7 @@ public class FeatureEngineeringService
                 MA10Ratio = (float)(current.Close / (decimal)Ma(sorted, i, 10)),
                 MA20Ratio = (float)(current.Close / (decimal)Ma(sorted, i, 20)),
                 MA50Ratio = (float)(current.Close / (decimal)Ma(sorted, i, 50)),
-                RSI = CalcRsi(sorted, i, 14),
+                RSI = CalcRsi(sorted, i),
                 MACD = CalcMacd(sorted, i).macd,
                 MACDSignal = CalcMacd(sorted, i).signal,
                 BollingerPosition = CalcBollingerPosition(closes, (float)current.Close),
@@ -99,8 +99,8 @@ public class FeatureEngineeringService
         var ema26 = CalcEma(data, index, 26);
         var macdLine = ema12 - ema26;
 
-        var signalLine = CalcEmaFromArray(data, index, 9, x => CalcEma(data, x, 12) - CalcEma(data, x, 26));
-        return ((float)macdLine, (float)signalLine);
+        var signalLine = CalcEmaFromArray(index, 9, x => CalcEma(data, x, 12) - CalcEma(data, x, 26));
+        return (macdLine, signalLine);
     }
 
     private static float CalcEma(List<RawMarketData> data, int index, int period)
@@ -116,7 +116,7 @@ public class FeatureEngineeringService
         return (float)ema;
     }
 
-    private static float CalcEmaFromArray(List<RawMarketData> data, int index, int period, Func<int, float> extractor)
+    private static float CalcEmaFromArray(int index, int period, Func<int, float> extractor)
     {
         var k = 2f / (period + 1);
         var ema = extractor(index - period);

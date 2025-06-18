@@ -21,6 +21,11 @@ public static class TradingModule
         services.AddScoped<FeatureEngineeringService>();
         services.AddScoped<StockPredictionEngine>();
 
+        // Register RawCsvData here
+        services.AddTransient<RawCsvData>(); // Add this line
+
+        services.AddScoped<TrainingOrchestrator>();
+
         // HttpClient for API calls
         services.AddHttpClient();
 

@@ -6,44 +6,53 @@ namespace TBD.TradingModule.Infrastructure.MarketData;
 
 public class RawCsvData(ITradingRepository repository, ILogger<RawCsvData> logger)
 {
-    private async Task<List<RawMarketData>> LoadFromCsvAsync(string filePath, string symbol = null)
+    private async IAsyncEnumerable<RawMarketData> LoadFromCsvStreamAsync(string filePath, string symbol = null)
     {
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"CSV file not found: {filePath}");
 
-        var marketDataList = new List<RawMarketData>();
-        var lines = await File.ReadAllLinesAsync(filePath);
-
-        if (lines.Length == 0)
+        using (var reader = new StreamReader(filePath))
         {
-            logger.LogWarning("CSV file is empty: {FilePath}", filePath);
-            return marketDataList;
-        }
-
-        var header = lines[0].Split(',');
-        var format = DetermineFormat(header);
-        logger.LogInformation("Detected CSV format: {Format} for file: {FilePath}", format, filePath);
-
-        for (int i = 1; i < lines.Length; i++)
-        {
-            try
+            // Read header
+            var headerLine = await reader.ReadLineAsync();
+            if (headerLine == null)
             {
-                var data = ParseCsvLine(lines[i], format, symbol);
-                marketDataList.Add(data);
+                logger.LogWarning("CSV file is empty: {FilePath}", filePath);
+                yield break; // Exit if file is empty
             }
-            catch (Exception ex)
+
+            var header = headerLine.Split(',');
+            var format = DetermineFormat(header);
+            logger.LogInformation("Detected CSV format: {Format} for file: {FilePath}", format, filePath);
+
+            string? line;
+            int lineNumber = 1; // Start from 1 for data lines after header
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                logger.LogWarning(ex, "Failed to parse line {LineNumber}: {Line}", i + 1, lines[i]);
+                lineNumber++;
+                try
+                {
+                    var data = ParseCsvLine(line, format, symbol);
+                    break;
+
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to parse line {LineNumber}: {Line}", lineNumber, line);
+                }
             }
         }
-
-        logger.LogInformation("Successfully parsed {Count} records from CSV", marketDataList.Count);
-        return marketDataList;
+        logger.LogInformation("Finished streaming and parsing records from CSV: {FilePath}", filePath);
     }
 
     public async Task<List<RawMarketData>> LoadAndSaveFromCsvAsync(string filePath, string symbol = null)
     {
-        var marketData = await LoadFromCsvAsync(filePath, symbol);
+        // This method needs to collect all data from the stream if it's still intended to save all at once
+        var marketData = new List<RawMarketData>();
+        await foreach (var data in LoadFromCsvStreamAsync(filePath, symbol))
+        {
+            marketData.Add(data);
+        }
 
         if (marketData.Count == 0)
         {
@@ -70,10 +79,14 @@ public class RawCsvData(ITradingRepository repository, ILogger<RawCsvData> logge
             {
                 var fileName = Path.GetFileNameWithoutExtension(file);
                 var symbolFromFile = ExtractSymbolFromFileName(fileName);
-                var data = await LoadFromCsvAsync(file, symbolFromFile);
+                var fileData = new List<RawMarketData>();
+                await foreach (var data in LoadFromCsvStreamAsync(file, symbolFromFile)) // Use streaming here
+                {
+                    fileData.Add(data);
+                }
 
-                if (data.Count != 0)
-                    results[data.First().Symbol] = data;
+                if (fileData.Count != 0)
+                    results[fileData.First().Symbol] = fileData;
             }
             catch (Exception ex)
             {
@@ -88,7 +101,13 @@ public class RawCsvData(ITradingRepository repository, ILogger<RawCsvData> logge
         DateTime startDate, DateTime endDate)
     {
         logger.LogInformation("Loading batch data from file: {FilePath}", csvFilePath);
-        var allData = await LoadFromCsvAsync(csvFilePath);
+
+        var allData = new List<RawMarketData>();
+        await foreach (var data in LoadFromCsvStreamAsync(csvFilePath)) // Use streaming here
+        {
+            allData.Add(data);
+        }
+
         var groupedData = allData
             .Where(d => d.Date >= startDate && d.Date <= endDate)
             .GroupBy(d => d.Symbol)
@@ -121,114 +140,284 @@ public class RawCsvData(ITradingRepository repository, ILogger<RawCsvData> logge
         };
     }
 
-    private RawMarketData ParseCsvLine(string line, CsvFormat format, string defaultSymbol)
+    private RawMarketData? ParseCsvLine(string line, CsvFormat format, string defaultSymbol)
     {
         var parts = line.Split(',');
 
-        return format switch
+        try
         {
-            CsvFormat.YahooFinance => ParseYahooFormat(parts, defaultSymbol),
-            CsvFormat.SymbolWithAdjClose => ParseSymbolWithAdjCloseFormat(parts),
-            CsvFormat.SymbolBasic => ParseSymbolBasicFormat(parts),
-            CsvFormat.SymbolAtEnd => ParseSymbolAtEndFormat(parts),
-            CsvFormat.Basic => ParseBasicFormat(parts, defaultSymbol),
-            _ => throw new ArgumentException($"Unsupported CSV format: {format}")
-        };
+            return format switch
+            {
+                CsvFormat.YahooFinance => ParseYahooFormat(parts, defaultSymbol),
+                CsvFormat.SymbolWithAdjClose => ParseSymbolWithAdjCloseFormat(parts),
+                CsvFormat.SymbolBasic => ParseSymbolBasicFormat(parts),
+                CsvFormat.SymbolAtEnd => ParseSymbolAtEndFormat(parts),
+                CsvFormat.Basic => ParseBasicFormat(parts, defaultSymbol),
+                _ => throw new ArgumentException($"Unsupported CSV format: {format}")
+            };
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning(ex, "Skipping line due to format specific error: {Line}", line);
+            return null;
+        }
     }
 
-    private RawMarketData ParseYahooFormat(string[] parts, string defaultSymbol)
+    private RawMarketData? ParseYahooFormat(string[] parts, string defaultSymbol)
     {
         if (parts.Length < 7)
-            throw new ArgumentException("Yahoo Finance format requires 7 columns");
+        {
+            logger.LogWarning("Yahoo Finance format requires 7 columns, but got {ColumnCount}: {Line}", parts.Length, string.Join(",", parts));
+            return null;
+        }
+
+        if (!DateTime.TryParse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            logger.LogWarning("Failed to parse Date: {DatePart} in Yahoo format for line: {Line}", parts[0], string.Join(",", parts)); return null;
+        }
+
+        decimal open = 0m, high = 0m, low = 0m, close = 0m, adjustedClose = 0m;
+        long volume = 0L;
+
+        if (!string.IsNullOrWhiteSpace(parts[1]) && !decimal.TryParse(parts[1], CultureInfo.InvariantCulture, out open))
+        {
+            logger.LogWarning("Failed to parse Open: {OpenPart} in Yahoo format for line: {Line}", parts[1], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[2]) && !decimal.TryParse(parts[2], CultureInfo.InvariantCulture, out high))
+        {
+            logger.LogWarning("Failed to parse High: {HighPart} in Yahoo format for line: {Line}", parts[2], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[3]) && !decimal.TryParse(parts[3], CultureInfo.InvariantCulture, out low))
+        {
+            logger.LogWarning("Failed to parse Low: {LowPart} in Yahoo format for line: {Line}", parts[3], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[4]) && !decimal.TryParse(parts[4], CultureInfo.InvariantCulture, out close))
+        {
+            logger.LogWarning("Failed to parse Close: {ClosePart} in Yahoo format for line: {Line}", parts[4], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[5]) && !decimal.TryParse(parts[5], CultureInfo.InvariantCulture, out adjustedClose))
+        {
+            logger.LogWarning("Failed to parse AdjustedClose: {AdjustedClosePart} in Yahoo format for line: {Line}", parts[5], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[6]) && !long.TryParse(parts[6], CultureInfo.InvariantCulture, out volume))
+        {
+            logger.LogWarning("Failed to parse Volume: {VolumePart} in Yahoo format for line: {Line}", parts[6], string.Join(",", parts)); return null;
+        }
 
         return new RawMarketData
         {
             Symbol = defaultSymbol ?? "UNKNOWN",
-            Date = DateTime.Parse(parts[0], CultureInfo.InvariantCulture),
-            Open = decimal.Parse(parts[1], CultureInfo.InvariantCulture),
-            High = decimal.Parse(parts[2], CultureInfo.InvariantCulture),
-            Low = decimal.Parse(parts[3], CultureInfo.InvariantCulture),
-            Close = decimal.Parse(parts[4], CultureInfo.InvariantCulture),
-            AdjustedClose = decimal.Parse(parts[5], CultureInfo.InvariantCulture),
-            Volume = long.Parse(parts[6], CultureInfo.InvariantCulture)
+            Date = date,
+            Open = open,
+            High = high,
+            Low = low,
+            Close = close,
+            AdjustedClose = adjustedClose,
+            Volume = volume
         };
     }
 
-    private RawMarketData ParseSymbolWithAdjCloseFormat(string[] parts)
+    private RawMarketData? ParseSymbolWithAdjCloseFormat(string[] parts)
     {
         if (parts.Length < 8)
-            throw new ArgumentException("Symbol with Adj Close format requires 8 columns");
+        {
+            logger.LogWarning("Symbol with Adj Close format requires 8 columns, but got {ColumnCount}: {Line}", parts.Length, string.Join(",", parts));
+            return null;
+        }
+
+        if (!DateTime.TryParse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            logger.LogWarning("Failed to parse Date: {DatePart} in Symbol with Adj Close format for line: {Line}", parts[0], string.Join(",", parts)); return null;
+        }
+
+        decimal open = 0m, high = 0m, low = 0m, close = 0m, adjustedClose = 0m;
+        long volume = 0L;
+
+        if (!string.IsNullOrWhiteSpace(parts[2]) && !decimal.TryParse(parts[2], CultureInfo.InvariantCulture, out open))
+        {
+            logger.LogWarning("Failed to parse Open: {OpenPart} in Symbol with Adj Close format for line: {Line}", parts[2], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[3]) && !decimal.TryParse(parts[3], CultureInfo.InvariantCulture, out high))
+        {
+            logger.LogWarning("Failed to parse High: {HighPart} in Symbol with Adj Close format for line: {Line}", parts[3], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[4]) && !decimal.TryParse(parts[4], CultureInfo.InvariantCulture, out low))
+        {
+            logger.LogWarning("Failed to parse Low: {LowPart} in Symbol with Adj Close format for line: {Line}", parts[4], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[5]) && !decimal.TryParse(parts[5], CultureInfo.InvariantCulture, out close))
+        {
+            logger.LogWarning("Failed to parse Close: {ClosePart} in Symbol with Adj Close format for line: {Line}", parts[5], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[6]) && !decimal.TryParse(parts[6], CultureInfo.InvariantCulture, out adjustedClose))
+        {
+            logger.LogWarning("Failed to parse AdjustedClose: {AdjustedClosePart} in Symbol with Adj Close format for line: {Line}", parts[6], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[7]) && !long.TryParse(parts[7], CultureInfo.InvariantCulture, out volume))
+        {
+            logger.LogWarning("Failed to parse Volume: {VolumePart} in Symbol with Adj Close format for line: {Line}", parts[7], string.Join(",", parts)); return null;
+        }
 
         return new RawMarketData
         {
             Symbol = parts[1].Trim(),
-            Date = DateTime.Parse(parts[0], CultureInfo.InvariantCulture),
-            Open = decimal.Parse(parts[2], CultureInfo.InvariantCulture),
-            High = decimal.Parse(parts[3], CultureInfo.InvariantCulture),
-            Low = decimal.Parse(parts[4], CultureInfo.InvariantCulture),
-            Close = decimal.Parse(parts[5], CultureInfo.InvariantCulture),
-            AdjustedClose = decimal.Parse(parts[6], CultureInfo.InvariantCulture),
-            Volume = long.Parse(parts[7], CultureInfo.InvariantCulture)
+            Date = date,
+            Open = open,
+            High = high,
+            Low = low,
+            Close = close,
+            AdjustedClose = adjustedClose,
+            Volume = volume
         };
     }
 
-    private RawMarketData ParseSymbolBasicFormat(string[] parts)
+    private RawMarketData? ParseSymbolBasicFormat(string[] parts)
     {
         if (parts.Length < 7)
-            throw new ArgumentException("Symbol basic format requires 7 columns");
+        {
+            logger.LogWarning("Symbol basic format requires 7 columns, but got {ColumnCount}: {Line}", parts.Length, string.Join(",", parts));
+            return null;
+        }
 
-        var close = decimal.Parse(parts[5], CultureInfo.InvariantCulture);
+        if (!DateTime.TryParse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            logger.LogWarning("Failed to parse Date: {DatePart} in Symbol basic format for line: {Line}", parts[0], string.Join(",", parts)); return null;
+        }
+
+        decimal open = 0m, high = 0m, low = 0m, close = 0m;
+        long volume = 0L;
+
+        if (!string.IsNullOrWhiteSpace(parts[2]) && !decimal.TryParse(parts[2], CultureInfo.InvariantCulture, out open))
+        {
+            logger.LogWarning("Failed to parse Open: {OpenPart} in Symbol basic format for line: {Line}", parts[2], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[3]) && !decimal.TryParse(parts[3], CultureInfo.InvariantCulture, out high))
+        {
+            logger.LogWarning("Failed to parse High: {HighPart} in Symbol basic format for line: {Line}", parts[3], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[4]) && !decimal.TryParse(parts[4], CultureInfo.InvariantCulture, out low))
+        {
+            logger.LogWarning("Failed to parse Low: {LowPart} in Symbol basic format for line: {Line}", parts[4], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[5]) && !decimal.TryParse(parts[5], CultureInfo.InvariantCulture, out close))
+        {
+            logger.LogWarning("Failed to parse Close: {ClosePart} in Symbol basic format for line: {Line}", parts[5], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[6]) && !long.TryParse(parts[6], CultureInfo.InvariantCulture, out volume))
+        {
+            logger.LogWarning("Failed to parse Volume: {VolumePart} in Symbol basic format for line: {Line}", parts[6], string.Join(",", parts)); return null;
+        }
 
         return new RawMarketData
         {
             Symbol = parts[1].Trim(),
-            Date = DateTime.Parse(parts[0], CultureInfo.InvariantCulture),
-            Open = decimal.Parse(parts[2], CultureInfo.InvariantCulture),
-            High = decimal.Parse(parts[3], CultureInfo.InvariantCulture),
-            Low = decimal.Parse(parts[4], CultureInfo.InvariantCulture),
+            Date = date,
+            Open = open,
+            High = high,
+            Low = low,
             Close = close,
             AdjustedClose = close,
-            Volume = long.Parse(parts[6], CultureInfo.InvariantCulture)
+            Volume = volume
         };
     }
 
-    private RawMarketData ParseBasicFormat(string[] parts, string defaultSymbol)
+    private RawMarketData? ParseBasicFormat(string[] parts, string defaultSymbol)
     {
         if (parts.Length < 6)
-            throw new ArgumentException("Basic format requires 6 columns");
+        {
+            logger.LogWarning("Basic format requires 6 columns, but got {ColumnCount}: {Line}", parts.Length, string.Join(",", parts));
+            return null;
+        }
 
-        var close = decimal.Parse(parts[4], CultureInfo.InvariantCulture);
+        if (!DateTime.TryParse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            logger.LogWarning("Failed to parse Date: {DatePart} in Basic format for line: {Line}", parts[0], string.Join(",", parts)); return null;
+        }
+
+        decimal open = 0m, high = 0m, low = 0m, close = 0m;
+        long volume = 0L;
+
+        if (!string.IsNullOrWhiteSpace(parts[1]) && !decimal.TryParse(parts[1], CultureInfo.InvariantCulture, out open))
+        {
+            logger.LogWarning("Failed to parse Open: {OpenPart} in Basic format for line: {Line}", parts[1], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[2]) && !decimal.TryParse(parts[2], CultureInfo.InvariantCulture, out high))
+        {
+            logger.LogWarning("Failed to parse High: {HighPart} in Basic format for line: {Line}", parts[2], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[3]) && !decimal.TryParse(parts[3], CultureInfo.InvariantCulture, out low))
+        {
+            logger.LogWarning("Failed to parse Low: {LowPart} in Basic format for line: {Line}", parts[3], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[4]) && !decimal.TryParse(parts[4], CultureInfo.InvariantCulture, out close))
+        {
+            logger.LogWarning("Failed to parse Close: {ClosePart} in Basic format for line: {Line}", parts[4], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[5]) && !long.TryParse(parts[5], CultureInfo.InvariantCulture, out volume))
+        {
+            logger.LogWarning("Failed to parse Volume: {VolumePart} in Basic format for line: {Line}", parts[5], string.Join(",", parts)); return null;
+        }
 
         return new RawMarketData
         {
             Symbol = defaultSymbol ?? "UNKNOWN",
-            Date = DateTime.Parse(parts[0], CultureInfo.InvariantCulture),
-            Open = decimal.Parse(parts[1], CultureInfo.InvariantCulture),
-            High = decimal.Parse(parts[2], CultureInfo.InvariantCulture),
-            Low = decimal.Parse(parts[3], CultureInfo.InvariantCulture),
+            Date = date,
+            Open = open,
+            High = high,
+            Low = low,
             Close = close,
             AdjustedClose = close,
-            Volume = long.Parse(parts[5], CultureInfo.InvariantCulture)
+            Volume = volume
         };
     }
 
-    private RawMarketData ParseSymbolAtEndFormat(string[] parts)
+    private RawMarketData? ParseSymbolAtEndFormat(string[] parts)
     {
         if (parts.Length < 7)
-            throw new ArgumentException("Symbol-at-end format requires 7 columns");
+        {
+            logger.LogWarning("Symbol-at-end format requires 7 columns, but got {ColumnCount}: {Line}", parts.Length, string.Join(",", parts));
+            return null;
+        }
 
-        var close = decimal.Parse(parts[4], CultureInfo.InvariantCulture);
+        if (!DateTime.TryParse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+        {
+            logger.LogWarning("Failed to parse Date: {DatePart} in Symbol-at-end format for line: {Line}", parts[0], string.Join(",", parts)); return null;
+        }
+
+        decimal open = 0m, high = 0m, low = 0m, close = 0m;
+        long volume = 0L;
+
+        if (!string.IsNullOrWhiteSpace(parts[1]) && !decimal.TryParse(parts[1], CultureInfo.InvariantCulture, out open))
+        {
+            logger.LogWarning("Failed to parse Open: {OpenPart} in Symbol-at-end format for line: {Line}", parts[1], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[2]) && !decimal.TryParse(parts[2], CultureInfo.InvariantCulture, out high))
+        {
+            logger.LogWarning("Failed to parse High: {HighPart} in Symbol-at-end format for line: {Line}", parts[2], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[3]) && !decimal.TryParse(parts[3], CultureInfo.InvariantCulture, out low))
+        {
+            logger.LogWarning("Failed to parse Low: {LowPart} in Symbol-at-end format for line: {Line}", parts[3], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[4]) && !decimal.TryParse(parts[4], CultureInfo.InvariantCulture, out close))
+        {
+            logger.LogWarning("Failed to parse Close: {ClosePart} in Symbol-at-end format for line: {Line}", parts[4], string.Join(",", parts)); return null;
+        }
+        if (!string.IsNullOrWhiteSpace(parts[5]) && !long.TryParse(parts[5], CultureInfo.InvariantCulture, out volume))
+        {
+            logger.LogWarning("Failed to parse Volume: {VolumePart} in Symbol-at-end format for line: {Line}", parts[5], string.Join(",", parts)); return null;
+        }
 
         return new RawMarketData
         {
             Symbol = parts[6].Trim(),
-            Date = DateTime.Parse(parts[0], CultureInfo.InvariantCulture),
-            Open = decimal.Parse(parts[1], CultureInfo.InvariantCulture),
-            High = decimal.Parse(parts[2], CultureInfo.InvariantCulture),
-            Low = decimal.Parse(parts[3], CultureInfo.InvariantCulture),
+            Date = date,
+            Open = open,
+            High = high,
+            Low = low,
             Close = close,
             AdjustedClose = close,
-            Volume = long.Parse(parts[5], CultureInfo.InvariantCulture)
+            Volume = volume
         };
     }
 

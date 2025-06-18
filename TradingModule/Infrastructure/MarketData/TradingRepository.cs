@@ -1,11 +1,13 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using TBD.Shared.Repositories;
 using TBD.TradingModule.Core.Entities;
 using TBD.TradingModule.Core.Entities.Interfaces;
 
 namespace TBD.TradingModule.Infrastructure.MarketData;
 
 public class TradingRepository(TradingDbContext context, ILogger<TradingRepository> logger)
-    : ITradingRepository
+    : IGenericRepository<RawMarketData>, ITradingRepository
 {
     public async Task SaveMarketDataAsync(List<RawMarketData> marketData)
     {
@@ -28,7 +30,7 @@ public class TradingRepository(TradingDbContext context, ILogger<TradingReposito
                 .Where(m => !existingKeys.Contains($"{m.Symbol}_{m.Date:yyyy-MM-dd}"))
                 .ToList();
 
-            if (newData.Any())
+            if (newData.Count != 0)
             {
                 await context.RawData.AddRangeAsync(newData);
                 await context.SaveChangesAsync();
@@ -425,5 +427,39 @@ public class TradingRepository(TradingDbContext context, ILogger<TradingReposito
         }
     }
 
+    public async Task<IEnumerable<RawMarketData>> GetAllAsync()
+    {
+        var all = await context.RawData.ToListAsync();
+        return all;
+    }
 
+    public async Task<RawMarketData> GetByIdAsync(Guid id)
+    {
+        var found = await context.RawData.FindAsync(id);
+        return found ?? throw new InvalidOperationException();
+    }
+
+    public async Task<IEnumerable<RawMarketData>> FindAsync(Expression<Func<RawMarketData, bool>> predicate)
+    {
+        var found = await context.RawData.Where(predicate).ToListAsync();
+        return found;
+    }
+
+    public async Task AddAsync(RawMarketData entity)
+    {
+        await context.RawData.AddAsync(entity);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task UpdateAsync(RawMarketData entity)
+    {
+        context.RawData.Update(entity);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(RawMarketData entity)
+    {
+        context.RawData.Remove(entity);
+        await context.SaveChangesAsync();
+    }
 }
