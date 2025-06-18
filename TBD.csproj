@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="FluentAssertions" Version="8.3.0" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
@@ -51,7 +52,6 @@
     <Folder Include="RecommendationModule\Controllers\" />
     <Folder Include="ScheduleModule\Controllers\" />
     <Folder Include="ServiceModule\Controllers\" />
-    <Folder Include="StockPredictionModule\" />
     <Folder Include="UserModule\Controllers\" />
   </ItemGroup>
 
