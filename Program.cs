@@ -9,10 +9,10 @@ using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils.EntityMappers;
-using TBD.TradingModule;
-using TBD.TradingModule.Infrastructure.MarketData;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
+
+// Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -27,7 +27,6 @@ builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
-builder.Services.AddTradingModule(builder.Configuration);
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
@@ -81,81 +80,6 @@ if (app.Environment.IsDevelopment())
                 includeRatings: true);
             Console.WriteLine("✅ Recommendation Seeding and Training complete!");
             await Task.Delay(1000);
-
-            // ADD TRADING MODULE INITIALIZATION HERE
-            Console.WriteLine("📈 Starting Trading Module initialization...");
-            try
-            {
-                // Check the API key first
-                var apiKey = builder.Configuration["API_KEY"];
-                if (string.IsNullOrEmpty(apiKey))
-                {
-                    Console.WriteLine(
-                        "⚠️  Warning: API_KEY environment variable not set. Trading module will not fetch real data.");
-                    Console.WriteLine(
-                        "   Set API_KEY environment variable with your Alpha Vantage API key to enable data fetching.");
-                }
-                else
-                {
-                    Console.WriteLine($"✅ API Key configured (length: {apiKey.Length})");
-                }
-
-                // Initialize dividend data fetcher
-                var dividendFetcher = scopedServices.GetRequiredService<DividendDataFetcher>();
-                var symbolsToFetch = new List<string> { "GOOGL" };
-                var endDate = DateTime.Now;
-                var startDate = endDate.AddYears(-2); // Get 2 years of dividend history
-
-                Console.WriteLine($"🚀 Fetching dividend data for: {string.Join(", ", symbolsToFetch)}");
-                Console.WriteLine($"📅 Date range: {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}");
-
-                var fetchedDividendData =
-                    await dividendFetcher.GetBatchDividendDataAsync(symbolsToFetch, startDate, endDate);
-
-                foreach (var entry in fetchedDividendData)
-                {
-                    Console.WriteLine($"  -> Fetched {entry.Value.Count} dividend records for {entry.Key}");
-                    if (entry.Value.Count != 0)
-                    {
-                        var latest = entry.Value.OrderByDescending(d => d.ExDividendDate).First();
-                        Console.WriteLine(
-                            $"     Latest dividend: ${latest.Amount} on {latest.ExDividendDate:yyyy-MM-dd}");
-                    }
-                }
-
-                Console.WriteLine("📊 Fetching market data (OHLCV prices)...");
-                var marketDataFetcher = scopedServices.GetRequiredService<MarketDataFetcher>();
-
-                foreach (var symbol in symbolsToFetch)
-                {
-                    Console.WriteLine($"  -> Fetching price data for {symbol}");
-                    var marketData = await marketDataFetcher.GetAndSaveHistoricalDataAsync(symbol, startDate, endDate);
-                    Console.WriteLine($"     Fetched {marketData.Count} price records for {symbol}");
-
-                    if (marketData.Count > 0)
-                    {
-                        var latest = marketData.OrderByDescending(d => d.Date).First();
-                        Console.WriteLine(
-                            $"     Latest price: Open=${latest.Open}, Close=${latest.Close}, Volume={latest.Volume}");
-                    }
-                }
-
-                // Check remaining API requests
-                var remainingRequests = await dividendFetcher.GetRemainingRequestsAsync();
-                Console.WriteLine($"📊 Remaining API requests this hour: {remainingRequests}");
-
-                Console.WriteLine("✅ Trading Module initialization complete!");
-            }
-            catch (Exception tradingEx)
-            {
-                Console.WriteLine($"⚠️  Trading Module initialization failed: {tradingEx.Message}");
-                Console.WriteLine(
-                    "   This won't prevent the application from starting, but trading features may not work.");
-                Console.WriteLine($"   Details: {tradingEx.StackTrace}");
-
-                // Don't throw here - let the app continue without trading data
-                // throw; // Uncomment this if you want trading failures to stop app startup
-            }
         }
 
         Console.WriteLine("🎉 All startup tasks complete!");

@@ -1,5 +1,5 @@
 using TBD.API.DTOs;
-using TBD.API.DTOs.UserDTO;
+using TBD.API.DTOs.Users;
 
 namespace TBD.UserModule.Services;
 
