@@ -1,6 +1,5 @@
 using AutoMapper;
 using TBD.AddressModule.Models;
-using TBD.API.DTOs;
 using TBD.API.DTOs.Users;
 
 namespace TBD.Shared.Utils.EntityMappers;

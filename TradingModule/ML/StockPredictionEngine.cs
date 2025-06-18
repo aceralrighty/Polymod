@@ -11,6 +11,7 @@ public class StockPredictionEngine
     private PredictionEngine<StockFeatureVector, StockDirectionPrediction>? _predictionEngine;
 
     private readonly string _modelPath = Path.Combine(AppContext.BaseDirectory, "Models", "StockPredictionModel.zip");
+    private readonly string _trainingDataPath = Path.Combine(AppContext.BaseDirectory, "Dataset", "all_stocks_5yr.csv");
     private const string ModelVersion = "v1.0";
 
     private void TrainAndSaveModel(IEnumerable<StockFeatureVector> data)

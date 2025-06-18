@@ -6,12 +6,10 @@ namespace TBD.TradingModule.Infrastructure.MarketData;
 
 public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbContext(options)
 {
-    public DbSet<RawMarketData> RawData { get; set; }
     public DbSet<StockFeatureVector> StockFeatures { get; set; }
     public DbSet<PredictionResult> Predictions { get; set; }
+    public DbSet<RawMarketData> RawData { get; set; }
 
-    public DbSet<ApiRequestLog> ApiRequestLogs { get; set; }
-    public DbSet<RawDividendData> DividendData { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -25,9 +23,8 @@ public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbCo
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfiguration(new PredictionResultConfiguration());
-        modelBuilder.ApplyConfiguration(new RawMarketDataConfiguration());
         modelBuilder.ApplyConfiguration(new StockFeatureVectorConfiguration());
-        modelBuilder.ApplyConfiguration(new ApiRequestLogConfiguration());
+        modelBuilder.ApplyConfiguration(new RawDataConfiguration());
     }
 
     public override int SaveChanges()
@@ -45,7 +42,7 @@ public class TradingDbContext(DbContextOptions<TradingDbContext> options) : DbCo
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries().Where(e =>
-            e.Entity is RawMarketData or StockFeatureVector or PredictionResult or ApiRequestLog);
+            e.Entity is RawMarketData or StockFeatureVector or PredictionResult);
 
         foreach (var entityEntry in entries)
         {

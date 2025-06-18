@@ -18,13 +18,8 @@ public static class TradingModule
         services.AddScoped<ITradingRepository, TradingRepository>();
 
         // Core Services
-        services.AddScoped<MarketDataFetcher>();
-        services.AddScoped<DividendDataFetcher>();
         services.AddScoped<FeatureEngineeringService>();
         services.AddScoped<StockPredictionEngine>();
-
-        // Main Orchestrator
-        services.AddScoped<TrainingOrchestrator>();
 
         // HttpClient for API calls
         services.AddHttpClient();

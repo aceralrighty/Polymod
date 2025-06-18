@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace TBD.API.DTOs.Users;
 
-public class UserSchedule
+public abstract class UserSchedule
 {
     private double? _overtime;
     private double? _overtimeRate;
