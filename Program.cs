@@ -9,6 +9,7 @@ using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils.EntityMappers;
+using TBD.StockPredictionModule;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
 
@@ -27,6 +28,7 @@ builder.Services.AddScheduleModule(builder.Configuration);
 builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
+builder.Services.AddStockModule(builder.Configuration);
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
