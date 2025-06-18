@@ -5,7 +5,7 @@ using TBD.AddressModule.Data;
 using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Repositories;
-using TBD.API.DTOs.UserDTO;
+using TBD.API.DTOs.Users;
 using TBD.UserModule.Services;
 
 namespace TBD.AddressModule.Services;

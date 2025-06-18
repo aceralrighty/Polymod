@@ -6,7 +6,7 @@ using AutoMapper;
 using Moq;
 using NUnit.Framework;
 using TBD.API.DTOs;
-using TBD.API.DTOs.UserDTO;
+using TBD.API.DTOs.Users;
 using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
 using TBD.UserModule.Models;

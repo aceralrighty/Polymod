@@ -1,5 +1,5 @@
 using TBD.AddressModule.Models;
-using TBD.API.DTOs.UserDTO;
+using TBD.API.DTOs.Users;
 
 namespace TBD.AddressModule.Services;
 

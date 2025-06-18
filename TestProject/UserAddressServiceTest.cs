@@ -10,8 +10,7 @@ using TBD.AddressModule.Data;
 using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
 using TBD.AddressModule.Services;
-using TBD.API.DTOs;
-using TBD.API.DTOs.UserDTO;
+using TBD.API.DTOs.Users;
 using TBD.UserModule.Models;
 using TBD.UserModule.Services;
 
@@ -482,25 +481,28 @@ public class UserAddressServiceTests
     {
         // Arrange
         var existingAddress = _testAddresses.First();
-        var updateRequest = new UserAddressRequest
+        if (_testUser != null)
         {
-            Id = existingAddress.Id, UserId = _testUser.Id, Address1 = "Updated Address", City = "Updated City"
-        };
-
-        _mockMapper.Setup(m => m.Map(It.IsAny<UserAddressRequest>(), It.IsAny<UserAddress>()))
-            .Callback<UserAddressRequest, UserAddress>((src, dest) =>
+            var updateRequest = new UserAddressRequest
             {
-                dest.Address1 = src.Address1 ?? string.Empty;
-                dest.City = src.City;
-            });
+                Id = existingAddress.Id, UserId = _testUser.Id, Address1 = "Updated Address", City = "Updated City"
+            };
 
-        // Act
-        var result = await _userAddressService.UpdateUserAddress(updateRequest);
+            _mockMapper.Setup(m => m.Map(It.IsAny<UserAddressRequest>(), It.IsAny<UserAddress>()))
+                .Callback<UserAddressRequest, UserAddress>((src, dest) =>
+                {
+                    dest.Address1 = src.Address1 ?? string.Empty;
+                    dest.City = src.City;
+                });
 
-        // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo(existingAddress.Id));
-        _mockMapper.Verify(m => m.Map(updateRequest, It.IsAny<UserAddress>()), Times.Once);
+            // Act
+            var result = await _userAddressService.UpdateUserAddress(updateRequest);
+
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Id, Is.EqualTo(existingAddress.Id));
+            _mockMapper.Verify(m => m.Map(updateRequest, It.IsAny<UserAddress>()), Times.Once);
+        }
 
         // Verify the address was actually updated in the database
         var updatedAddress = await _context.Set<UserAddress>().FindAsync(existingAddress.Id);
