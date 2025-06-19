@@ -1,4 +1,4 @@
-namespace TBD.RecommendationModule.Repositories.Interfaces;
+namespace TBD.RecommendationModule.ML.Interface;
 
 public interface IMlRecommendationEngine
 {

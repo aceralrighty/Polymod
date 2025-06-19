@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
 using TBD.Shared.CachingConfiguration;
+using TBD.Shared.EntityMappers;
 using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
-using TBD.Shared.Utils.EntityMappers;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;

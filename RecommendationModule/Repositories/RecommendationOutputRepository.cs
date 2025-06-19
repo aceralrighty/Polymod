@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.RecommendationModule.Data;
-using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.Models.Recommendations;
 using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.Shared.Repositories;
 

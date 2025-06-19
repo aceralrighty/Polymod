@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
 using TBD.Shared.CachingConfiguration;
+using TBD.Shared.EntityMappers;
 using TBD.Shared.Repositories;
-using TBD.Shared.Utils.EntityMappers;
 using TBD.StockPredictionModule.Context;
 using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.PipelineOrchestrator;
 using TBD.StockPredictionModule.PipelineOrchestrator.Interface;
 using TBD.StockPredictionModule.Repository;

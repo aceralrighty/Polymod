@@ -5,7 +5,7 @@ using TBD.RecommendationModule.Exceptions;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
 
-namespace TBD.RecommendationModule.Models;
+namespace TBD.RecommendationModule.Models.Recommendations;
 
 public class UserRecommendation : BaseTableProperties
 {

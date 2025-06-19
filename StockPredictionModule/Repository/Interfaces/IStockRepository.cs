@@ -1,5 +1,6 @@
 using TBD.Shared.Repositories;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.Models.Stocks;
 
 namespace TBD.StockPredictionModule.Repository.Interfaces;
 

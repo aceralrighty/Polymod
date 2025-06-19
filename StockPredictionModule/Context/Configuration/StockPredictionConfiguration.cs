@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.Models.Stocks;
 
 namespace TBD.StockPredictionModule.Context.Configuration;
 

@@ -1,7 +1,7 @@
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
-using TBD.Shared.Utils.EntityMappers;
+using TBD.Shared.EntityMappers;
 using TBD.StockPredictionModule.Models;
 
 namespace TBD.StockPredictionModule.Load;

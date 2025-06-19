@@ -1,9 +1,8 @@
 using AutoMapper;
-using TBD.API.DTOs;
 using TBD.API.DTOs.Users;
 using TBD.ScheduleModule.Models;
 
-namespace TBD.Shared.Utils.EntityMappers;
+namespace TBD.Shared.EntityMappers;
 
 public class UserScheduleMapping : Profile
 {
@@ -15,6 +14,6 @@ public class UserScheduleMapping : Profile
             .ForMember(dest => dest.TotalHoursWorked, opt => opt.MapFrom(src => src.TotalHoursWorked))
             .ForMember(dest => dest.BasePay, opt => opt.MapFrom(src => src.BasePay))
             .ForMember(dest => dest.Overtime, opt => opt.Ignore()) // Example: Ignore or customize mappings
-            .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null)); // Non-null check
+            .ForAllMembers(opt => opt.Condition((_, _, srcMember) => srcMember != null)); // Non-null check
     }
 }

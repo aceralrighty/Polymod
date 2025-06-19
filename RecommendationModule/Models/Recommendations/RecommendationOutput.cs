@@ -4,7 +4,7 @@ using TBD.GenericDBProperties;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
 
-namespace TBD.RecommendationModule.Models;
+namespace TBD.RecommendationModule.Models.Recommendations;
 
 public class RecommendationOutput : BaseTableProperties
 {
