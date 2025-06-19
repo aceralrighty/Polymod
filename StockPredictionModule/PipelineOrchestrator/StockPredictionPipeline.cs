@@ -1,4 +1,4 @@
-using TBD.Shared.Utils.EntityMappers;
+using TBD.Shared.EntityMappers;
 using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML;
 using TBD.StockPredictionModule.Models;

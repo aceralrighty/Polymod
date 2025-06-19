@@ -2,7 +2,7 @@ using AutoMapper;
 using TBD.API.DTOs;
 using TBD.ServiceModule.Models;
 
-namespace TBD.Shared.Utils.EntityMappers;
+namespace TBD.Shared.EntityMappers;
 
 public class ServiceMapping : Profile
 {

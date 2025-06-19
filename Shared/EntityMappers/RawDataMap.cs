@@ -1,7 +1,7 @@
 using CsvHelper.Configuration;
 using TBD.StockPredictionModule.Models;
 
-namespace TBD.Shared.Utils.EntityMappers;
+namespace TBD.Shared.EntityMappers;
 
 public sealed class RawDataMap: ClassMap<RawData>
 {

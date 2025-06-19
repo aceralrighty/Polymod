@@ -2,7 +2,7 @@ using AutoMapper;
 using TBD.AddressModule.Models;
 using TBD.API.DTOs.Users;
 
-namespace TBD.Shared.Utils.EntityMappers;
+namespace TBD.Shared.EntityMappers;
 
 public class UserAddressMapping : Profile
 {

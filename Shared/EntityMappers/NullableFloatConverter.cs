@@ -3,11 +3,11 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 
-namespace TBD.Shared.Utils.EntityMappers;
+namespace TBD.Shared.EntityMappers;
 
-public class NullableFloatConverter : SingleConverter
+public abstract class NullableFloatConverter : SingleConverter
 {
-    public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+    public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
     {
         if (string.IsNullOrWhiteSpace(text))
         {

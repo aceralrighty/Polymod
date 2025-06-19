@@ -8,7 +8,7 @@ using TBD.ScheduleModule;
 using TBD.ScheduleModule.Seed;
 using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
-using TBD.Shared.Utils.EntityMappers;
+using TBD.Shared.EntityMappers;
 using TBD.StockPredictionModule;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.PipelineOrchestrator;
