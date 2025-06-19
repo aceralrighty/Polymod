@@ -24,6 +24,7 @@ public class StockDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new RawDataConfiguration());
+        modelBuilder.ApplyConfiguration(new StockPredictionConfiguration());
     }
 
     public override int SaveChanges()
@@ -38,16 +39,35 @@ public class StockDbContext : DbContext
         return await base.SaveChangesAsync(cancellationToken);
     }
 
+
     private void UpdateTimestamps()
     {
-        var entries = ChangeTracker.Entries().Where(e =>
-            e.Entity is RawData or Stock or StockPrediction);
-        foreach (var entityEntry in entries)
-        {
-            if (entityEntry.Entity is not RawData rawData) continue;
-            rawData.UpdatedAt = DateTime.UtcNow;
-        }
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified &&
+                        e.Entity is RawData or Stock or StockPrediction);
 
-        base.SaveChanges();
+        var now = DateTime.UtcNow;
+
+        foreach (var entry in entries)
+        {
+            switch (entry.Entity)
+            {
+                case RawData r:
+                    r.UpdatedAt = now;
+                    if (entry.State == EntityState.Added)
+                        r.CreatedAt = now;
+                    break;
+                case Stock s:
+                    s.UpdatedAt = now;
+                    if (entry.State == EntityState.Added)
+                        s.CreatedAt = now;
+                    break;
+                case StockPrediction p:
+                    p.UpdatedAt = now;
+                    if (entry.State == EntityState.Added)
+                        p.CreatedAt = now;
+                    break;
+            }
+        }
     }
 }

@@ -1,3 +1,4 @@
+using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
 using TBD.Shared.Repositories;
 using TBD.StockPredictionModule.Context;
@@ -13,10 +14,36 @@ public class StockRepository(StockDbContext context) : GenericRepository<RawData
         return await DbSet.FirstOrDefaultAsync(f => f.Id == id);
     }
 
-    public async Task SaveStockAsync(List<Stock> stock)
+    public async Task SaveStockAsync(List<Stock> stocks)
     {
-        await context.Stocks.AddRangeAsync(stock);
-        await context.SaveChangesAsync();
+        if (stocks.Count == 0)
+            return;
+
+        var bulkConfig = new BulkConfig
+        {
+            PreserveInsertOrder = true,
+            SetOutputIdentity = true,
+            BulkCopyTimeout = 60, // seconds
+            BatchSize = 10000,
+            PropertiesToInclude =
+            [
+                nameof(Stock.Symbol),
+                nameof(Stock.Open),
+                nameof(Stock.High),
+                nameof(Stock.Low),
+                nameof(Stock.Close),
+                nameof(Stock.Volume),
+                nameof(Stock.Date),
+                nameof(Stock.UserId),
+                nameof(Stock.StockId),
+                nameof(Stock.Price),
+                nameof(Stock.CreatedAt),
+                nameof(Stock.UpdatedAt),
+                nameof(Stock.DeletedAt)
+            ]
+        };
+
+        await context.BulkInsertAsync(stocks, bulkConfig);
     }
 
     public async Task<IEnumerable<RawData>> GetBySymbolAsync(string symbol)

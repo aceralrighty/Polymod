@@ -8,7 +8,7 @@ namespace TBD.StockPredictionModule.Load;
 
 public class LoadCsvData
 {
-    public async Task<List<RawData>> LoadRawDataAsync(string filePath)
+    public static async Task<List<RawData>> LoadRawDataAsync(string filePath)
     {
         using var reader = new StreamReader(filePath);
         var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)

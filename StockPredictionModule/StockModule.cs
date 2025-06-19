@@ -32,7 +32,7 @@ public static class StockModule
         services.AddScoped<IStockPredictionRepository, StockPredictionRepository>();
         services.AddScoped<IStockPredictionPipeline, StockPredictionPipeline>();
         services.AddScoped<LoadCsvData>();
-        services.AddScoped<DataTransformation>();
+        services.AddScoped<StockEntityMapper>();
         services.AddScoped<StockPredictionPipeline>();
 
         services.AddScoped<MlStockPredictionEngine>();

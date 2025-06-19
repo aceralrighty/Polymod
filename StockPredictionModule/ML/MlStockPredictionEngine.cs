@@ -1,5 +1,6 @@
 using Microsoft.ML;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.PipelineOrchestrator;
 
 namespace TBD.StockPredictionModule.ML;
 
@@ -7,102 +8,128 @@ public class MlStockPredictionEngine
 {
     private static readonly MLContext MlContext = new(seed: 0);
     private ITransformer? _model;
-    private PredictionEngine<RawData, StockPrediction>? _predictionEngine;
+    private PredictionEngine<StockFeatureVector, StockPrediction>? _predictionEngine;
 
     public Task<bool> IsModelTrainedAsync()
     {
         return Task.FromResult(_model != null && _predictionEngine != null);
     }
 
-    public Task TrainModelAsync(List<RawData> rawData)
+    public async Task TrainModelAsync(List<RawData> rawData)
     {
         Console.WriteLine("Starting model training...");
 
         if (rawData == null || rawData.Count == 0)
-        {
             throw new InvalidOperationException("No training data provided");
-        }
 
-        Console.WriteLine($"Training on {rawData.Count} historical records");
+        var features = FeatureEngineering.GenerateFeatures(rawData);
 
-        var mlTrainingData = MlContext.Data.LoadFromEnumerable(rawData);
+        Console.WriteLine($"Generated {features.Count} training feature rows");
 
-        var pipeline = MlContext.Transforms.CustomMapping<RawData, DateFeatures>(
-                (input, output) =>
-                {
-                    if (!DateTime.TryParse(input.Date, out var date))
-                    {
-                        output.DayOfYear = 1;
-                        output.DaysSinceEpoch = 0;
-                        output.Year = 2000;
-                        output.Month = 1;
-                        output.DayOfWeek = 1;
-                        return;
-                    }
+        var trainTestSplit =
+            MlContext.Data.TrainTestSplit(MlContext.Data.LoadFromEnumerable(features), testFraction: 0.2);
 
-                    output.DayOfYear = date.DayOfYear;
-                    output.DaysSinceEpoch = (float)(date - new DateTime(2000, 1, 1)).TotalDays;
-                    output.Year = date.Year;
-                    output.Month = date.Month;
-                    output.DayOfWeek = (int)date.DayOfWeek;
-                }, "DateFeatures")
-            .Append(MlContext.Transforms.Text.FeaturizeText("SymbolFeatures", nameof(RawData.Symbol)))
-            .Append(MlContext.Transforms.Concatenate("NumericFeatures",
-                nameof(RawData.Open), nameof(RawData.High), nameof(RawData.Low),
-                nameof(RawData.Volume), "DayOfYear", "DaysSinceEpoch", "Year", "Month", "DayOfWeek"))
-            .Append(MlContext.Transforms.Concatenate("Features", "NumericFeatures", "SymbolFeatures"))
-            .Append(MlContext.Regression.Trainers.Sdca(
-                labelColumnName: nameof(RawData.Close),
+        var pipeline = MlContext.Transforms.Concatenate("Features",
+                nameof(StockFeatureVector.Open),
+                nameof(StockFeatureVector.High),
+                nameof(StockFeatureVector.Low),
+                nameof(StockFeatureVector.Close),
+                nameof(StockFeatureVector.Volume),
+                nameof(StockFeatureVector.MA5),
+                nameof(StockFeatureVector.MA10),
+                nameof(StockFeatureVector.Volatility5),
+                nameof(StockFeatureVector.Return1D))
+            .Append(MlContext.Transforms.NormalizeMinMax("Features"))
+            .Append(MlContext.Regression.Trainers.FastTree(
+                labelColumnName: nameof(StockFeatureVector.NextClose),
                 featureColumnName: "Features"));
 
-        _model = pipeline.Fit(mlTrainingData);
-        _predictionEngine = MlContext.Model.CreatePredictionEngine<RawData, StockPrediction>(_model);
+        _model = pipeline.Fit(trainTestSplit.TrainSet);
 
-        Console.WriteLine("Model training completed successfully");
-        return Task.CompletedTask;
+        _predictionEngine = MlContext.Model.CreatePredictionEngine<StockFeatureVector, StockPrediction>(_model);
+
+        Console.WriteLine("✅ Model training complete");
+
+        // Optional evaluation
+        var predictions = _model.Transform(trainTestSplit.TestSet);
+        var metrics = MlContext.Regression.Evaluate(predictions, labelColumnName: nameof(StockFeatureVector.NextClose));
+
+        Console.WriteLine($"📊 Evaluation RMSE: {metrics.RootMeanSquaredError:F2}, R²: {metrics.RSquared:P2}");
+
+        await Task.CompletedTask;
     }
+
 
     public Task<StockPrediction> GeneratePredictAsync(List<RawData> rawData, string symbol)
     {
         if (string.IsNullOrWhiteSpace(symbol))
-            throw new ArgumentException("Symbol cannot be null or empty", nameof(symbol));
+            throw new ArgumentException("Symbol is required", nameof(symbol));
 
         if (_predictionEngine == null)
-            throw new InvalidOperationException("Model must be trained before generating predictions");
+            throw new InvalidOperationException("Model must be trained before predictions");
 
-        var latestStock = rawData
-            .Where(s => s.Symbol == symbol)
-            .OrderByDescending(s => DateTime.Parse(s.Date))
-            .FirstOrDefault();
+        var ordered = rawData
+            .Where(r => r.Symbol == symbol && r.Close > 0)
+            .OrderBy(r => DateTime.Parse(r.Date))
+            .ToList();
 
-        if (latestStock == null)
-            throw new InvalidOperationException($"No historical data found for symbol: {symbol}");
+        if (ordered.Count < 11)
+            throw new InvalidOperationException("Not enough data for feature generation");
 
-        var input = new RawData
+        var i = ordered.Count - 1;
+        var window5 = ordered.Skip(i - 4).Take(5).ToList();
+        var window10 = ordered.Skip(i - 9).Take(10).ToList();
+
+        var today = ordered[i];
+
+        var input = new StockFeatureVector
         {
-            Date = DateTime.Now.AddDays(1).ToString("yyyy-MM-dd"),
-            Open = latestStock.Close,
-            High = latestStock.Close * 1.05f,
-            Low = latestStock.Close * 0.95f,
-            Close = 0, // to be predicted
-            Volume = latestStock.Volume,
-            Symbol = symbol
+            Open = today.Open,
+            High = today.High,
+            Low = today.Low,
+            Close = today.Close,
+            Volume = today.Volume,
+            MA5 = window5.Average(x => x.Close),
+            MA10 = window10.Average(x => x.Close),
+            Volatility5 = (float)Math.Sqrt(window5.Average(x => Math.Pow(x.Close - window5.Average(w => w.Close), 2))),
+            Return1D = (today.Close - ordered[i - 1].Close) / ordered[i - 1].Close
         };
 
-        var prediction = _predictionEngine.Predict(input);
+        var predicted = _predictionEngine.Predict(input);
 
-        // The prediction.Price will be automatically mapped from the "Score" column
         var result = new StockPrediction
         {
             Id = Guid.NewGuid(),
+            Symbol = symbol,
             BatchId = Guid.NewGuid(),
-            Price = prediction.Price, // This should work now
+            Price = Math.Max(0.01f, predicted.Price), // using .Price field from StockPrediction class
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             DeletedAt = null
         };
 
-        Console.WriteLine($"Generated prediction for {symbol}: ${result.Price:F2}");
+        Console.WriteLine($"🔮 {symbol}: Predicted next close = ${result.Price:F2}");
+
         return Task.FromResult(result);
+    }
+
+
+    // Helper method to clean training data
+    private List<RawData> CleanTrainingData(List<RawData> rawData)
+    {
+        return rawData.Where(r =>
+            r.Open > 0 &&
+            r.High > 0 &&
+            r.Low > 0 &&
+            r.Close > 0 &&
+            r.Volume > 0 &&
+            r.High >= r.Low &&
+            r.High >= r.Open &&
+            r.High >= r.Close &&
+            r.Low <= r.Open &&
+            r.Low <= r.Close &&
+            !string.IsNullOrEmpty(r.Symbol) &&
+            DateTime.TryParse(r.Date, out _)
+        ).ToList();
     }
 }

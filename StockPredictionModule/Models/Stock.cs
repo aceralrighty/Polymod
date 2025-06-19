@@ -1,10 +1,10 @@
 using Microsoft.ML.Data;
+using TBD.GenericDBProperties;
 
 namespace TBD.StockPredictionModule.Models;
 
-public class Stock
+public class Stock : BaseTableProperties
 {
-    public Guid Id { get; set; }
     public string Symbol { get; set; }
     public float Open { get; set; }
     public float High { get; set; }
@@ -17,4 +17,8 @@ public class Stock
     [LoadColumn(0)] public float UserId { get; set; }
     [LoadColumn(1)] public float StockId { get; set; }
     [LoadColumn(2)] public float Price { get; set; }
+
+    [NoColumn] public override Guid Id { get; set; }
+    [NoColumn] public override DateTime CreatedAt { get; set; }
+    [NoColumn] public override DateTime UpdatedAt { get; set; }
 }
