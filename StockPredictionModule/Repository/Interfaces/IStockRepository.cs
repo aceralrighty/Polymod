@@ -8,7 +8,7 @@ public interface IStockRepository: IGenericRepository<RawData>
     new Task AddAsync(RawData rawData);
     new Task<IEnumerable<RawData>> GetAllAsync();
     Task<RawData?> GetByTableIdAsync(Guid id);
-    Task SaveChangesAsync();
+    Task SaveStockAsync(List<Stock> stock);
 
     Task<IEnumerable<RawData>> GetBySymbolAsync(string symbol);
     Task<IEnumerable<RawData>> GetByHighestVolumeAsync(float volume);

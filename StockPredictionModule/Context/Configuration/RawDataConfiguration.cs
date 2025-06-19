@@ -10,6 +10,6 @@ public class RawDataConfiguration: IEntityTypeConfiguration<RawData>
     {
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Symbol).HasMaxLength(10);
-        builder.Property(r => r.Date).HasColumnType("");
+
     }
 }

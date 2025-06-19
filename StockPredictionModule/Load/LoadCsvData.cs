@@ -1,27 +1,43 @@
 using System.Globalization;
 using CsvHelper;
-using TBD.StockPredictionModule.Context;
+using CsvHelper.Configuration;
+using TBD.Shared.Utils.EntityMappers;
 using TBD.StockPredictionModule.Models;
 
 namespace TBD.StockPredictionModule.Load;
 
-public class LoadCsvData(StockDbContext context)
+public class LoadCsvData
 {
-    public async Task<int> LoadDataAsync(string filePath)
+    public async Task<List<RawData>> LoadRawDataAsync(string filePath)
     {
         using var reader = new StreamReader(filePath);
-        using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-
-        var savedCount = 0;
-
-        foreach (var recordBatch in csv.GetRecords<RawData>().Batch(10000))
+        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            await context.AddRangeAsync(recordBatch);
-            savedCount += await context.SaveChangesAsync();
+            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
+            MissingFieldFound = null,
+            BadDataFound = null // Ignore bad data instead of throwing
+        };
+        using var csv = new CsvReader(reader, csvConfig);
+        csv.Context.RegisterClassMap<RawDataMap>();
+
+        var records = new List<RawData>();
+        await foreach (var record in csv.GetRecordsAsync<RawData>())
+        {
+            // Skip records with invalid or missing critical data
+            if (IsValidRecord(record))
+            {
+                records.Add(record);
+            }
         }
 
-        return savedCount;
+        return records;
     }
 
-
+    private static bool IsValidRecord(RawData record)
+    {
+        // Check if essential fields have valid values
+        return !string.IsNullOrWhiteSpace(record.Date) &&
+               !string.IsNullOrWhiteSpace(record.Symbol) &&
+               record.Close > 0; // At minimum, we need a valid close price
+    }
 }

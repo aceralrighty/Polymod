@@ -4,5 +4,5 @@ namespace TBD.GenericDBProperties;
 
 public abstract class BaseTableProperties : DateableObject, IWithId
 {
-    [Key] public Guid Id { get; set; }
+    [Key] public virtual Guid Id { get; set; }
 }

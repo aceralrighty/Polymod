@@ -10,6 +10,8 @@ using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.Utils.EntityMappers;
 using TBD.StockPredictionModule;
+using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.PipelineOrchestrator;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
 
@@ -82,6 +84,10 @@ if (app.Environment.IsDevelopment())
                 includeRatings: true);
             Console.WriteLine("✅ Recommendation Seeding and Training complete!");
             await Task.Delay(1000);
+
+            var prediction = scopedServices.GetRequiredService<StockPredictionPipeline>();
+            await prediction.ExecuteFullPipelineAsync("StockPredictionModule/Dataset/all_stocks_5yr.csv", "AAPL");
+            Console.WriteLine("✅ Does it get here?");
         }
 
         Console.WriteLine("🎉 All startup tasks complete!");

@@ -2,8 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 using TBD.StockPredictionModule.Context;
+using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.PipelineOrchestrator;
+using TBD.StockPredictionModule.PipelineOrchestrator.Interface;
 using TBD.StockPredictionModule.Repository;
 using TBD.StockPredictionModule.Repository.Interfaces;
 
@@ -27,6 +30,10 @@ public static class StockModule
 
         services.AddScoped<IStockRepository, StockRepository>();
         services.AddScoped<IStockPredictionRepository, StockPredictionRepository>();
+        services.AddScoped<IStockPredictionPipeline, StockPredictionPipeline>();
+        services.AddScoped<LoadCsvData>();
+        services.AddScoped<DataTransformation>();
+        services.AddScoped<StockPredictionPipeline>();
 
         services.AddScoped<MlStockPredictionEngine>();
 
