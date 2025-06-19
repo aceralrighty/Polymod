@@ -7,6 +7,8 @@ public class StockPrediction: BaseTableProperties
 {
     [ColumnName("Score")]
     public float Price { get; set; }
+    [ColumnName("Company Symbol")]
+    public string Symbol { get; set; }
 
     [NoColumn]
     public Guid BatchId { get; set; }

@@ -95,6 +95,7 @@ public class MlStockPredictionEngine
         var result = new StockPrediction
         {
             Id = Guid.NewGuid(),
+            Symbol = symbol,
             BatchId = Guid.NewGuid(),
             Price = prediction.Price, // This should work now
             CreatedAt = DateTime.UtcNow,
