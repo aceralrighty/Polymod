@@ -66,6 +66,9 @@ public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactor
                 featureColumnName: "Features"));
 
         _model = pipeline.Fit(trainTestSplit.TrainSet);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         _predictionEngine = MlContext.Model.CreatePredictionEngine<StockFeatureVector, StockPrediction>(_model);
 
         _metricsService.IncrementCounter("stock.train_model.success");
