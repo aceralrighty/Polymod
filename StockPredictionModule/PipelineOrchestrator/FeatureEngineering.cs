@@ -7,7 +7,7 @@ public static class FeatureEngineering
     public static List<StockFeatureVector> GenerateFeatures(List<RawData> rawData)
     {
         var result = new List<StockFeatureVector>();
-        var grouped = rawData.Where(r => r.Close > 0 && r.Volume > 0).GroupBy(r => r.Symbol);
+        var grouped = rawData.Where(r => r is { Close: > 0, Volume: > 0 }).GroupBy(r => r.Symbol);
 
         foreach (var group in grouped)
         {

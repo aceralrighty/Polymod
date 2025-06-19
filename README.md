@@ -1,8 +1,12 @@
 # TBD Modular Monolith (.NET Learning Project)
 
-This is a personal project aimed at deepening my understanding of the `.NET framework`, `Entity Framework Core`, and building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application for better scalability, maintainability, and eventual transition toward microservices.
+This is a personal project aimed at deepening my understanding of the `.NET framework`, `Entity Framework Core`, and
+building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application for
+better scalability, maintainability, and eventual transition toward microservices.
 
-Each module encapsulates its own domain: Authentication, User, Address, Schedule, Service, Metrics, Recommendations, and **Stock Prediction**—each with its own DbContext, models, repositories, and services. Logging, seeding, and testing are also organized per module.
+Each module encapsulates its own domain: Authentication, User, Address, Schedule, Service, Metrics, Recommendations, and
+**Stock Prediction**—each with its own DbContext, models, repositories, and services. Logging, seeding, and testing are
+also organized per module.
 
 ---
 
@@ -99,6 +103,7 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 ## 🚀 Key Features & Recent Additions
 
 ### ✅ **Complete Modular Architecture**
+
 - **8 Core Modules**: Auth, User, Address, Schedule, Service, Recommendation, Metrics, **Stock Prediction**
 - **Independent DbContexts**: Each module manages its own database context and migrations
 - **Separation of Concerns**: Controllers, repositories, services, and models are module-specific
@@ -106,6 +111,7 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 - **Design-Time Factories**: Complete EF Core migration support for all modules
 
 ### 🆕 **Advanced ML Stock Prediction System**
+
 - **Production-Ready ML Pipeline**: Complete ML.NET implementation with feature engineering
 - **Massive Dataset Processing**: **619,040 records** across 5 years of stock data (50k+ lines)
 - **Exceptional Accuracy**: **RMSE: 14.50, R²: 97.78%** - Industry-leading performance
@@ -115,18 +121,20 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 - **Pipeline Orchestration**: Complete `StockPredictionPipeline` with automated workflows
 
 #### 📈 **ML Performance Highlights**
+
 ```
-📊 Evaluation RMSE: 14.50, R²: 97.78%
+📊 Evaluation RMSE: 14.76, R²: 97.70%
 🔮 Real-time Predictions:
-   • AAL: Predicted $50.96, Actual $51.40, Error: 0.9%
-   • AAPL: Predicted $164.84, Actual $159.54, Error: 3.3%
-   • AAP: Predicted $114.32, Actual $109.93, Error: 4.0%
-   • ABBV: Predicted $109.73, Actual $113.62, Error: 3.4%
-   • ABC: Predicted $93.51, Actual $94.22, Error: 0.8%
-📊 Average prediction error: 2.5% - 🟢 EXCELLENT
+   • AAL: Predicted $51.83, Actual $51.40, Error: 0.8%
+   • AAPL: Predicted $165.12, Actual $159.54, Error: 3.5%
+   • AAP: Predicted $113.82, Actual $109.93, Error: 3.5%
+   • ABBV: Predicted $109.93, Actual $113.62, Error: 3.2%
+   • ABC: Predicted $93.55, Actual $94.22, Error: 0.7%
+📊 Average prediction error: 2.4% - 🟢 GOOD
 ```
 
 ### ✅ **Advanced Recommendation System**
+
 - **ML-Ready Infrastructure**: Complete scaffolding with `MLRecommendationEngine`
 - **Analytics Models**: `RecommendationAnalytics`, `ServiceRating`, `ServiceRatingPrediction`
 - **Background Training Service**: `ModelTrainingBackgroundService` for automated ML model updates
@@ -134,6 +142,7 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 - **Comprehensive Data Models**: `RecommendationOutput`, `UserRecommendation` for complete tracking
 
 ### ✅ **Robust Data Management**
+
 - **Generic Repository Pattern**: Shared base repository with caching decorators
 - **Comprehensive Seeding**: Deterministic seeding across all 8 modules with real data relationships
 - **Complete Migration Support**: All modules have independent migration paths
@@ -141,12 +150,14 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 - **Advanced Configuration**: Entity-specific configurations for complex relationships
 
 ### ✅ **Enterprise-Level Caching**
+
 - **Repository Caching Decorator**: Transparent caching layer with `CachingRepositoryDecorator`
 - **Concurrent Collections**: Thread-safe utilities (`ConcurrentHashSet`)
 - **Configurable Cache Options**: Module-specific caching strategies
 - **Performance Optimization**: In-memory caching for frequently accessed data
 
 ### ✅ **Comprehensive Metrics & Monitoring**
+
 - **Advanced Metrics Service**: `MetricsCollector`, `MetricsService`, `MetricsServiceFactory`
 - **Detailed Module Logging**: Individual log files for all 8 modules with daily rotation
 - **Seeding Statistics**: Comprehensive logging of seeding operations and performance
@@ -154,6 +165,7 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 - **Factory Pattern**: Centralized metrics service creation and dependency injection
 
 ### ✅ **Extensive Testing Infrastructure**
+
 - **Multi-Module Testing**: Complete test coverage across all major services
 - **Repository Testing**: Generic repository and caching decorator validation
 - **Service Layer Testing**: Business logic validation for authentication, recommendations, ML predictions
@@ -182,7 +194,9 @@ Each module encapsulates its own domain: Authentication, User, Address, Schedule
 ## 🏗️ Architecture Highlights
 
 ### Modular Design
+
 Each module follows a consistent, enterprise-ready structure:
+
 - **Controllers**: API endpoints and request handling
 - **Data**: DbContext with entity configurations
 - **Models**: Domain entities with complex relationships
@@ -192,6 +206,7 @@ Each module follows a consistent, enterprise-ready structure:
 - **Exceptions**: Custom, module-specific exception types
 
 ### Machine Learning Pipeline
+
 - **Feature Engineering**: Advanced technical indicators and time-series features
 - **Pipeline Orchestration**: Automated ML workflows with `StockPredictionPipeline`
 - **Large Dataset Handling**: Efficient processing of 619k+ records
@@ -199,12 +214,14 @@ Each module follows a consistent, enterprise-ready structure:
 - **Model Validation**: Comprehensive accuracy testing with industry-standard metrics
 
 ### Cross-Cutting Concerns
+
 - **Advanced Utilities**: JWT generation, secure hashing, comprehensive AutoMapper profiles
 - **Generic Repository**: Base repository pattern with CRUD and caching
 - **Caching Infrastructure**: Multi-layer caching with concurrent collections
 - **Metrics Collection**: Real-time performance and usage analytics across all modules
 
 ### Database Architecture
+
 - **8 Independent DbContexts**: Complete separation of concerns
 - **Design-Time Factories**: Full EF Core tooling support
 - **Complex Relationships**: Cross-module entity relationships with proper configuration
@@ -214,16 +231,16 @@ Each module follows a consistent, enterprise-ready structure:
 
 ## 📈 Current Module Status
 
-| Module             | Status     | Key Features                                                                 |
-|--------------------|------------|------------------------------------------------------------------------------|
-| **Auth**           | ✅ Complete | JWT tokens, secure registration, custom exceptions, seeding                  |
-| **User**           | ✅ Complete | User profiles, relationships, comprehensive management                       |
-| **Address**        | ✅ Complete | Geographic management, city/state grouping, custom exceptions                |
-| **Schedule**       | ✅ Complete | User scheduling, availability, statistics tracking                           |
-| **Service**        | ✅ Complete | Service catalog, CRUD operations, relationship management                    |
-| **Recommendation** | ✅ Advanced | ML infrastructure, analytics, background training, real-time recommendations |
-| **StockPrediction**| 🆕 **Advanced** | **ML.NET pipeline, 619k records, 97.78% R², 2.5% avg error**           |
-| **Metrics**        | ✅ Complete | Real-time monitoring, factory pattern, comprehensive logging                 |
+| Module              | Status          | Key Features                                                                 |
+|---------------------|-----------------|------------------------------------------------------------------------------|
+| **Auth**            | ✅ Complete      | JWT tokens, secure registration, custom exceptions, seeding                  |
+| **User**            | ✅ Complete      | User profiles, relationships, comprehensive management                       |
+| **Address**         | ✅ Complete      | Geographic management, city/state grouping, custom exceptions                |
+| **Schedule**        | ✅ Complete      | User scheduling, availability, statistics tracking                           |
+| **Service**         | ✅ Complete      | Service catalog, CRUD operations, relationship management                    |
+| **Recommendation**  | ✅ Advanced      | ML infrastructure, analytics, background training, real-time recommendations |
+| **StockPrediction** | 🆕 **Advanced** | **ML.NET pipeline, 619k records, 97.78% R², 2.5% avg error**                 |
+| **Metrics**         | ✅ Complete      | Real-time monitoring, factory pattern, comprehensive logging                 |
 
 ---
 
@@ -244,18 +261,21 @@ Each module follows a consistent, enterprise-ready structure:
 ## 📦 What's Next
 
 ### Short Term
+
 - 🔄 **Advanced ML Features**: Implement ensemble models and real-time market data integration
 - 🔲 **API Documentation**: Complete Swagger UI integration with all endpoints
 - 🔲 **Redis Integration**: External caching layer for production performance
 - 🔲 **Integration Testing**: End-to-end testing across all modules
 
 ### Medium Term
+
 - 🔲 **Trading Strategy Engine**: Algorithmic trading based on ML predictions
 - 🔲 **Real-time Features**: SignalR integration for live stock updates and recommendations
 - 🔲 **Performance Optimization**: Database indexing and query optimization
 - 🔲 **Security Enhancements**: Advanced authentication and rate limiting
 
 ### Long Term
+
 - 🔲 **Microservices Migration**: Gradual transition from modular monolith
 - 🔲 **Event Sourcing**: Event-driven architecture with cross-module communication
 - 🔲 **Cloud Deployment**: Azure/AWS with CI/CD and container orchestration
