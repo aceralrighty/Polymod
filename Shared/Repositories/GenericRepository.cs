@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using Dapper;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace TBD.Shared.Repositories;
@@ -65,5 +67,55 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         var table = entityType.GetTableName();
 
         return !string.IsNullOrWhiteSpace(schema) ? $"{schema}.{table}" : table!;
+    }
+
+    public async Task BulkInsertAsync(IEnumerable<T> entities)
+    {
+        var enumerable = entities as T[] ?? entities.ToArray();
+        if (enumerable.Length == 0)
+            return;
+
+        var tableName = GetTableName();
+
+        // Get connection
+        if (_dbConnection.State != ConnectionState.Open)
+            await ((DbConnection)_dbConnection).OpenAsync();
+
+        using var sqlBulk = new SqlBulkCopy((SqlConnection)_dbConnection, SqlBulkCopyOptions.Default, null);
+        sqlBulk.DestinationTableName = tableName;
+        sqlBulk.BatchSize = 1000;
+
+        var table = ToDataTable(enumerable);
+
+        // Map columns automatically
+        foreach (DataColumn column in table.Columns)
+        {
+            sqlBulk.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+        }
+
+        await sqlBulk.WriteToServerAsync(table);
+    }
+
+
+    private DataTable ToDataTable(IEnumerable<T> data)
+    {
+        var table = new DataTable();
+        var props = typeof(T).GetProperties()
+            .Where(p => p.CanRead && p.GetCustomAttributes(typeof(NotMappedAttribute), true).Length == 0)
+            .ToArray();
+
+        foreach (var prop in props)
+        {
+            var type = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+            table.Columns.Add(prop.Name, type);
+        }
+
+        foreach (var item in data)
+        {
+            var values = props.Select(p => p.GetValue(item) ?? DBNull.Value).ToArray();
+            table.Rows.Add(values);
+        }
+
+        return table;
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
+using TBD.Shared.Utils.EntityMappers;
 using TBD.StockPredictionModule.Context;
 using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML;
