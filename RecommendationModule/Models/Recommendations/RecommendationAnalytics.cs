@@ -1,4 +1,4 @@
-namespace TBD.RecommendationModule.Models;
+namespace TBD.RecommendationModule.Models.Recommendations;
 
 public class RecommendationAnalytics
 {

@@ -6,6 +6,7 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.Models.Recommendations;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
 

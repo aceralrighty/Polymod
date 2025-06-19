@@ -1,4 +1,4 @@
-using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.Models.Recommendations;
 using TBD.Shared.Repositories;
 
 namespace TBD.RecommendationModule.Repositories.Interfaces;

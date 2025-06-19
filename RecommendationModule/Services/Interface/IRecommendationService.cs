@@ -1,6 +1,6 @@
 using TBD.ServiceModule.Models;
 
-namespace TBD.RecommendationModule.Services;
+namespace TBD.RecommendationModule.Services.Interface;
 
 public interface IRecommendationService
 {

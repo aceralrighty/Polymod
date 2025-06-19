@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TBD.RecommendationModule.Data;
-using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.Models.Recommendations;
 
 namespace TBD.RecommendationModule.Controllers;
 

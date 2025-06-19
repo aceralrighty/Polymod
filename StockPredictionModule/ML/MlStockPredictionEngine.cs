@@ -1,11 +1,12 @@
 using Microsoft.ML;
 using TBD.MetricsModule.Services;
+using TBD.StockPredictionModule.ML.Interface;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.PipelineOrchestrator;
 
 namespace TBD.StockPredictionModule.ML;
 
-public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactory)
+public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactory) : IMlStockPredictionEngine
 {
     private static readonly MLContext MlContext = new(seed: 0);
     private ITransformer? _model;
@@ -151,7 +152,7 @@ public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactor
         return Task.FromResult(result);
     }
 
-    private List<RawData> CleanTrainingData(List<RawData> rawData)
+    public List<RawData> CleanTrainingData(List<RawData> rawData)
     {
         return rawData.Where(r =>
             r is { Open: > 0, High: > 0, Low: > 0, Close: > 0, Volume: > 0 } &&

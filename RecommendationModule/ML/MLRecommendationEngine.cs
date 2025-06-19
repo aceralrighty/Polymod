@@ -1,10 +1,12 @@
 using Microsoft.ML;
 using Microsoft.ML.Trainers;
 using TBD.MetricsModule.Services;
+using TBD.RecommendationModule.ML.Interface;
 using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.Models.Recommendations;
 using TBD.RecommendationModule.Repositories.Interfaces;
 
-namespace TBD.RecommendationModule.Repositories;
+namespace TBD.RecommendationModule.ML;
 
 /// <summary>
 /// The MlRecommendationEngine class provides functionality for generating

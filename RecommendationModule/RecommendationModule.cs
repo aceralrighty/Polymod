@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
 using TBD.RecommendationModule.Data;
-using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.ML;
+using TBD.RecommendationModule.ML.Interface;
+using TBD.RecommendationModule.Models.Recommendations;
 using TBD.RecommendationModule.Repositories;
 using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.RecommendationModule.Seed;
 using TBD.RecommendationModule.Services;
+using TBD.RecommendationModule.Services.BackgroundProcesses;
+using TBD.RecommendationModule.Services.Interface;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
 

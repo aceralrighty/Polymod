@@ -1,4 +1,6 @@
-namespace TBD.RecommendationModule.Services;
+using TBD.RecommendationModule.Services.Interface;
+
+namespace TBD.RecommendationModule.Services.BackgroundProcesses;
 
 internal class ModelTrainingBackgroundService(
     IServiceProvider serviceProvider,

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TBD.RecommendationModule.Models;
+using TBD.RecommendationModule.Models.Recommendations;
 
 namespace TBD.RecommendationModule.Data.Configuration.Recommendation;
 
