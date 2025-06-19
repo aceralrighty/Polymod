@@ -2,7 +2,7 @@ using TBD.StockPredictionModule.Models;
 
 namespace TBD.StockPredictionModule.Load;
 
-public class DataTransformation
+public class StockEntityMapper
 {
     public List<Stock> TransformRawDataToStocks(List<RawData> rawData)
     {

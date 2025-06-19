@@ -86,7 +86,7 @@ if (app.Environment.IsDevelopment())
             await Task.Delay(1000);
 
             var prediction = scopedServices.GetRequiredService<StockPredictionPipeline>();
-            await prediction.ExecuteFullPipelineAsync("StockPredictionModule/Dataset/all_stocks_5yr.csv", "AJG");
+            await prediction.ExecuteFullPipelineAsync("StockPredictionModule/Dataset/all_stocks_5yr.csv");
             Console.WriteLine("✅ Prediction complete!");
         }
 

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.ML.Data;
 using TBD.GenericDBProperties;
 
