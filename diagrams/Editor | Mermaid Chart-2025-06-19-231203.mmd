@@ -1,0 +1,9 @@
+flowchart TD
+    A["📄 data.csv"] --> B["🧾 LoadCsvData (parser)"]
+    B --> C["🔃 Group by Symbol"]
+    C --> D["🧠 Train Model (MLStockPredictionEngine)"]
+    D --> E["📏 Perform Quick Accuracy Check"]
+    E --> F["📊 Generate Predictions (per symbol)"]
+    F --> G["🧮 GenerateFeatures (StockFeatureVectors)"]
+    G --> H["💾 Save Predictions to DB"]
+    G --> I["📥 Save Stocks to DB"]

@@ -120,6 +120,10 @@ also organized per module.
 - **Feature Engineering**: Advanced `FeatureEngineering` with technical indicators
 - **Pipeline Orchestration**: Complete `StockPredictionPipeline` with automated workflows
 
+## 🔄 Pipeline Flow Overview
+
+![Prediction Pipeline Flow](diagrams/Pipeline.png)
+
 #### 📈 **ML Performance Highlights**
 
 ```
