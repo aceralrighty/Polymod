@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.Shared.Repositories;
 using TBD.StockPredictionModule.Context;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.Repository.Interfaces;
 
 namespace TBD.StockPredictionModule.Repository;

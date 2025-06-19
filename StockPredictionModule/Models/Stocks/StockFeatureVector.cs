@@ -1,4 +1,4 @@
-namespace TBD.StockPredictionModule.Models;
+namespace TBD.StockPredictionModule.Models.Stocks;
 
 public class StockFeatureVector
 {

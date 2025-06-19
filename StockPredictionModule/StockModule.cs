@@ -7,6 +7,7 @@ using TBD.StockPredictionModule.Context;
 using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.PipelineOrchestrator;
 using TBD.StockPredictionModule.PipelineOrchestrator.Interface;
 using TBD.StockPredictionModule.Repository;

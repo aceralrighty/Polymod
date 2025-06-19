@@ -2,6 +2,7 @@ using Microsoft.ML;
 using TBD.MetricsModule.Services;
 using TBD.StockPredictionModule.ML.Interface;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.PipelineOrchestrator;
 
 namespace TBD.StockPredictionModule.ML;

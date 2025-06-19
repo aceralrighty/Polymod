@@ -2,6 +2,7 @@ using TBD.Shared.Utils.EntityMappers;
 using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML;
 using TBD.StockPredictionModule.Models;
+using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.PipelineOrchestrator.Interface;
 using TBD.StockPredictionModule.Repository;
 using TBD.StockPredictionModule.Repository.Interfaces;
@@ -52,7 +53,7 @@ public class StockPredictionPipeline(
 
                     // Generate prediction for this symbol
                     var prediction = await mlEngine.GeneratePredictAsync(rawData, symbol);
-                    prediction.BatchId = batchId; // Set consistent batch ID
+                    prediction.BatchId = batchId; // Set a consistent batch ID
 
                     allPredictions.Add(prediction);
                     Console.WriteLine($"✅ Prediction for {symbol}: ${prediction.Price:F2}");
@@ -87,11 +88,8 @@ public class StockPredictionPipeline(
         var totalError = 0.0;
         var testCount = 0;
 
-        foreach (var symbolData in testSymbols)
+        foreach (var (symbol, historicalData) in testSymbols)
         {
-            var symbol = symbolData.Key;
-            var historicalData = symbolData.Value;
-
             if (historicalData.Count < 10) continue; // Need enough data
 
             // Use second-to-last record to predict last record
