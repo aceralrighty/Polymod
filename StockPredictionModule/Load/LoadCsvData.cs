@@ -35,7 +35,6 @@ public class LoadCsvData
 
     private static bool IsValidRecord(RawData record)
     {
-        // Check if essential fields have valid values
         return !string.IsNullOrWhiteSpace(record.Date) &&
                !string.IsNullOrWhiteSpace(record.Symbol) &&
                record.Close > 0; // At minimum, we need a valid close price

@@ -19,15 +19,14 @@ public class StockEntityMapper
             CreatedAt = raw.CreatedAt,
             UpdatedAt = raw.UpdatedAt,
             DeletedAt = raw.DeletedAt,
-            UserId = ConvertToInt(Guid.NewGuid()),
-            StockId = ConvertToInt(Guid.NewGuid()),
+            UserId = HashGuid(Guid.NewGuid()),
+            StockId = HashGuid(Guid.NewGuid()),
             Price = raw.Close,
         }).ToList();
     }
 
-    private int ConvertToInt(Guid id)
+    private float HashGuid(Guid guid)
     {
-        var bytes = id.ToByteArray();
-        return Math.Abs(BitConverter.ToInt32(bytes, 0));
+        return Math.Abs(guid.GetHashCode()) % 100000;
     }
 }
