@@ -7,9 +7,9 @@ public abstract class DateableObject
 {
     [DisplayName("Created At")]
     [DisplayFormat(DataFormatString = "{0:d}")]
-    public DateTime CreatedAt { get; set; }
+    public virtual DateTime CreatedAt { get; set; }
 
-    [DisplayName("Update At")] public DateTime UpdatedAt { get; set; }
+    [DisplayName("Update At")] public virtual DateTime UpdatedAt { get; set; }
 
-    [DisplayName("Deleted At")] public DateTime? DeletedAt { get; set; }
+    [DisplayName("Deleted At")] public virtual DateTime? DeletedAt { get; set; }
 }

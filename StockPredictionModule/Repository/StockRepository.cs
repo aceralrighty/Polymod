@@ -6,15 +6,16 @@ using TBD.StockPredictionModule.Repository.Interfaces;
 
 namespace TBD.StockPredictionModule.Repository;
 
-public class StockRepository(StockDbContext context): GenericRepository<RawData>(context), IStockRepository
+public class StockRepository(StockDbContext context) : GenericRepository<RawData>(context), IStockRepository
 {
     public async Task<RawData?> GetByTableIdAsync(Guid id)
     {
         return await DbSet.FirstOrDefaultAsync(f => f.Id == id);
     }
 
-    public async Task SaveChangesAsync()
+    public async Task SaveStockAsync(List<Stock> stock)
     {
+        await context.Stocks.AddRangeAsync(stock);
         await context.SaveChangesAsync();
     }
 
