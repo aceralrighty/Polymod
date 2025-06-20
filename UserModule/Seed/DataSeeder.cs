@@ -84,7 +84,7 @@ public static class DataSeeder
                     $"⚠️ WARNING: Expected {seededUsers.Count} users but found {userCountAfterSeeding} in database!");
             }
 
-            // List first few users for verification
+            // List the first few users for verification
             var usersInDb = await userContext.Set<User>().Take(3).Select(u => new { u.Id, u.Username }).ToListAsync();
             Console.WriteLine("📝 Users in database:");
             foreach (var user in usersInDb)
@@ -213,9 +213,9 @@ public static class DataSeeder
 
         var addresses = new List<UserAddress>
         {
-            new(users[0].Id, users[0], "123 Main St", "Apt 1", "New York", "NY", "10001") { Id = Guid.NewGuid() },
-            new(users[1].Id, users[1], "456 Oak Ave", null, "Boston", "MA", "02108") { Id = Guid.NewGuid() },
-            new(users[2].Id, users[2], "789 Pine Rd", "Suite 300", "Chicago", "IL", "60601") { Id = Guid.NewGuid() }
+            new(users[0]!.Id, users[0], "123 Main St", "Apt 1", "New York", "NY", "10001") { Id = Guid.NewGuid() },
+            new(users[1]!.Id, users[1], "456 Oak Ave", null, "Boston", "MA", "02108") { Id = Guid.NewGuid() },
+            new(users[2]!.Id, users[2], "789 Pine Rd", "Suite 300", "Chicago", "IL", "60601") { Id = Guid.NewGuid() }
         };
 
         await addressContext.UserAddress.AddRangeAsync(addresses);

@@ -144,7 +144,7 @@ public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactor
             Symbol = symbol,
             BatchId = Guid.NewGuid(),
             PredictedPrice = Math.Max(0.01f, predicted.PredictedPrice),
-            CreatedAt = DateTime.Today,
+            CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.UtcNow,
             DeletedAt = null
         };
