@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.ML.Data;
 using TBD.GenericDBProperties;
 
@@ -17,6 +18,7 @@ public class StockPrediction: BaseTableProperties
     public override Guid Id { get; set; }
 
     [NoColumn]
+    [DisplayFormat(DataFormatString = "{0:d}")]
     public override DateTime CreatedAt { get; set; }
 
     [NoColumn]
