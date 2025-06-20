@@ -10,7 +10,6 @@ using TBD.ServiceModule;
 using TBD.ServiceModule.Seed;
 using TBD.Shared.EntityMappers;
 using TBD.StockPredictionModule;
-using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.PipelineOrchestrator;
 using TBD.UserModule;
 using TBD.UserModule.Seed;

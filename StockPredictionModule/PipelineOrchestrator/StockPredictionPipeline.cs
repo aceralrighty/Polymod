@@ -4,7 +4,6 @@ using TBD.StockPredictionModule.ML;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.PipelineOrchestrator.Interface;
-using TBD.StockPredictionModule.Repository;
 using TBD.StockPredictionModule.Repository.Interfaces;
 
 namespace TBD.StockPredictionModule.PipelineOrchestrator;

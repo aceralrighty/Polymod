@@ -5,7 +5,7 @@ using CsvHelper.TypeConversion;
 
 namespace TBD.Shared.EntityMappers;
 
-public abstract class NullableFloatConverter : SingleConverter
+public class NullableFloatConverter : SingleConverter
 {
     public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
     {
