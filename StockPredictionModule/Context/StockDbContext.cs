@@ -9,8 +9,6 @@ public class StockDbContext : DbContext
 {
     public StockDbContext(DbContextOptions<StockDbContext> options) : base(options) { }
     public StockDbContext() { }
-
-    public DbSet<RawData> StockData { get; set; }
     public DbSet<Stock> Stocks { get; set; }
     public DbSet<StockPrediction> StockPredictions { get; set; }
 
@@ -24,7 +22,6 @@ public class StockDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new RawDataConfiguration());
         modelBuilder.ApplyConfiguration(new StockPredictionConfiguration());
     }
 

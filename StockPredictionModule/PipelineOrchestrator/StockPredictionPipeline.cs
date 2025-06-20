@@ -11,7 +11,8 @@ namespace TBD.StockPredictionModule.PipelineOrchestrator;
 public class StockPredictionPipeline(
     StockEntityMapper entityMapper,
     MlStockPredictionEngine mlEngine,
-    IStockPredictionRepository stockPredictionRepository, IStockRepository stockRepository)
+    IStockPredictionRepository stockPredictionRepository,
+    IStockRepository stockRepository)
     : IStockPredictionPipeline
 {
     public async Task<List<StockPrediction>> ExecuteFullPipelineAsync(string csvFilePath)
@@ -55,7 +56,7 @@ public class StockPredictionPipeline(
                     prediction.BatchId = batchId; // Set a consistent batch ID
 
                     allPredictions.Add(prediction);
-                    Console.WriteLine($"✅ Prediction for {symbol}: ${prediction.Price:F2}");
+                    Console.WriteLine($"✅ Prediction for {symbol}: ${prediction.PredictedPrice:F2}");
                 }
                 catch (Exception ex)
                 {
@@ -63,6 +64,7 @@ public class StockPredictionPipeline(
                     // Continue with other symbols
                 }
             }
+
             var stonks = entityMapper.TransformRawDataToStocks(rawData);
 
             Console.WriteLine($"Step 6: Saving {allPredictions.Count} predictions to database...");
@@ -92,7 +94,6 @@ public class StockPredictionPipeline(
             if (historicalData.Count < 10) continue; // Need enough data
 
             // Use second-to-last record to predict last record
-            var secondLast = historicalData[^2];
             var actual = historicalData[^1];
 
             try
@@ -100,14 +101,14 @@ public class StockPredictionPipeline(
                 var testData = historicalData.Take(historicalData.Count - 1).ToList();
                 var prediction = await mlEngine.GeneratePredictAsync(testData, symbol);
 
-                var error = Math.Abs(prediction.Price - actual.Close);
+                var error = Math.Abs(prediction.PredictedPrice - actual.Close);
                 var percentageError = (error / actual.Close) * 100;
 
                 totalError += percentageError;
                 testCount++;
 
                 Console.WriteLine(
-                    $"   {symbol}: Predicted ${prediction.Price:F2}, Actual ${actual.Close:F2}, Error: {percentageError:F1}%");
+                    $"   {symbol}: Predicted ${prediction.PredictedPrice:F2}, Actual ${actual.Close:F2}, Error: {percentageError:F1}%");
             }
             catch (Exception ex)
             {
