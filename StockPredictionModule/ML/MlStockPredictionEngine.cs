@@ -135,7 +135,7 @@ public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactor
 
         var predicted = _predictionEngine.Predict(input);
 
-        _metricsService.IncrementCounter($"stock.prediction.predicted_price{predicted.Price:F2}");
+        _metricsService.IncrementCounter($"stock.prediction.predicted_price{predicted.PredictedPrice:F2}");
         _metricsService.IncrementCounter("stock.prediction.success");
 
         var result = new StockPrediction
@@ -143,13 +143,13 @@ public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactor
             Id = Guid.NewGuid(),
             Symbol = symbol,
             BatchId = Guid.NewGuid(),
-            Price = Math.Max(0.01f, predicted.Price),
+            PredictedPrice = Math.Max(0.01f, predicted.PredictedPrice),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
             DeletedAt = null
         };
 
-        Console.WriteLine($"🔮 {symbol}: Predicted next close = ${result.Price:F2}");
+        Console.WriteLine($"🔮 {symbol}: Predicted next close = ${result.PredictedPrice:F2}");
 
         return Task.FromResult(result);
     }

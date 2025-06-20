@@ -32,7 +32,7 @@ public class StockPredictionRepository(StockDbContext context)
                 stockPrediction.UpdatedAt = DateTime.UtcNow;
 
             await context.StockPredictions.AddAsync(stockPrediction);
-            Console.WriteLine($"Added stock prediction record for ${stockPrediction.Price:F2}");
+            Console.WriteLine($"Added stock prediction record for ${stockPrediction.PredictedPrice:F2}");
 
             var savedCount = await context.SaveChangesAsync();
             Console.WriteLine($"Successfully saved {savedCount} stock prediction record");

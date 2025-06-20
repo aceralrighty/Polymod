@@ -6,7 +6,7 @@ namespace TBD.StockPredictionModule.Models.Stocks;
 public class StockPrediction: BaseTableProperties
 {
     [ColumnName("Score")]
-    public float Price { get; set; }
+    public float PredictedPrice { get; set; }
     [ColumnName("Company Symbol")]
     public string Symbol { get; set; }
 
