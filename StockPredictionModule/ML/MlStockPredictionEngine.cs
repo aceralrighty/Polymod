@@ -7,11 +7,11 @@ using TBD.StockPredictionModule.PipelineOrchestrator;
 
 namespace TBD.StockPredictionModule.ML;
 
-public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactory, ITransformer? model)
+public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactory)
     : IMlStockPredictionEngine
 {
     private static readonly MLContext MlContext = new(seed: 0);
-    private ITransformer? _model = model;
+    private ITransformer? _model;
     private PredictionEngine<StockFeatureVector, StockPrediction>? _predictionEngine;
     private readonly IMetricsService _metricsService = metricsServiceFactory.CreateMetricsService("StockPrediction");
 
