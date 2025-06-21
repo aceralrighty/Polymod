@@ -1,4 +1,4 @@
-namespace TBD.MetricsModule.Services;
+namespace TBD.MetricsModule.Services.Interfaces;
 
 public interface IMetricsServiceFactory
 {

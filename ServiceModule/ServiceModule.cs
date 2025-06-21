@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.ServiceModule.Data;
 using TBD.ServiceModule.Models;
 using TBD.ServiceModule.Repositories;

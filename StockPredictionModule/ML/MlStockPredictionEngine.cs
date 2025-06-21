@@ -1,5 +1,6 @@
 using Microsoft.ML;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.StockPredictionModule.ML.Interface;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.Models.Stocks;

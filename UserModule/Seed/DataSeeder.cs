@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.ScheduleModule.Models;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;

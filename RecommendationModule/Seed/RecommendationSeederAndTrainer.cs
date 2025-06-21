@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.RecommendationModule.Data;
 using TBD.RecommendationModule.Models;
 using TBD.RecommendationModule.Models.Recommendations;

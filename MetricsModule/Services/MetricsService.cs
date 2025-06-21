@@ -1,4 +1,5 @@
 using Serilog;
+using TBD.MetricsModule.Services.Interfaces;
 using ILogger = Serilog.ILogger;
 
 namespace TBD.MetricsModule.Services;

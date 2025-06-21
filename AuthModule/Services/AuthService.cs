@@ -5,6 +5,7 @@ using TBD.AuthModule.Exceptions;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.Utils;
 
 namespace TBD.AuthModule.Services;
