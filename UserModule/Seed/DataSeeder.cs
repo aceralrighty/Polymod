@@ -102,7 +102,6 @@ public static class DataSeeder
             Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
             throw;
         }
-
     }
 
     private static async Task<List<User>> SeedUsersAsync(UserDbContext context, IMetricsService metricsService)
@@ -201,7 +200,7 @@ public static class DataSeeder
     {
         Console.WriteLine("🌱 Starting address seeding...");
 
-        List<User?> users = await context.Set<User>().ToListAsync();
+        var users = await context.Set<User>().ToListAsync();
         Console.WriteLine($"👥 Found {users.Count} users for address seeding");
 
         if (users.Count == 0)
@@ -213,9 +212,9 @@ public static class DataSeeder
 
         var addresses = new List<UserAddress>
         {
-            new(users[0]!.Id, users[0], "123 Main St", "Apt 1", "New York", "NY", "10001") { Id = Guid.NewGuid() },
-            new(users[1]!.Id, users[1], "456 Oak Ave", null, "Boston", "MA", "02108") { Id = Guid.NewGuid() },
-            new(users[2]!.Id, users[2], "789 Pine Rd", "Suite 300", "Chicago", "IL", "60601") { Id = Guid.NewGuid() }
+            new(users[0].Id, users[0], "123 Main St", "Apt 1", "New York", "NY", "10001") { Id = Guid.NewGuid() },
+            new(users[1].Id, users[1], "456 Oak Ave", null, "Boston", "MA", "02108") { Id = Guid.NewGuid() },
+            new(users[2].Id, users[2], "789 Pine Rd", "Suite 300", "Chicago", "IL", "60601") { Id = Guid.NewGuid() }
         };
 
         await addressContext.UserAddress.AddRangeAsync(addresses);
