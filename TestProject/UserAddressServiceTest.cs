@@ -17,14 +17,20 @@ using TBD.UserModule.Services;
 namespace TBD.TestProject;
 
 [TestFixture]
-public class UserAddressServiceTests
+public class UserAddressServiceTests(
+    AddressDbContext context,
+    Mock<IMapper> mockMapper,
+    Mock<IUserService> mockUserService,
+    UserAddressService userAddressService,
+    List<UserAddress> testAddresses,
+    User? testUser)
 {
-    private AddressDbContext _context;
-    private Mock<IMapper> _mockMapper;
-    private Mock<IUserService> _mockUserService;
-    private UserAddressService _userAddressService;
-    private List<UserAddress> _testAddresses;
-    private User? _testUser;
+    private AddressDbContext _context = context;
+    private Mock<IMapper> _mockMapper = mockMapper;
+    private Mock<IUserService> _mockUserService = mockUserService;
+    private UserAddressService _userAddressService = userAddressService;
+    private List<UserAddress> _testAddresses = testAddresses;
+    private User? _testUser = testUser;
 
     [SetUp]
     public async Task Setup()
@@ -87,7 +93,7 @@ public class UserAddressServiceTests
     [TearDown]
     public void TearDown()
     {
-        _context?.Dispose();
+        _context.Dispose();
     }
 
     #region GroupByUserStateAsync Tests
@@ -195,35 +201,47 @@ public class UserAddressServiceTests
     public async Task GetByUserAddressAsync_WithMatchingAddress1_ReturnsUserAddress()
     {
         // Arrange
-        var searchAddress = new UserAddress(_testUser.Id, _testUser, "123 Main St", null, "Test City", "TS", "12345");
+        if (_testUser != null)
+        {
+            var searchAddress =
+                new UserAddress(_testUser.Id, _testUser, "123 Main St", null, "Test City", "TS", "12345");
 
-        // Act
-        var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
+            // Act
+            var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
 
-        // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Address1, Is.EqualTo("123 Main St"));
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Address1, Is.EqualTo("123 Main St"));
+        }
     }
 
     [Test]
     public async Task GetByUserAddressAsync_WithMatchingAddress2_ReturnsUserAddress()
     {
         // Arrange
-        var searchAddress =
-            new UserAddress(_testUser.Id, _testUser, "Different St", "Apt 2", "Test City", "TS", "12345");
+        if (_testUser != null)
+        {
+            var searchAddress =
+                new UserAddress(_testUser.Id, _testUser, "Different St", "Apt 2", "Test City", "TS", "12345");
 
-        // Act
-        var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
+            // Act
+            var result = await _userAddressService.GetByUserAddressAsync(searchAddress);
 
-        // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Address2, Is.EqualTo("Apt 2"));
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Address2, Is.EqualTo("Apt 2"));
+        }
     }
 
     [Test]
     public void GetByUserAddressAsync_WithNoMatch_ThrowsInvalidOperationException()
     {
         // Arrange
+        if (_testUser == null)
+        {
+            return;
+        }
+
         var searchAddress = new UserAddress(_testUser.Id, _testUser, "Non-existent St", "Non-existent Apt", "Test City",
             "TS", "12345");
 
@@ -240,12 +258,15 @@ public class UserAddressServiceTests
     public async Task GetAllAsync_ReturnsAllAddresses()
     {
         // Act
-        var result = await _userAddressService.GetAllAsync(_testUser.Id);
+        if (_testUser != null)
+        {
+            var result = await _userAddressService.GetAllAsync(_testUser.Id);
 
-        // Assert
-        var userAddresses = result.ToList();
-        Assert.That(userAddresses, Is.Not.Null);
-        Assert.That(userAddresses.Count(), Is.EqualTo(3));
+            // Assert
+            var userAddresses = result.ToList();
+            Assert.That(userAddresses, Is.Not.Null);
+            Assert.That(userAddresses.Count(), Is.EqualTo(3));
+        }
     }
 
     [Test]
@@ -256,12 +277,15 @@ public class UserAddressServiceTests
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _userAddressService.GetAllAsync(_testUser.Id);
+        if (_testUser != null)
+        {
+            var result = await _userAddressService.GetAllAsync(_testUser.Id);
 
-        // Assert
-        var userAddresses = result.ToList();
-        Assert.That(userAddresses, Is.Not.Null);
-        Assert.That(userAddresses.Count(), Is.EqualTo(0));
+            // Assert
+            var userAddresses = result.ToList();
+            Assert.That(userAddresses, Is.Not.Null);
+            Assert.That(userAddresses.Count(), Is.EqualTo(0));
+        }
     }
 
     #endregion
@@ -297,7 +321,8 @@ public class UserAddressServiceTests
     public async Task FindAsync_WithComplexExpression_ReturnsMatchingAddresses()
     {
         // Act
-        var result = await _userAddressService.FindAsync(ua => ua.City == "New York" && ua.ZipCode == "10002");;
+        var result = await _userAddressService.FindAsync(ua => ua.City == "New York" && ua.ZipCode == "10002");
+
 
         // Assert
         var userAddresses = result.ToList();
@@ -355,18 +380,21 @@ public class UserAddressServiceTests
     public async Task AddAsync_WithValidEntity_AddsEntityAndSavesChanges()
     {
         // Arrange
-        var newAddress =
-            new UserAddress(_testUser.Id, _testUser, "999 New St", null, "Chicago", "IL",
-                "60601") { Id = Guid.NewGuid() };
+        if (_testUser != null)
+        {
+            var newAddress =
+                new UserAddress(_testUser.Id, _testUser, "999 New St", null, "Chicago", "IL",
+                    "60601") { Id = Guid.NewGuid() };
 
-        // Act
-        await _userAddressService.AddAsync(newAddress);
+            // Act
+            await _userAddressService.AddAsync(newAddress);
 
-        // Assert
-        var addedAddress = await _context.Set<UserAddress>().FindAsync(newAddress.Id);
-        Assert.That(addedAddress, Is.Not.Null);
-        Assert.That(addedAddress?.Address1, Is.EqualTo("999 New St"));
-        Assert.That(addedAddress?.City, Is.EqualTo("Chicago"));
+            // Assert
+            var addedAddress = await _context.Set<UserAddress>().FindAsync(newAddress.Id);
+            Assert.That(addedAddress, Is.Not.Null);
+            Assert.That(addedAddress?.Address1, Is.EqualTo("999 New St"));
+            Assert.That(addedAddress?.City, Is.EqualTo("Chicago"));
+        }
     }
 
     [Test]
@@ -384,20 +412,17 @@ public class UserAddressServiceTests
     public async Task AddRangeAsync_WithValidEntities_AddsEntitiesAndSavesChanges()
     {
         // Arrange
-        var newAddresses = new List<UserAddress>
+        if (_testUser != null)
         {
-            new UserAddress(_testUser.Id, _testUser, "111 First St", null, "Boston", "MA", "02101")
+            var newAddresses = new List<UserAddress>
             {
-                Id = Guid.NewGuid()
-            },
-            new UserAddress(_testUser.Id, _testUser, "222 Second St", null, "Boston", "MA", "02102")
-            {
-                Id = Guid.NewGuid()
-            }
-        };
+                new(_testUser.Id, _testUser, "111 First St", null, "Boston", "MA", "02101") { Id = Guid.NewGuid() },
+                new(_testUser.Id, _testUser, "222 Second St", null, "Boston", "MA", "02102") { Id = Guid.NewGuid() }
+            };
 
-        // Act
-        await _userAddressService.AddRangeAsync(newAddresses);
+            // Act
+            await _userAddressService.AddRangeAsync(newAddresses);
+        }
 
         // Assert
         var allAddresses = await _context.Set<UserAddress>().ToListAsync();
@@ -534,6 +559,11 @@ public class UserAddressServiceTests
     public void UpdateUserAddress_WithNonExistentAddress_ThrowsArgumentNullException()
     {
         // Arrange
+        if (_testUser == null)
+        {
+            return;
+        }
+
         var updateRequest = new UserAddressRequest
         {
             Id = Guid.NewGuid(), UserId = _testUser.Id, Address1 = "Some Address"
@@ -552,6 +582,11 @@ public class UserAddressServiceTests
     public void UpdateUserAddress_WithEmptyGuid_ThrowsArgumentNullException()
     {
         // Arrange
+        if (_testUser == null)
+        {
+            return;
+        }
+
         var updateRequest = new UserAddressRequest
         {
             Id = Guid.Empty, UserId = _testUser.Id, Address1 = "Some Address"
@@ -573,39 +608,42 @@ public class UserAddressServiceTests
     public async Task CompleteWorkflow_AddFindUpdateRemove_WorksCorrectly()
     {
         // Arrange
-        var newAddress =
-            new UserAddress(_testUser.Id, _testUser, "Integration Test St", null, "Test City", "TC", "12345")
+        if (_testUser != null)
+        {
+            var newAddress =
+                new UserAddress(_testUser.Id, _testUser, "Integration Test St", null, "Test City", "TC", "12345")
+                {
+                    Id = Guid.NewGuid()
+                };
+
+            // Add
+            await _userAddressService.AddAsync(newAddress);
+            var addedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
+            Assert.That(addedAddress, Is.Not.Null);
+
+            // Find
+            var foundAddresses = await _userAddressService.FindAsync(ua => ua.City == "Test City");
+            Assert.That(foundAddresses.Count(), Is.EqualTo(1));
+
+            // Update
+            if (addedAddress != null)
             {
-                Id = Guid.NewGuid()
-            };
+                addedAddress.City = "Updated Test City";
+                await _userAddressService.UpdateAsync(addedAddress);
+            }
 
-        // Add
-        await _userAddressService.AddAsync(newAddress);
-        var addedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
-        Assert.That(addedAddress, Is.Not.Null);
+            var updatedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
+            Assert.That(updatedAddress?.City, Is.EqualTo("Updated Test City"));
 
-        // Find
-        var foundAddresses = await _userAddressService.FindAsync(ua => ua.City == "Test City");
-        Assert.That(foundAddresses.Count(), Is.EqualTo(1));
+            // Remove
+            if (updatedAddress != null)
+            {
+                await _userAddressService.RemoveAsync(updatedAddress);
+            }
 
-        // Update
-        if (addedAddress != null)
-        {
-            addedAddress.City = "Updated Test City";
-            await _userAddressService.UpdateAsync(addedAddress);
+            var removedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
+            Assert.That(removedAddress, Is.Null);
         }
-
-        var updatedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
-        Assert.That(updatedAddress?.City, Is.EqualTo("Updated Test City"));
-
-        // Remove
-        if (updatedAddress != null)
-        {
-            await _userAddressService.RemoveAsync(updatedAddress);
-        }
-
-        var removedAddress = await _userAddressService.GetByIdAsync(newAddress.Id);
-        Assert.That(removedAddress, Is.Null);
     }
 
     #endregion

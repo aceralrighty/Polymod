@@ -9,16 +9,15 @@ namespace TBD.TestProject;
 
 [TestOf(typeof(Schedule))]
 [TestFixture]
-public class ScheduleTest
+public class ScheduleTest(ScheduleDbContext context)
 {
-    private ScheduleDbContext _context;
-
     #region Construction & Defaults
 
     [Test]
     public void Constructor_Default_SetsDefaults()
     {
-        var schedule = new Schedule();;
+        var schedule = new Schedule();
+        ;
 
         Assert.That(schedule.TotalHoursWorked, Is.Null);
         Assert.That(schedule.BasePay, Is.Null);
@@ -28,7 +27,6 @@ public class ScheduleTest
     [Test]
     public void Constructor_WithUser_SetsUserProperties()
     {
-
         var userMock = new User
         {
             Id = Guid.NewGuid(),
@@ -38,16 +36,11 @@ public class ScheduleTest
             Schedule = null
         };
 
-        var schedule = new Schedule
-        {
-            UserId = userMock.Id,
-            User = userMock
-        };
+        var schedule = new Schedule { UserId = userMock.Id, User = userMock };
 
         Assert.That(schedule.UserId, Is.EqualTo(userMock.Id));
         Assert.That(schedule.User, Is.EqualTo(userMock));
     }
-
 
     #endregion
 

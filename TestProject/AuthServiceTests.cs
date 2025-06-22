@@ -18,16 +18,24 @@ using TBD.Shared.Utils;
 namespace TBD.TestProject;
 
 [TestFixture]
-public class AuthServiceTests
+public class AuthServiceTests(
+    Mock<IAuthRepository> repositoryMock,
+    DbContextOptions<AuthDbContext> dbOptions,
+    AuthDbContext dbContext,
+    IConfiguration configuration,
+    Mock<ILogger<AuthService>> loggerMock,
+    Mock<IHasher> hasherMock,
+    AuthService authService)
 {
-    private Mock<IAuthRepository> _repositoryMock;
-    private DbContextOptions<AuthDbContext> _dbOptions;
-    private AuthDbContext _dbContext;
-    private IConfiguration _configuration;
-    private Mock<ILogger<AuthService>> _loggerMock;
+    private Mock<IAuthRepository> _repositoryMock = repositoryMock;
+    private DbContextOptions<AuthDbContext> _dbOptions = dbOptions;
+    private AuthDbContext _dbContext = dbContext;
+    private IConfiguration _configuration = configuration;
+    private Mock<ILogger<AuthService>> _loggerMock = loggerMock;
+
     private static IMetricsServiceFactory MetricsServiceFactory() => new MetricsServiceFactory();
-    private Mock<IHasher> _hasherMock;
-    private AuthService _authService;
+    private Mock<IHasher> _hasherMock = hasherMock;
+    private AuthService _authService = authService;
 
     [SetUp]
     public void SetUp()

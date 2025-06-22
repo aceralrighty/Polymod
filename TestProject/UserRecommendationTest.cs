@@ -5,7 +5,6 @@ using System.Linq;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using TBD.RecommendationModule.Models;
 using TBD.RecommendationModule.Models.Recommendations;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
@@ -38,9 +37,9 @@ public class UserRecommendationTest
         // Arrange
         var userId = Guid.NewGuid();
         var serviceId = Guid.NewGuid();
-        var rating = 4.5f;
+        const float rating = 4.5f;
         var recommendedAt = DateTime.UtcNow;
-        var clickCount = 7;
+        const int clickCount = 7;
 
         var userMock = new Mock<User>();
         var serviceMock = new Mock<Service>();
@@ -124,7 +123,7 @@ public class UserRecommendationTest
     public void UserRecommendation_Rating_Should_Accept_FloatValues()
     {
         // Arrange
-        var rating = 4.5f;
+        const float rating = 4.5f;
 
         // Act
         var recommendation = new UserRecommendation { Rating = rating };
@@ -148,10 +147,9 @@ public class UserRecommendationTest
     public void UserRecommendation_Should_Allow_ClickCount_Modification()
     {
         // Arrange
-        var recommendation = new UserRecommendation();
-
-        // Act
-        recommendation.ClickCount = 10;
+        var recommendation = new UserRecommendation {
+            // Act
+            ClickCount = 10 };
 
         // Assert
         recommendation.ClickCount.Should().Be(10);
