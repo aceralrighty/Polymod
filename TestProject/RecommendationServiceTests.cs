@@ -16,20 +16,14 @@ using TBD.ServiceModule.Repositories;
 namespace TestProject;
 
 [TestFixture]
-public class RecommendationServiceTests(
-    Mock<IRecommendationRepository> mockRecommendationRepository,
-    Mock<IMetricsServiceFactory> mockMetricsServiceFactory,
-    Mock<IServiceRepository> mockServiceRepository,
-    Mock<IMlRecommendationEngine> mockMlEngine,
-    Mock<IMetricsService> mockMetricsService,
-    RecommendationService service)
+public class RecommendationServiceTests
 {
-    private Mock<IRecommendationRepository> _mockRecommendationRepository = mockRecommendationRepository;
-    private Mock<IMetricsServiceFactory> _mockMetricsServiceFactory = mockMetricsServiceFactory;
-    private Mock<IServiceRepository> _mockServiceRepository = mockServiceRepository;
-    private Mock<IMlRecommendationEngine> _mockMlEngine = mockMlEngine;
-    private Mock<IMetricsService> _mockMetricsService = mockMetricsService;
-    private RecommendationService _service = service;
+    private Mock<IRecommendationRepository> _mockRecommendationRepository;
+    private Mock<IMetricsServiceFactory> _mockMetricsServiceFactory;
+    private Mock<IServiceRepository> _mockServiceRepository;
+    private Mock<IMlRecommendationEngine> _mockMlEngine;
+    private Mock<IMetricsService> _mockMetricsService;
+    private RecommendationService _service;
 
     [SetUp]
     public void SetUp()

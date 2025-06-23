@@ -14,19 +14,14 @@ using TBD.Shared.Repositories;
 namespace TBD.TestProject;
 
 [TestFixture]
-public class CachingRepositoryDecoratorTests(
-    Mock<IGenericRepository<TestEntity>> mockInnerRepository,
-    IMemoryCache memoryCache,
-    Mock<ILogger<CachingRepositoryDecorator<TestEntity>>> mockLogger,
-    CachingRepositoryDecorator<TestEntity> cachingRepository,
-    CacheOptions cachingOptions)
+public class CachingRepositoryDecoratorTests
     : IDisposable
 {
-    private Mock<IGenericRepository<TestEntity>> _mockInnerRepository = mockInnerRepository;
-    private IMemoryCache _memoryCache = memoryCache;
-    private Mock<ILogger<CachingRepositoryDecorator<TestEntity>>> _mockLogger = mockLogger;
-    private CachingRepositoryDecorator<TestEntity> _cachingRepository = cachingRepository;
-    private CacheOptions _cachingOptions = cachingOptions;
+    private Mock<IGenericRepository<TestEntity>> _mockInnerRepository;
+    private IMemoryCache _memoryCache;
+    private Mock<ILogger<CachingRepositoryDecorator<TestEntity>>> _mockLogger;
+    private CachingRepositoryDecorator<TestEntity> _cachingRepository;
+    private CacheOptions _cachingOptions;
 
     [SetUp]
     public void SetUp()

@@ -14,15 +14,11 @@ public class RawData : BaseTableProperties
     [LoadColumn(5)] public float Volume { get; set; }
     [LoadColumn(6)] public string Symbol { get; set; }
 
-    [NoColumn]
-    public override Guid Id { get; set; }
+    [NoColumn] public override Guid Id { get; set; }
 
-    [NoColumn]
-    public override DateTime CreatedAt { get; set; }
+    [NoColumn] public override DateTime CreatedAt { get; set; }
 
-    [NoColumn]
-    public override DateTime UpdatedAt { get; set; }
+    [NoColumn] public override DateTime UpdatedAt { get; set; }
 
-    [NoColumn]
-    public override DateTime? DeletedAt { get; set; }
+    [NoColumn] public override DateTime? DeletedAt { get; set; }
 }

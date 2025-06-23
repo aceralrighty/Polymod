@@ -16,16 +16,12 @@ using Assert = NUnit.Framework.Assert;
 namespace TBD.TestProject;
 
 [TestFixture]
-public class UserServiceTests(
-    Mock<IUserRepository> userRepositoryMock,
-    Mock<IMapper> mapperMock,
-    Mock<IHasher> hasherMock,
-    IUserService userService)
+public class UserServiceTests
 {
-    private Mock<IUserRepository> _userRepositoryMock = userRepositoryMock;
-    private Mock<IMapper> _mapperMock = mapperMock;
-    private Mock<IHasher> _hasherMock = hasherMock;
-    private IUserService _userService = userService;
+    private Mock<IUserRepository> _userRepositoryMock;
+    private Mock<IMapper> _mapperMock;
+    private Mock<IHasher> _hasherMock;
+    private IUserService _userService;
 
     private static readonly UserDto TestUserDto = new()
     {
@@ -161,8 +157,8 @@ public class UserServiceTests(
         };
         var userDtos = new List<UserDto> { new UserDto(), new UserDto() };
         const int totalCount = 10;
-        int page = 2;
-        int pageSize = 5;
+        const int page = 2;
+        const int pageSize = 5;
 
         _userRepositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(totalCount);
         _userRepositoryMock.Setup(r => r.GetPagedAsync(page, pageSize)).ReturnsAsync(users);
@@ -237,8 +233,11 @@ public class UserServiceTests(
         _hasherMock.Setup(h => h.HashPassword(TestUserDto.Password ?? string.Empty))
             .Returns(expectedHashedPassword);
         // Configure the hasher mock for verification
-        _hasherMock.Setup(h => TestUserDto.Password != null && h.Verify(expectedHashedPassword, TestUserDto.Password))
+        _hasherMock.Setup(h => h.Verify(expectedHashedPassword, TestUserDto.Password!))
             .Returns(true);
+
+
+
 
         var capturedUser = new User
         {
