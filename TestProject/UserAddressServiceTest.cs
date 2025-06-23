@@ -17,20 +17,14 @@ using TBD.UserModule.Services;
 namespace TBD.TestProject;
 
 [TestFixture]
-public class UserAddressServiceTests(
-    AddressDbContext context,
-    Mock<IMapper> mockMapper,
-    Mock<IUserService> mockUserService,
-    UserAddressService userAddressService,
-    List<UserAddress> testAddresses,
-    User? testUser)
+public class UserAddressServiceTests
 {
-    private AddressDbContext _context = context;
-    private Mock<IMapper> _mockMapper = mockMapper;
-    private Mock<IUserService> _mockUserService = mockUserService;
-    private UserAddressService _userAddressService = userAddressService;
-    private List<UserAddress> _testAddresses = testAddresses;
-    private User? _testUser = testUser;
+    private AddressDbContext _context;
+    private Mock<IMapper> _mockMapper;
+    private Mock<IUserService> _mockUserService;
+    private UserAddressService _userAddressService;
+    private List<UserAddress> _testAddresses;
+    private User? _testUser;
 
     [SetUp]
     public async Task Setup()

@@ -9,8 +9,9 @@ namespace TBD.TestProject;
 
 [TestOf(typeof(Schedule))]
 [TestFixture]
-public class ScheduleTest(ScheduleDbContext context)
+public class ScheduleTest
 {
+    private Schedule _schedule;
     #region Construction & Defaults
 
     [Test]
