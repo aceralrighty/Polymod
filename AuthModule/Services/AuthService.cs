@@ -5,6 +5,7 @@ using TBD.AuthModule.Exceptions;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.Utils;
 
 namespace TBD.AuthModule.Services;
@@ -113,7 +114,7 @@ public class AuthService(
             {
                 Id = Guid.NewGuid(),
                 Username = request.Username,
-                Email = request.Email,
+                Email = request.Email ?? string.Empty,
                 HashedPassword = hasher.HashPassword(request.Password),
                 FailedLoginAttempts = 0,
             };

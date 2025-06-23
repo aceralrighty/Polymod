@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Moq;
 using NUnit.Framework;
-using TBD.API.DTOs;
 using TBD.API.DTOs.Users;
 using TBD.MetricsModule.Services;
 using TBD.Shared.Utils;
@@ -17,12 +16,16 @@ using Assert = NUnit.Framework.Assert;
 namespace TBD.TestProject;
 
 [TestFixture]
-public class UserServiceTests
+public class UserServiceTests(
+    Mock<IUserRepository> userRepositoryMock,
+    Mock<IMapper> mapperMock,
+    Mock<IHasher> hasherMock,
+    IUserService userService)
 {
-    private Mock<IUserRepository> _userRepositoryMock;
-    private Mock<IMapper> _mapperMock;
-    private Mock<IHasher> _hasherMock;
-    private IUserService _userService;
+    private Mock<IUserRepository> _userRepositoryMock = userRepositoryMock;
+    private Mock<IMapper> _mapperMock = mapperMock;
+    private Mock<IHasher> _hasherMock = hasherMock;
+    private IUserService _userService = userService;
 
     private static readonly UserDto TestUserDto = new()
     {
@@ -64,7 +67,11 @@ public class UserServiceTests
 
         // Assert
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Id, Is.EqualTo(TestUserDto.Id));
+        if (result != null)
+        {
+            Assert.That(result.Id, Is.EqualTo(TestUserDto.Id));
+        }
+
         _userRepositoryMock.Verify(r => r.GetByIdAsync(TestUserDto.Id), Times.Once);
         _mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
     }
@@ -81,16 +88,20 @@ public class UserServiceTests
             Password = "hashedpassword", // Placeholder
             Schedule = null
         };
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(TestUserDto.Email)).ReturnsAsync(user);
+        _userRepositoryMock.Setup(r => r.GetByEmailAsync(TestUserDto.Email ?? string.Empty)).ReturnsAsync(user);
         _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
 
         // Act
-        var result = await _userService.GetUserByEmailAsync(TestUserDto.Email);
+        if (TestUserDto.Email != null)
+        {
+            var result = await _userService.GetUserByEmailAsync(TestUserDto.Email);
 
-        // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Email, Is.EqualTo(TestUserDto.Email));
-        _userRepositoryMock.Verify(r => r.GetByEmailAsync(TestUserDto.Email), Times.Once);
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Email, Is.EqualTo(TestUserDto.Email));
+        }
+
+        _userRepositoryMock.Verify(r => r.GetByEmailAsync(TestUserDto.Email ?? string.Empty), Times.Once);
         _mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
     }
 
@@ -122,15 +133,19 @@ public class UserServiceTests
             Password = "hashedpassword", // Placeholder
             Schedule = null
         };
-        _userRepositoryMock.Setup(r => r.GetByUsernameAsync(TestUserDto.Username)).ReturnsAsync(user);
+        _userRepositoryMock.Setup(r => r.GetByUsernameAsync(TestUserDto.Username ?? string.Empty)).ReturnsAsync(user);
         _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
 
         // Act
-        var result = await _userService.GetUserByUsernameAsync(TestUserDto.Username);
+        if (TestUserDto.Username != null)
+        {
+            var result = await _userService.GetUserByUsernameAsync(TestUserDto.Username);
 
-        // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Username, Is.EqualTo(TestUserDto.Username));
+            // Assert
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Username, Is.EqualTo(TestUserDto.Username));
+        }
+
         _userRepositoryMock.Verify(r => r.GetByUsernameAsync(TestUserDto.Username), Times.Once);
         _mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
     }
@@ -145,7 +160,7 @@ public class UserServiceTests
             new User { Username = "user2", Email = "e2@e.com", Password = "p2", Schedule = null }
         };
         var userDtos = new List<UserDto> { new UserDto(), new UserDto() };
-        var totalCount = 10;
+        const int totalCount = 10;
         int page = 2;
         int pageSize = 5;
 
@@ -173,9 +188,9 @@ public class UserServiceTests
         // Arrange
         var users = new List<User>();
         var userDtos = new List<UserDto>();
-        var totalCount = 0;
-        int invalidPage = 0;
-        int pageSize = 10;
+        const int totalCount = 0;
+        const int invalidPage = 0;
+        const int pageSize = 10;
 
         _userRepositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(totalCount);
         _userRepositoryMock.Setup(r => r.GetPagedAsync(1, pageSize)).ReturnsAsync(users);
@@ -195,9 +210,9 @@ public class UserServiceTests
         // Arrange
         var users = new List<User>();
         var userDtos = new List<UserDto>();
-        var totalCount = 0;
-        int page = 1;
-        int invalidPageSize = 0;
+        const int totalCount = 0;
+        const int page = 1;
+        const int invalidPageSize = 0;
 
         _userRepositoryMock.Setup(r => r.GetCountAsync()).ReturnsAsync(totalCount);
         _userRepositoryMock.Setup(r => r.GetPagedAsync(page, 50)).ReturnsAsync(users);
@@ -219,10 +234,10 @@ public class UserServiceTests
         var expectedHashedPassword = "mockedHashedPassword"; // A simple string for the mock
 
         // Configure the hasher mock to return a predictable hash
-        _hasherMock.Setup(h => h.HashPassword(TestUserDto.Password))
+        _hasherMock.Setup(h => h.HashPassword(TestUserDto.Password ?? string.Empty))
             .Returns(expectedHashedPassword);
         // Configure the hasher mock for verification
-        _hasherMock.Setup(h => h.Verify(expectedHashedPassword, TestUserDto.Password))
+        _hasherMock.Setup(h => TestUserDto.Password != null && h.Verify(expectedHashedPassword, TestUserDto.Password))
             .Returns(true);
 
         var capturedUser = new User
@@ -252,7 +267,7 @@ public class UserServiceTests
 
         // Assert
         // Verify that the hasher's HashPassword method was called with the correct plain text password
-        _hasherMock.Verify(h => h.HashPassword(TestUserDto.Password), Times.Once);
+        _hasherMock.Verify(h => h.HashPassword(TestUserDto.Password ?? string.Empty), Times.Once);
         // Verify that the repository's AddAsync method was called exactly once.
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Once);
 
@@ -296,7 +311,7 @@ public class UserServiceTests
 
         // Act & Assert
         var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.CreateUserAsync(invalidUserDto));
-        Assert.That(ex.Message, Is.EqualTo("Password cannot be empty"));
+        Assert.That(ex?.Message, Is.EqualTo("Password cannot be empty"));
         _userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>()), Times.Never);
         _hasherMock.Verify(h => h.HashPassword(It.IsAny<string>()), Times.Never); // Hasher should not be called
     }

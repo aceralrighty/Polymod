@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using TBD.ScheduleModule.Models;
+using TBD.UserModule.Data.Configuration;
 using TBD.UserModule.Models;
 
 namespace TBD.UserModule.Data;
@@ -19,24 +18,7 @@ public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<User>()
-            .HasIndex(u => u.Email)
-            .IsUnique();
-
-        modelBuilder.Entity<User>()
-            .HasIndex(u => u.Username)
-            .IsUnique();
-
-        modelBuilder.Entity<User>()
-            .Property(u => u.CreatedAt)
-            .ValueGeneratedOnAdd()
-            .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
-
-        modelBuilder.Entity<User>()
-            .HasOne(u => u.Schedule)
-            .WithOne(s => s.User)
-            .HasForeignKey<Schedule>(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.ApplyConfiguration(new UserEntityConfiguration());
     }
 
     public override int SaveChanges()

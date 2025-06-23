@@ -1,4 +1,5 @@
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.ScheduleModule.Models;
 using TBD.ScheduleModule.Repositories;
 

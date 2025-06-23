@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.ScheduleModule.Models;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
@@ -84,7 +85,7 @@ public static class DataSeeder
                     $"⚠️ WARNING: Expected {seededUsers.Count} users but found {userCountAfterSeeding} in database!");
             }
 
-            // List first few users for verification
+            // List the first few users for verification
             var usersInDb = await userContext.Set<User>().Take(3).Select(u => new { u.Id, u.Username }).ToListAsync();
             Console.WriteLine("📝 Users in database:");
             foreach (var user in usersInDb)
@@ -102,7 +103,6 @@ public static class DataSeeder
             Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
             throw;
         }
-
     }
 
     private static async Task<List<User>> SeedUsersAsync(UserDbContext context, IMetricsService metricsService)
@@ -201,7 +201,7 @@ public static class DataSeeder
     {
         Console.WriteLine("🌱 Starting address seeding...");
 
-        List<User?> users = await context.Set<User>().ToListAsync();
+        var users = await context.Set<User>().ToListAsync();
         Console.WriteLine($"👥 Found {users.Count} users for address seeding");
 
         if (users.Count == 0)

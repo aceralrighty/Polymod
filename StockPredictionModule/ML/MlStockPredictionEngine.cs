@@ -1,5 +1,6 @@
 using Microsoft.ML;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.StockPredictionModule.ML.Interface;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.Models.Stocks;
@@ -144,7 +145,7 @@ public class MlStockPredictionEngine(IMetricsServiceFactory metricsServiceFactor
             Symbol = symbol,
             BatchId = Guid.NewGuid(),
             PredictedPrice = Math.Max(0.01f, predicted.PredictedPrice),
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.UtcNow,
             DeletedAt = null
         };

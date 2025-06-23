@@ -2,6 +2,7 @@ using AutoMapper;
 using TBD.API.DTOs;
 using TBD.API.DTOs.Users;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.Utils;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;

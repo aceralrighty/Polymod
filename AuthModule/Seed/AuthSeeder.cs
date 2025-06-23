@@ -1,6 +1,7 @@
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
 using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.Utils;
 
 namespace TBD.AuthModule.Seed;

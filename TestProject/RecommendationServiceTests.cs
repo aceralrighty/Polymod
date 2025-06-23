@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
-using TBD.MetricsModule.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.RecommendationModule.ML.Interface;
-using TBD.RecommendationModule.Models;
 using TBD.RecommendationModule.Models.Recommendations;
 using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.RecommendationModule.Services;
@@ -17,14 +16,20 @@ using TBD.ServiceModule.Repositories;
 namespace TestProject;
 
 [TestFixture]
-public class RecommendationServiceTests
+public class RecommendationServiceTests(
+    Mock<IRecommendationRepository> mockRecommendationRepository,
+    Mock<IMetricsServiceFactory> mockMetricsServiceFactory,
+    Mock<IServiceRepository> mockServiceRepository,
+    Mock<IMlRecommendationEngine> mockMlEngine,
+    Mock<IMetricsService> mockMetricsService,
+    RecommendationService service)
 {
-    private Mock<IRecommendationRepository> _mockRecommendationRepository;
-    private Mock<IMetricsServiceFactory> _mockMetricsServiceFactory;
-    private Mock<IServiceRepository> _mockServiceRepository;
-    private Mock<IMlRecommendationEngine> _mockMlEngine;
-    private Mock<IMetricsService> _mockMetricsService;
-    private RecommendationService _service;
+    private Mock<IRecommendationRepository> _mockRecommendationRepository = mockRecommendationRepository;
+    private Mock<IMetricsServiceFactory> _mockMetricsServiceFactory = mockMetricsServiceFactory;
+    private Mock<IServiceRepository> _mockServiceRepository = mockServiceRepository;
+    private Mock<IMlRecommendationEngine> _mockMlEngine = mockMlEngine;
+    private Mock<IMetricsService> _mockMetricsService = mockMetricsService;
+    private RecommendationService _service = service;
 
     [SetUp]
     public void SetUp()
@@ -41,10 +46,10 @@ public class RecommendationServiceTests
 
         // Fixed constructor call - match the primary constructor parameter order
         _service = new RecommendationService(
-            _mockRecommendationRepository.Object,    // IRecommendationRepository recommendationRepository
-            _mockMetricsServiceFactory.Object,       // IMetricsServiceFactory serviceFactory
-            _mockServiceRepository.Object,           // IServiceRepository service
-            _mockMlEngine.Object);                   // IMlRecommendationEngine mlEngine
+            _mockRecommendationRepository.Object, // IRecommendationRepository recommendationRepository
+            _mockMetricsServiceFactory.Object, // IMetricsServiceFactory serviceFactory
+            _mockServiceRepository.Object, // IServiceRepository service
+            _mockMlEngine.Object); // IMlRecommendationEngine mlEngine
     }
 
     #region GetRecommendationsForUserAsync Tests
@@ -66,8 +71,7 @@ public class RecommendationServiceTests
 
         var services = new List<Service>
         {
-            new() { Id = serviceId1, Title = "Service 1" },
-            new() { Id = serviceId2, Title = "Service 2" }
+            new() { Id = serviceId1, Title = "Service 1" }, new() { Id = serviceId2, Title = "Service 2" }
         };
 
         _mockRecommendationRepository
@@ -147,11 +151,7 @@ public class RecommendationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var serviceId = Guid.NewGuid();
-        var existingRecommendation = new UserRecommendation
-        {
-            UserId = userId,
-            ServiceId = serviceId
-        };
+        var existingRecommendation = new UserRecommendation { UserId = userId, ServiceId = serviceId };
 
         _mockRecommendationRepository
             .Setup(x => x.GetLatestByUserAndServiceAsync(userId, serviceId))
@@ -176,12 +176,7 @@ public class RecommendationServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         var serviceId = Guid.NewGuid();
-        var recommendation = new UserRecommendation
-        {
-            UserId = userId,
-            ServiceId = serviceId,
-            ClickCount = 5
-        };
+        var recommendation = new UserRecommendation { UserId = userId, ServiceId = serviceId, ClickCount = 5 };
 
         _mockRecommendationRepository
             .Setup(x => x.GetLatestByUserAndServiceAsync(userId, serviceId))
