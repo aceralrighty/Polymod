@@ -31,9 +31,13 @@ internal class UserRepository(UserDbContext context) : GenericRepository<User>(c
         await Context.SaveChangesAsync();
     }
 
-    public async Task RemoveAsync(User entity)
+    public async Task RemoveAsync(User? entity)
     {
-        DbSet.Remove(entity);
+        if (entity != null)
+        {
+            DbSet.Remove(entity);
+        }
+
         await Context.SaveChangesAsync();
     }
 

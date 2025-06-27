@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TBD.GenericDBProperties;
 using TBD.ScheduleModule.Models;
+using TBD.Shared.GenericDBProperties;
 
 namespace TBD.UserModule.Models;
 

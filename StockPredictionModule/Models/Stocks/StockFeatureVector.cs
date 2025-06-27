@@ -1,3 +1,5 @@
+using Microsoft.ML.Data;
+
 namespace TBD.StockPredictionModule.Models.Stocks;
 
 public class StockFeatureVector
@@ -13,5 +15,6 @@ public class StockFeatureVector
     public float Volatility5 { get; set; }
     public float Return1D { get; set; }
 
+    [ColumnName("NextClose")]
     public float NextClose { get; set; } // Label to predict
 }

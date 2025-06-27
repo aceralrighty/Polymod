@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TBD.GenericDBProperties;
 using TBD.RecommendationModule.Exceptions;
 using TBD.ServiceModule.Models;
+using TBD.Shared.GenericDBProperties;
 using TBD.UserModule.Models;
 
 namespace TBD.RecommendationModule.Models.Recommendations;

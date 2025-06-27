@@ -1,11 +1,12 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.ML.Data;
-using TBD.GenericDBProperties;
+using TBD.Shared.GenericDBProperties;
 
 namespace TBD.StockPredictionModule.Models.Stocks;
 
 public class Stock : BaseTableProperties
 {
-    public string Symbol { get; set; }
+    [MaxLength(10)] public string Symbol { get; set; }
     public float Open { get; set; }
     public float High { get; set; }
     public float Low { get; set; }
