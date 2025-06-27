@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.ML.Data;
-using TBD.GenericDBProperties;
+using TBD.Shared.GenericDBProperties;
 
 namespace TBD.StockPredictionModule.Models.Stocks;
 

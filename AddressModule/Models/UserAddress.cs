@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TBD.GenericDBProperties;
+using TBD.Shared.GenericDBProperties;
 using TBD.UserModule.Models;
 
 namespace TBD.AddressModule.Models;

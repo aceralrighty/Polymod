@@ -1,4 +1,4 @@
-namespace TBD.GenericDBProperties;
+namespace TBD.Shared.GenericDBProperties;
 
 internal interface IWithId
 {
