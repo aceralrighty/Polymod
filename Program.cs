@@ -1,3 +1,4 @@
+using Grafana.OpenTelemetry;
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
@@ -13,8 +14,6 @@ using TBD.StockPredictionModule;
 using TBD.StockPredictionModule.PipelineOrchestrator;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
-
-// Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -38,6 +37,19 @@ builder.Services.AddOpenApi();
 builder.Services.AddAutoMapperExtension();
 
 builder.Services.AddMemoryCache();
+
+builder.Services.AddOpenTelemetry().WithTracing(configure =>
+{
+    configure.UseGrafana();
+}).WithMetrics(configure =>
+{
+    configure.UseGrafana();
+});
+builder.Logging.AddOpenTelemetry(options =>
+{
+    options.UseGrafana();
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
