@@ -16,7 +16,7 @@ public class OpenTelemetryMetricsService(string moduleName) : IMetricsService
         // Use your existing implementation
         _baseService.IncrementCounter(key);
 
-        // Create OpenTelemetry counter if it doesn't exist
+        // Create an OpenTelemetry counter if it doesn't exist
         if (!_counters.ContainsKey(key))
         {
             _counters[key] = _meter.CreateCounter<int>(
