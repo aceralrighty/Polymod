@@ -50,7 +50,7 @@ builder.Services.AddOpenTelemetry()
         .AddHttpClientInstrumentation()
         .AddPrometheusExporter());
 var app = builder.Build();
-app.MapPrometheusScrapingEndpoint();
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -112,7 +112,6 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-
 app.MapOpenApi();
 
 app.UseSwagger();
@@ -121,6 +120,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();
