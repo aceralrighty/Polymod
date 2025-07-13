@@ -1,8 +1,10 @@
-using Grafana.OpenTelemetry;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
 using TBD.MetricsModule;
+using TBD.MetricsModule.OpenTelemetry;
 using TBD.RecommendationModule;
 using TBD.RecommendationModule.Seed;
 using TBD.ScheduleModule;
@@ -21,6 +23,7 @@ builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMetricsModule();
+builder.Services.AddOpenTelemetryMetricsModule();
 // DI Containers
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
@@ -38,19 +41,16 @@ builder.Services.AddAutoMapperExtension();
 
 builder.Services.AddMemoryCache();
 
-builder.Services.AddOpenTelemetry().WithTracing(configure =>
-{
-    configure.UseGrafana();
-}).WithMetrics(configure =>
-{
-    configure.UseGrafana();
-});
-builder.Logging.AddOpenTelemetry(options =>
-{
-    options.UseGrafana();
-});
-
+builder.Services.AddOpenTelemetry()
+    .WithTracing(providerBuilder => providerBuilder
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation())
+    .WithMetrics(providerBuilder => providerBuilder
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddPrometheusExporter());
 var app = builder.Build();
+app.MapPrometheusScrapingEndpoint();
 
 if (app.Environment.IsDevelopment())
 {
