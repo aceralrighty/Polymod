@@ -2,7 +2,6 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
-using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.ScheduleModule.Models;
 using TBD.Shared.Utils;
@@ -27,9 +26,6 @@ public static class DataSeeder
         {
             Console.WriteLine("🔄 Starting user database operations...");
 
-            // Check connection strings
-            Console.WriteLine($"👥 User DB Connection: {userContext.Database.GetConnectionString()}");
-            Console.WriteLine($"📍 Address DB Connection: {addressContext.Database.GetConnectionString()}");
 
             // Check if databases can be connected to before deletion
             var userDbExists = await userContext.Database.CanConnectAsync();

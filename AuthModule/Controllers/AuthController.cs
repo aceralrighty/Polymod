@@ -2,11 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
+using TBD.MetricsModule.Services.Interfaces;
 
 namespace TBD.AuthModule.Controllers;
 
-public class AuthController(AuthDbContext context) : Controller
+public class AuthController(AuthDbContext context, IMetricsServiceFactory metricsFactory)
+    : Controller
 {
+    private readonly IMetricsService _metricsService = metricsFactory.CreateMetricsService("Auth");
+
     // GET: Auth
     public async Task<IActionResult> Index()
     {
@@ -47,15 +51,17 @@ public class AuthController(AuthDbContext context) : Controller
             "AuthId,Username,Email,HashedPassword,RefreshToken,RefreshTokenExpiry,LastLogin,FailedLoginAttempts,Id,CreatedAt,UpdatedAt,DeletedAt")]
         AuthUser authUser)
     {
-        if (ModelState.IsValid)
+        _metricsService.IncrementCounter("Login attempted");
+        if (!ModelState.IsValid)
         {
-            authUser.Id = Guid.NewGuid();
-            context.Add(authUser);
-            await context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return View(authUser);
         }
 
-        return View(authUser);
+        authUser.Id = Guid.NewGuid();
+        context.Add(authUser);
+        await context.SaveChangesAsync();
+        return RedirectToAction(nameof(Index));
+
     }
 
     // GET: Auth/Edit/5

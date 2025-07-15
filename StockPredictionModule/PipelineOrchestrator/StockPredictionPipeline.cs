@@ -66,6 +66,7 @@ public class StockPredictionPipeline(
             }
 
             var stonks = entityMapper.TransformRawDataToStocks(rawData);
+            Console.WriteLine($"EntityMapper created {stonks.Count} stocks from {rawData.Count} raw data records");
 
             Console.WriteLine($"Step 6: Saving {allPredictions.Count} predictions to database...");
             await stockPredictionRepository.SaveStockPredictionBatchAsync(allPredictions);

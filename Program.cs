@@ -1,7 +1,10 @@
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
 using TBD.MetricsModule;
+using TBD.MetricsModule.OpenTelemetry;
 using TBD.RecommendationModule;
 using TBD.RecommendationModule.Seed;
 using TBD.ScheduleModule;
@@ -14,14 +17,13 @@ using TBD.StockPredictionModule.PipelineOrchestrator;
 using TBD.UserModule;
 using TBD.UserModule.Seed;
 
-// Add this using directive
-
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMetricsModule();
+builder.Services.AddOpenTelemetryMetricsModule();
 // DI Containers
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
@@ -38,7 +40,17 @@ builder.Services.AddOpenApi();
 builder.Services.AddAutoMapperExtension();
 
 builder.Services.AddMemoryCache();
+
+builder.Services.AddOpenTelemetry()
+    .WithTracing(providerBuilder => providerBuilder
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation())
+    .WithMetrics(providerBuilder => providerBuilder
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddPrometheusExporter());
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -100,7 +112,6 @@ if (app.Environment.IsDevelopment())
     }
 }
 
-
 app.MapOpenApi();
 
 app.UseSwagger();
@@ -109,6 +120,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();

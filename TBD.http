@@ -38,3 +38,34 @@ Content-Type: application/json
 
 ### Delete address by id
 DELETE {{TBD_HostAddress}}/api/Address/fcfeec42-6f71-49c5-8a79-b77d6b457baa
+
+
+###
+GET {{TBD_HostAddress}}/api/Stock/model/status
+
+
+###
+POST {{TBD_HostAddress}}/api/Stock/model/train
+Access-Control-Request-Method:
+var trainingData = new List<RawData>
+{
+    new RawData
+    {
+        Symbol = "AAPL",
+        Date = "2024-01-01",
+        Open = 150.00f,
+        High = 155.00f,
+        Low = 149.00f,
+        Close = 154.00f,
+        Volume = 1000000
+    },
+    new RawData
+    {
+        Symbol = "AAPL",
+        Date = "2024-01-02",
+        Open = 154.50f,
+        High = 158.00f,
+        Low = 153.00f,
+        Close = 157.00f,
+        Volume = 1200000
+    }
