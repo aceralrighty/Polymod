@@ -63,6 +63,7 @@
     <Folder Include="AddressModule\Seed\" />
     <Folder Include="AuthModule\Controllers\" />
     <Folder Include="AuthModule\Views\" />
+    <Folder Include="DemoMaterial\" />
     <Folder Include="diagrams\" />
     <Folder Include="RecommendationModule\Controllers\" />
     <Folder Include="ScheduleModule\Controllers\" />

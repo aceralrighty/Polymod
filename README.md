@@ -12,7 +12,7 @@ also organized per module.
 
 ## 🧱 Project Structure
 
-```plaintext
+``` plaintext
 .
 ├── API/                                    # Shared DTOs & contracts
 │   └── DTOs/
@@ -38,7 +38,7 @@ also organized per module.
 │   ├── Exceptions/
 │   └── Seed/
 │
-├── AuthModule/                             # Authentication
+├── AuthModule/                             # Authentication & authorization
 │   ├── Controllers/
 │   ├── Data/
 │   ├── Models/
@@ -70,10 +70,12 @@ also organized per module.
 │   ├── Models/
 │   ├── Repositories/Interfaces/
 │   ├── Services/
+│   ├── ML/
 │   ├── Seed/
 │   └── Exceptions/
 │
 ├── StockPredictionModule/                  # 🆕 ML Stock Prediction
+│   ├── Controllers/
 │   ├── Context/Configuration/
 │   ├── Dataset/
 │   │   └── all_stocks_5yr.csv            # 619,040 records (50k+ lines)
@@ -88,16 +90,17 @@ also organized per module.
 │
 ├── Shared/                                 # Cross-cutting concerns
 │   ├── CachingConfiguration/
+│   ├── EntityMappers/
+│   ├── GenericDBProperties/
 │   ├── Repositories/
 │   └── Utils/
 │
-├── GenericDBProperties/                    # Base DB properties
+├── UserModule/                             # User management
 ├── DesignTimeFactories/                    # EF Core factories
 ├── Migrations/                             # DB migrations by module
 ├── Logs/                                   # Module-specific logs
-└── TestProject/                            # Comprehensive testing
+└── TBD.TestProject/                        # Comprehensive testing
 ```
-
 ---
 
 ## 🚀 Key Features & Recent Additions
@@ -309,7 +312,6 @@ Each module follows a consistent, enterprise-ready structure:
 
 ### Short Term
 
-- 🔄 **Advanced ML Features**: Implement ensemble models and real-time market data integration
 - ✅ **Enhanced Monitoring**: Custom Grafana dashboards for business metrics
 - ✅ **API Documentation**: Complete Swagger UI integration with all endpoints
 - 🔲 **Redis Integration**: External caching layer for production performance
@@ -317,6 +319,7 @@ Each module follows a consistent, enterprise-ready structure:
 
 ### Medium Term
 
+- 🔄 **Advanced ML Features**: Implement ensemble models and real-time market data integration
 - 🔲 **Trading Strategy Engine**: Algorithmic trading based on ML predictions
 - 🔲 **Real-time Features**: SignalR integration for live stock updates and recommendations
 - 🔲 **Performance Optimization**: Database indexing and query optimization
@@ -335,6 +338,10 @@ Each module follows a consistent, enterprise-ready structure:
 
 ## 🚀 Getting Started
 
+### Application in Action
+
+![Application Startup](DemoMaterial/Startup_gif.gif)
+
 ### Prerequisites
 - .NET 9.0 SDK
 - Docker and Docker Compose
@@ -348,17 +355,13 @@ Each module follows a consistent, enterprise-ready structure:
 4. **Start the monitoring stack**: `docker-compose up -d`
 5. **Run migrations** for each module: Auth, User, Address, Schedule, Service, Recommendation, StockPrediction
 6. **Build and run** the application with .NET 9.0
+
+![API Testing Example](DemoMaterial/Postman_gif.gif)
+
 7. **Load stock data** (619k records) for ML training
 8. **Explore endpoints** via the comprehensive `.http` file
 9. **Monitor metrics** through Prometheus (`http://localhost:9090`) and Grafana dashboards
 10. **View application logs** in the module-specific log files
-
-### Monitoring Setup
-
-- **Prometheus**: Accessible at `http://localhost:9090`
-- **Application Metrics**: Available at `/metrics` endpoint
-- **Custom Dashboards**: Configure Grafana for your specific monitoring needs
-- **OpenTelemetry**: Distributed tracing automatically configured
 
 ---
 

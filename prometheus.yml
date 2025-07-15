@@ -1,11 +1,19 @@
 global:
-  scrape_interval: 60s
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'tbd-app'
+    static_configs:
+      - targets: ['localhost:5000']  # This is the key change
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
 remote_write:
   - url: https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push
     basic_auth:
-      username: GRAFANA_USERNAME
-      password: GRAFANA_PASSWORD
-scrape_configs:
-  - job_name: node
-    static_configs:
-      - targets: ["localhost:9090"]
+      username: ${GRAFANA_USERNAME}
+      password: ${GRAFANA_PASSWORD}
