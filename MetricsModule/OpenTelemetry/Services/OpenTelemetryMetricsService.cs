@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
@@ -8,38 +9,34 @@ public class OpenTelemetryMetricsService(string moduleName) : IMetricsService
 {
     private readonly IMetricsService _baseService = new MetricsService(moduleName);
     private readonly Meter _meter = new($"TBD.{moduleName}", "1.0.0");
-    private readonly Dictionary<string, Counter<int>> _counters = new();
-    private readonly Dictionary<string, Histogram<double>> _histograms = new();
+    private readonly ConcurrentDictionary<string, Counter<int>> _counters = new();
+    private readonly ConcurrentDictionary<string, Histogram<double>> _histograms = new();
 
     public void IncrementCounter(string key)
     {
-        // Use your existing implementation
+        // Use your existing implementation for text logging
         _baseService.IncrementCounter(key);
 
-        // Create an OpenTelemetry counter if it doesn't exist
-        if (!_counters.ContainsKey(key))
-        {
-            _counters[key] = _meter.CreateCounter<int>(
-                name: SanitizeMetricName(key),
-                description: $"Counter for {key}"
-            );
-        }
+        // Create OpenTelemetry counter if it doesn't exist, or get existing one
+        var counter = _counters.GetOrAdd(key, k =>
+            _meter.CreateCounter<int>(
+                name: SanitizeMetricName(k),
+                description: $"Counter for {k}")
+        );
 
-        _counters[key].Add(1);
+        counter.Add(1);
     }
 
     public void RecordHistogram(string key, double value, params KeyValuePair<string, object?>[] tags)
     {
-        // Create OpenTelemetry histogram if it doesn't exist
-        if (!_histograms.ContainsKey(key))
-        {
-            _histograms[key] = _meter.CreateHistogram<double>(
-                name: SanitizeMetricName(key),
-                description: $"Histogram for {key}"
-            );
-        }
+        // Create OpenTelemetry histogram if it doesn't exist, or get existing one
+        var histogram = _histograms.GetOrAdd(key, k =>
+            _meter.CreateHistogram<double>(
+                name: SanitizeMetricName(k),
+                description: $"Histogram for {k}")
+        );
 
-        _histograms[key].Record(value, tags);
+        histogram.Record(value, tags);
     }
 
     public int GetCount(string key) => _baseService.GetCount(key);
