@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.OpenTelemetry;
+using TBD.MetricsModule.OpenTelemetry.Services;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.CachingConfiguration;
@@ -35,11 +38,19 @@ public static class UserModule
 
         // Just decorate - no need for manual registration
         services.Decorate<IGenericRepository<User>, CachingRepositoryDecorator<User>>();
+        services.Configure<KestrelServerOptions>(options =>
+        {
+            options.AllowSynchronousIO = true;
+        });
 
+        services.AddLogging();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IHasher, Hasher>();
-        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
         services.AddAutoMapper(typeof(UserMapping).Assembly);
+        services.RegisterModuleForMetrics("UserModule");
+
+        // Register this module for metrics
+        services.RegisterModuleForMetrics("UserModule");
 
         return services;
     }

@@ -1,10 +1,11 @@
-using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
 using TBD.MetricsModule;
 using TBD.MetricsModule.OpenTelemetry;
+using TBD.MetricsModule.OpenTelemetry.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.RecommendationModule;
 using TBD.RecommendationModule.Seed;
 using TBD.ScheduleModule;
@@ -32,24 +33,21 @@ builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
-
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
 // Extension method to call the autoMappers for my modules
 builder.Services.AddAutoMapperExtension();
-
+builder.Services.ConfigureOpenTelemetryMetrics();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(providerBuilder => providerBuilder
         .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation())
-    .WithMetrics(providerBuilder => providerBuilder
-        .AddAspNetCoreInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddPrometheusExporter());
+        .AddHttpClientInstrumentation());
+
 var app = builder.Build();
+app.UseOpenTelemetryPrometheusScrapingEndpoint();
 
 
 if (app.Environment.IsDevelopment())
@@ -61,6 +59,26 @@ if (app.Environment.IsDevelopment())
         using (var scope = app.Services.CreateScope())
         {
             var scopedServices = scope.ServiceProvider;
+            var testFactory = scopedServices.GetRequiredService<IMetricsServiceFactory>();
+            var testMetrics = testFactory.CreateMetricsService("TestModule");
+
+            Console.WriteLine("🔍 Testing basic counter...");
+            testMetrics.IncrementCounter("test.immediate_counter");
+            testMetrics.IncrementCounter("test.immediate_counter");
+            testMetrics.IncrementCounter("test.immediate_counter");
+
+            Console.WriteLine("🔍 Testing histogram...");
+            if (testMetrics is OpenTelemetryMetricsService openTelemetryTest)
+            {
+                openTelemetryTest.RecordHistogram("test.immediate_histogram", 42.0);
+                openTelemetryTest.RecordHistogram("test.immediate_histogram", 84.0);
+            }
+
+            Console.WriteLine("✅ Test metrics recorded");
+
+            // Wait a moment for metrics to be processed
+            await Task.Delay(2000);
+
 
             // Seed users first and capture the result
             Console.WriteLine("👥 Seeding users...");
@@ -120,7 +138,6 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.UseOpenTelemetryPrometheusScrapingEndpoint();
 app.UseRouting();
 app.UseAuthorization();
 app.MapControllers();

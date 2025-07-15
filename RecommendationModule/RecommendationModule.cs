@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.RecommendationModule.Data;
@@ -41,7 +42,7 @@ public static class RecommendationModule
         // Register services
         services.AddScoped<IRecommendationService, RecommendationService>();
         services.AddScoped<IMlRecommendationEngine, MlRecommendationEngine>();
-        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
+        services.RegisterModuleForMetrics("RecommendationModule");
 
         // Register generic repositories with caching
         services.AddScoped<IGenericRepository<UserRecommendation>>(sp =>

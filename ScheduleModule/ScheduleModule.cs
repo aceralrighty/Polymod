@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.ScheduleModule.Data;
@@ -26,7 +27,7 @@ public static class ScheduleModule
         });
         services.AddScoped<IScheduleRepository, ScheduleRepository>();
         services.AddScoped<IScheduleService, ScheduleService>();
-        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
+        services.RegisterModuleForMetrics("ScheduleModule");
         services.AddScoped<IGenericRepository<Schedule>>(sp =>
             new GenericRepository<Schedule>(sp.GetRequiredService<ScheduleDbContext>()));
         services.Decorate<IGenericRepository<Schedule>, CachingRepositoryDecorator<Schedule>>();

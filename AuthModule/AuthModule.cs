@@ -3,6 +3,7 @@ using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
 using TBD.AuthModule.Services;
+using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.CachingConfiguration;
@@ -28,7 +29,7 @@ public static class AuthModule
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IHasher, Hasher>();
-        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
+        services.RegisterModuleForMetrics("AuthModule");
         services.AddScoped<IGenericRepository<AuthUser>>(sp =>
             new GenericRepository<AuthUser>(sp.GetRequiredService<AuthDbContext>()));
         services.Decorate<IGenericRepository<AuthUser>, CachingRepositoryDecorator<AuthUser>>();
