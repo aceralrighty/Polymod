@@ -356,12 +356,14 @@ Each module follows a consistent, enterprise-ready structure:
 5. **Run migrations** for each module: Auth, User, Address, Schedule, Service, Recommendation, StockPrediction
 6. **Build and run** the application with .NET 9.0
 
-![API Testing Example](DemoMaterial/Postman_gif.gif)
 
 7. **Load stock data** (619k records) for ML training
 8. **Explore endpoints** via the comprehensive `.http` file
 9. **Monitor metrics** through Prometheus (`http://localhost:9090`) and Grafana dashboards
 10. **View application logs** in the module-specific log files
+---
+
+![API Testing Example](DemoMaterial/Postman_gif.gif)
 
 ---
 
