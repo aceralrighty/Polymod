@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.MetricsModule.Services;
-using TBD.MetricsModule.Services.Interfaces;
+using TBD.MetricsModule.OpenTelemetry;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.EntityMappers;
 using TBD.Shared.Repositories;
@@ -38,7 +37,7 @@ public static class StockModule
         services.AddScoped<LoadCsvData>();
         services.AddScoped<StockEntityMapper>();
         services.AddScoped<StockPredictionPipeline>();
-        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
+        services.RegisterModuleForMetrics("StockModule");
 
         services.AddScoped<MlStockPredictionEngine>();
 

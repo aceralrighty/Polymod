@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.ServiceModule.Data;
@@ -27,7 +28,7 @@ public static class ServiceModule
         });
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IServicesService, ServicesService>();
-        services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
+        services.RegisterModuleForMetrics("ServiceModule");
         services.AddScoped<IGenericRepository<Service>>(sp =>
             new GenericRepository<Service>(sp.GetRequiredService<ServiceDbContext>()));
         services.Decorate<IGenericRepository<Service>, CachingRepositoryDecorator<Service>>();

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using App.Metrics;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     protected readonly DbContext Context = context;
     protected readonly DbSet<T> DbSet = context.Set<T>();
     private readonly IDbConnection _dbConnection = context.Database.GetDbConnection();
+
 
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {

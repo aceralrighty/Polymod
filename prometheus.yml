@@ -1,19 +1,11 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-
-rule_files:
-  - "ci.yaml"
-  - "dependabot.yml"
-
+  scrape_interval: 60s
+remote_write:
+  - url: https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push
+    basic_auth:
+      username: GRAFANA_USERNAME
+      password: GRAFANA_PASSWORD
 scrape_configs:
-  - job_name: 'dotnet-tbd-app'
+  - job_name: node
     static_configs:
-      - targets: [ 'TBD:5000' ]  # Your .NET app service name and port
-    scrape_interval: 5s
-    metrics_path: '/metrics'
-    scrape_timeout: 10s
-
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: [ 'localhost:9090' ]
+      - targets: ["localhost:9090"]
