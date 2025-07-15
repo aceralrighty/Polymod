@@ -44,3 +44,9 @@ services:
         condition: service_healthy
     environment:
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=YourDbName;User=sa;Password=Sang192albs@
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:5000/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
