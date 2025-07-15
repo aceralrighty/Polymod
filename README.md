@@ -366,5 +366,20 @@ Each module follows a consistent, enterprise-ready structure:
 ![API Testing Example](DemoMaterial/Postman_gif.gif)
 
 ---
+## 📈 Live Monitoring (Local Development)
+
+🔗 **Quick Links**:
+- [Prometheus Metrics](http://localhost:9090) - Real-time metrics
+- [Health Check](http://localhost:5000/api/system/health) - System status
+- [API Documentation—](http://localhost:5000/swagger)Interactive API docs
+- [Metrics Endpoint—](http://localhost:5000/api/system/metrics)Prometheus scraping
+
+💡 **Try it yourself**:
+1. Run `docker-compose up -d`
+2. Execute `dotnet run`
+3. Visit the links above to see live data
+
+![API Testing Example](DemoMaterial/Postman_gif.gif)
+---
 
 *MIT License. Enterprise-ready modular architecture with advanced ML capabilities and comprehensive monitoring for learning and production.* 🔧
