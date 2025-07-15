@@ -193,7 +193,7 @@ public class StockPredictionPipeline : IStockPredictionPipeline
         }
     }
 
-    private async Task<double?> PerformQuickAccuracyCheck(Dictionary<string, List<RawData>> groupedBySymbol)
+    public async Task<double?> PerformQuickAccuracyCheck(Dictionary<string, List<RawData>> groupedBySymbol)
     {
         var accuracyStopwatch = Stopwatch.StartNew();
         _metricsService.IncrementCounter("stock.pipeline_accuracy_checks_total");

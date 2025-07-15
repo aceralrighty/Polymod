@@ -12,6 +12,7 @@ public static class OpenTelemetryModule
     {
         Console.WriteLine("[METRICS] Adding OpenTelemetry metrics module");
         services.AddSingleton<IMetricsServiceFactory, OpenTelemetryMetricsServiceFactory>();
+        services.AddSingleton<IMetricsService>(sp => new OpenTelemetryMetricsService("System"));
         return services;
     }
 
