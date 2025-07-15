@@ -163,6 +163,9 @@ also organized per module.
 ### ✅ **Comprehensive Metrics & Monitoring**
 
 - **Advanced Metrics Service**: `MetricsCollector`, `MetricsService`, `MetricsServiceFactory`
+- **OpenTelemetry Integration**: Complete observability with OpenTelemetry module
+- **Prometheus Integration**: Metrics export with Prometheus scraping endpoint
+- **Grafana Dashboard**: Real-time monitoring and visualization
 - **Detailed Module Logging**: Individual log files for all 8 modules with daily rotation
 - **Seeding Statistics**: Comprehensive logging of seeding operations and performance
 - **Real-time Analytics**: API performance tracking and ML model performance metrics
@@ -178,6 +181,34 @@ also organized per module.
 
 ---
 
+## 📊 Monitoring & Observability
+
+### **Prometheus & Grafana Stack**
+
+The project includes a complete monitoring solution with:
+
+- **Prometheus Server**: Time-series database collecting application metrics
+- **Grafana Dashboard**: Real-time visualization and alerting
+- **OpenTelemetry**: Distributed tracing and metrics collection
+- **Docker Compose**: Fully containerized monitoring stack
+
+### **Key Metrics Tracked**
+
+- **Stock Prediction Accuracy**: Real-time ML model performance
+- **API Performance**: Response times and error rates across all modules
+- **Database Operations**: Query performance and connection pooling
+- **Memory Usage**: Application resource consumption
+- **Custom Business Metrics**: Module-specific KPIs and analytics
+
+### **Accessing Monitoring**
+
+1. **Prometheus**: `http://localhost:9090` - Metrics collection and queries
+2. **Grafana**: Configure dashboards for visualization
+3. **Application Metrics**: `/metrics` endpoint for Prometheus scraping
+4. **OpenTelemetry**: Distributed tracing and performance monitoring
+
+---
+
 ## 🧰 Technologies Used
 
 - **.NET 9.0** (Latest)
@@ -189,6 +220,9 @@ also organized per module.
 - **JWT Authentication** with custom token generation
 - **NUnit + Moq** for comprehensive unit testing
 - **Docker & Docker Compose** for containerization
+- **Prometheus** for metrics collection and monitoring
+- **Grafana** for dashboard visualization and alerting
+- **OpenTelemetry** for distributed tracing and observability
 - **Custom Metrics Service** for real-time monitoring
 - **Large Dataset Processing** with efficient batch operations
 - **Structured Logging** with module-specific log files
@@ -216,6 +250,14 @@ Each module follows a consistent, enterprise-ready structure:
 - **Large Dataset Handling**: Efficient processing of 619k+ records
 - **Real-time Predictions**: Sub-3% average error rates for stock price predictions
 - **Model Validation**: Comprehensive accuracy testing with industry-standard metrics
+
+### Monitoring & Observability
+
+- **OpenTelemetry Integration**: Complete observability with distributed tracing
+- **Prometheus Metrics**: Real-time metrics collection and export
+- **Grafana Dashboards**: Custom visualization for business and technical metrics
+- **Module-Specific Monitoring**: Individual metric tracking across all 8 modules
+- **Performance Analytics**: ML model performance and API response time tracking
 
 ### Cross-Cutting Concerns
 
@@ -259,6 +301,7 @@ Each module follows a consistent, enterprise-ready structure:
 - **Advanced ML Infrastructure** ready for production recommendation and prediction systems
 - **Modular Seeding System** with deterministic cross-module data relationships
 - **Complete Logging Infrastructure** with module-specific analytics
+- **Full Observability Stack** with Prometheus, Grafana, and OpenTelemetry
 
 ---
 
@@ -267,6 +310,7 @@ Each module follows a consistent, enterprise-ready structure:
 ### Short Term
 
 - 🔄 **Advanced ML Features**: Implement ensemble models and real-time market data integration
+- 🔲 **Enhanced Monitoring**: Custom Grafana dashboards for business metrics
 - 🔲 **API Documentation**: Complete Swagger UI integration with all endpoints
 - 🔲 **Redis Integration**: External caching layer for production performance
 - 🔲 **Integration Testing**: End-to-end testing across all modules
@@ -277,6 +321,7 @@ Each module follows a consistent, enterprise-ready structure:
 - 🔲 **Real-time Features**: SignalR integration for live stock updates and recommendations
 - 🔲 **Performance Optimization**: Database indexing and query optimization
 - 🔲 **Security Enhancements**: Advanced authentication and rate limiting
+- 🔲 **Alerting System**: Grafana alerts for system health and business metrics
 
 ### Long Term
 
@@ -284,19 +329,37 @@ Each module follows a consistent, enterprise-ready structure:
 - 🔲 **Event Sourcing**: Event-driven architecture with cross-module communication
 - 🔲 **Cloud Deployment**: Azure/AWS with CI/CD and container orchestration
 - 🔲 **Advanced Analytics**: Business intelligence and ML model performance analysis
+- 🔲 **Distributed Tracing**: Full OpenTelemetry implementation across microservices
 
 ---
 
 ## 🚀 Getting Started
 
+### Prerequisites
+- .NET 9.0 SDK
+- Docker and Docker Compose
+- SQL Server (or use the containerized version)
+
+### Quick Start
+
 1. **Clone the repository**
 2. **Update connection strings** in `appsettings.json` for all 8 modules
-3. **Run migrations** for each module: Auth, User, Address, Schedule, Service, Recommendation, StockPrediction
-4. **Build and run** the application with .NET 9.0
-5. **Load stock data** (619k records) for ML training
-6. **Explore endpoints** via the comprehensive `.http` file
-7. **Monitor metrics** through the real-time logging system
+3. **Configure monitoring** (set `GRAFANA_USERNAME` and `GRAFANA_PASSWORD` environment variables)
+4. **Start the monitoring stack**: `docker-compose up -d`
+5. **Run migrations** for each module: Auth, User, Address, Schedule, Service, Recommendation, StockPrediction
+6. **Build and run** the application with .NET 9.0
+7. **Load stock data** (619k records) for ML training
+8. **Explore endpoints** via the comprehensive `.http` file
+9. **Monitor metrics** through Prometheus (`http://localhost:9090`) and Grafana dashboards
+10. **View application logs** in the module-specific log files
+
+### Monitoring Setup
+
+- **Prometheus**: Accessible at `http://localhost:9090`
+- **Application Metrics**: Available at `/metrics` endpoint
+- **Custom Dashboards**: Configure Grafana for your specific monitoring needs
+- **OpenTelemetry**: Distributed tracing automatically configured
 
 ---
 
-*MIT License. Enterprise-ready modular architecture with advanced ML capabilities for learning and production.* 🔧
+*MIT License. Enterprise-ready modular architecture with advanced ML capabilities and comprehensive monitoring for learning and production.* 🔧
