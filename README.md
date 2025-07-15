@@ -101,6 +101,7 @@ also organized per module.
 ├── Logs/                                   # Module-specific logs
 └── TBD.TestProject/                        # Comprehensive testing
 ```
+
 ---
 
 ## 🚀 Key Features & Recent Additions
@@ -151,7 +152,7 @@ also organized per module.
 ### ✅ **Robust Data Management**
 
 - **Generic Repository Pattern**: Shared base repository with caching decorators
-- **Comprehensive Seeding**: Deterministic seeding across all 8 modules with real data relationships
+- **Comprehensive Seeding**: Deterministic seeding across all eight modules with real data relationships
 - **Complete Migration Support**: All modules have independent migration paths
 - **Base Properties**: Shared inheritance (`BaseTableProperties`, `DateableObject`, `IWithId`)
 - **Advanced Configuration**: Entity-specific configurations for complex relationships
@@ -169,7 +170,7 @@ also organized per module.
 - **OpenTelemetry Integration**: Complete observability with OpenTelemetry module
 - **Prometheus Integration**: Metrics export with Prometheus scraping endpoint
 - **Grafana Dashboard**: Real-time monitoring and visualization
-- **Detailed Module Logging**: Individual log files for all 8 modules with daily rotation
+- **Detailed Module Logging**: Individual log files for all eight modules with daily rotation
 - **Seeding Statistics**: Comprehensive logging of seeding operations and performance
 - **Real-time Analytics**: API performance tracking and ML model performance metrics
 - **Factory Pattern**: Centralized metrics service creation and dependency injection
@@ -259,7 +260,7 @@ Each module follows a consistent, enterprise-ready structure:
 - **OpenTelemetry Integration**: Complete observability with distributed tracing
 - **Prometheus Metrics**: Real-time metrics collection and export
 - **Grafana Dashboards**: Custom visualization for business and technical metrics
-- **Module-Specific Monitoring**: Individual metric tracking across all 8 modules
+- **Module-Specific Monitoring**: Individual metric tracking across all eight modules
 - **Performance Analytics**: ML model performance and API response time tracking
 
 ### Cross-Cutting Concerns
@@ -343,6 +344,7 @@ Each module follows a consistent, enterprise-ready structure:
 ![Application Startup](DemoMaterial/Startup_gif.gif)
 
 ### Prerequisites
+
 - .NET 9.0 SDK
 - Docker and Docker Compose
 - SQL Server (or use the containerized version)
@@ -350,28 +352,33 @@ Each module follows a consistent, enterprise-ready structure:
 ### Quick Start
 
 1. **Clone the repository**
-2. **Update connection strings** in `appsettings.json` for all 8 modules
+2. **Update connection strings** in `appsettings.json` for all eight modules
 3. **Configure monitoring** (set `GRAFANA_USERNAME` and `GRAFANA_PASSWORD` environment variables)
 4. **Start the monitoring stack**: `docker-compose up -d`
 5. **Run migrations** for each module: Auth, User, Address, Schedule, Service, Recommendation, StockPrediction
 6. **Build and run** the application with .NET 9.0
-
-
 7. **Load stock data** (619k records) for ML training
 8. **Explore endpoints** via the comprehensive `.http` file
 9. **Monitor metrics** through Prometheus (`http://localhost:9090`) and Grafana dashboards
 10. **View application logs** in the module-specific log files
 
 ---
+
 ## 📈 Live Monitoring (Local Development)
 
 🔗 **Quick Links**:
+
 - [Prometheus Metrics](http://localhost:9090) - Real-time metrics
-- [Health Check](http://localhost:5000/api/system/health) - System status
+- [Health Check](http://localhost:5000/api/healthcheck/health) - System status
+- [Performance Check—](http://localhost:5000/api/healthcheck/performance)Performance Check
+- [Summary Check—](http://localhost:5000/api/healthcheck/metrics/summary)Summary Check
+- [Module Check—](http://localhost:5000/api/healthcheck/modules)Module Check
+- [Demo](http://localhost:5000/api/healthcheck/demo) - Demo
 - [API Documentation—](http://localhost:5000/swagger)Interactive API docs
 - [Metrics Endpoint—](http://localhost:5000/api/system/metrics)Prometheus scraping
 
 💡 **Try it yourself**:
+
 1. Run `docker-compose up -d`
 2. Execute `dotnet run`
 3. Visit the links above to see live data
@@ -379,4 +386,5 @@ Each module follows a consistent, enterprise-ready structure:
 ![API Testing Example](DemoMaterial/Postman_gif.gif)
 ---
 
-*MIT License. Enterprise-ready modular architecture with advanced ML capabilities and comprehensive monitoring for learning and production.* 🔧
+*MIT License. Enterprise-ready modular architecture with advanced ML capabilities and comprehensive monitoring for
+learning and production.* 🔧
