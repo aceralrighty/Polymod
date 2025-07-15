@@ -356,13 +356,27 @@ Each module follows a consistent, enterprise-ready structure:
 5. **Run migrations** for each module: Auth, User, Address, Schedule, Service, Recommendation, StockPrediction
 6. **Build and run** the application with .NET 9.0
 
-![API Testing Example](DemoMaterial/Postman_gif.gif)
 
 7. **Load stock data** (619k records) for ML training
 8. **Explore endpoints** via the comprehensive `.http` file
 9. **Monitor metrics** through Prometheus (`http://localhost:9090`) and Grafana dashboards
 10. **View application logs** in the module-specific log files
 
+---
+## 📈 Live Monitoring (Local Development)
+
+🔗 **Quick Links**:
+- [Prometheus Metrics](http://localhost:9090) - Real-time metrics
+- [Health Check](http://localhost:5000/api/system/health) - System status
+- [API Documentation—](http://localhost:5000/swagger)Interactive API docs
+- [Metrics Endpoint—](http://localhost:5000/api/system/metrics)Prometheus scraping
+
+💡 **Try it yourself**:
+1. Run `docker-compose up -d`
+2. Execute `dotnet run`
+3. Visit the links above to see live data
+
+![API Testing Example](DemoMaterial/Postman_gif.gif)
 ---
 
 *MIT License. Enterprise-ready modular architecture with advanced ML capabilities and comprehensive monitoring for learning and production.* 🔧
