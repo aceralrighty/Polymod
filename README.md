@@ -361,9 +361,6 @@ Each module follows a consistent, enterprise-ready structure:
 8. **Explore endpoints** via the comprehensive `.http` file
 9. **Monitor metrics** through Prometheus (`http://localhost:9090`) and Grafana dashboards
 10. **View application logs** in the module-specific log files
----
-
-![API Testing Example](DemoMaterial/Postman_gif.gif)
 
 ---
 ## 📈 Live Monitoring (Local Development)
