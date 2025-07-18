@@ -1,52 +1,33 @@
-﻿version: '3.8'
+﻿version: '3.9'
 
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: sql1
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=YourStrongPassword@!
-    ports:
-      - "1433:1433"
-    healthcheck:
-      test: ["CMD-SHELL", "sqlcmd -U sa -P Sang192albs@ -Q 'SELECT 1'"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
     ports:
       - "9090:9090"
-    environment:
-      - GRAFANA_USERNAME=${GRAFANA_USERNAME}
-      - GRAFANA_PASSWORD=${GRAFANA_PASSWORD}
     volumes:
-      - ./prometheus.yml.template:/etc/prometheus/prometheus.yml.template
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
-      - /bin/sh
-      - -c
-      - |
-        envsubst < /etc/prometheus/prometheus.yml.template > /etc/prometheus/prometheus.yml
-        /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus --web.console.libraries=/etc/prometheus/console_libraries --web.console.templates=/etc/prometheus/consoles
+      - --config.file=/etc/prometheus/prometheus.yml
     depends_on:
-      - app
+      - sql-server
 
-  app:
-    build:
-      context: .
-    ports:
-      - "5000:5000"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
+  sql-server:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    container_name: sql-server
     environment:
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=YourDbName;User=sa;Password=Sang192albs@
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:5000/health || exit 1" ]
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "DevPassword123!" -Q "SELECT 1"
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 40s
+
+volumes:
+  sqlserver_data:

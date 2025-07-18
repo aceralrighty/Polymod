@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
@@ -12,9 +13,12 @@ namespace TBD.ScheduleModule.Seed;
 public static class ScheduleSeeder
 {
     private static readonly Random Random = new();
+    private static readonly ActivitySource ActivitySource = new("TBD.ScheduleModule.ScheduleSeeder");
 
     public static async Task<List<Schedule>> ReseedForTestingAsync(IServiceProvider serviceProvider)
     {
+        using var activity = ActivitySource.StartActivity("ReseedForTesting");
+        activity?.SetTag("operation", "ReseedForTesting");
         using var scope = serviceProvider.CreateScope();
         var scheduleContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();

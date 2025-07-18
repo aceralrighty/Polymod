@@ -4,7 +4,6 @@ using TBD.AuthModule.Data;
 using TBD.AuthModule.Exceptions;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
-using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.Utils;
 
@@ -148,6 +147,9 @@ public class AuthService(
         {
             _metricsService.IncrementCounter("auth.login_attempts");
 
+            // Record response time
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
             if (string.IsNullOrWhiteSpace(request.Username) ||
                 string.IsNullOrWhiteSpace(request.Password))
             {
@@ -192,6 +194,10 @@ public class AuthService(
             _metricsService.IncrementCounter("auth.refresh_tokens_generated");
 
             await repository.UpdateAsync(authUser);
+
+            // Record login duration
+            stopwatch.Stop();
+            _metricsService.RecordHistogram("auth.login_duration_ms", stopwatch.ElapsedMilliseconds);
 
             logger.LogInformation("Login successful for user: {Username}. New refresh token expiry: {TokenExpiry}",
                 authUser.Username, authUser.RefreshTokenExpiry);

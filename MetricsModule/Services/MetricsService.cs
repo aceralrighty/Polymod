@@ -45,6 +45,11 @@ internal class MetricsService(string moduleName) : IMetricsService
         LogWithDaySpacing("Metric incremented: {MetricKey} = {NewValue}", key, newValue);
     }
 
+    public void RecordHistogram(string key, double value, params KeyValuePair<string, object?>[] tags)
+    {
+        throw new NotImplementedException();
+    }
+
     public int GetCount(string key) => MetricsCollector.Instance.Get(key);
 
     public Dictionary<string, int> GetAllMetrics()

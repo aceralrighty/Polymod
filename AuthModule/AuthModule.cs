@@ -4,7 +4,6 @@ using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
 using TBD.AuthModule.Services;
 using TBD.MetricsModule.OpenTelemetry;
-using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.Repositories;
@@ -16,8 +15,11 @@ public static class AuthModule
 {
     public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration)
     {
+        // Database configuration
         services.AddDbContext<AuthDbContext>(options => options.UseSqlServer(
             configuration.GetConnectionString("AuthDb")));
+
+        // Cache configuration
         services.Configure<CacheOptions>("Auth", options =>
         {
             options.DefaultCacheDuration = TimeSpan.FromMinutes(10);
@@ -26,14 +28,21 @@ public static class AuthModule
             options.EnableCaching = true;
             options.CacheKeyPrefix = "Auth";
         });
+
+        // Core auth services
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IHasher, Hasher>();
-        services.RegisterModuleForMetrics("AuthModule");
+
+        // Generic repository with caching
         services.AddScoped<IGenericRepository<AuthUser>>(sp =>
             new GenericRepository<AuthUser>(sp.GetRequiredService<AuthDbContext>()));
         services.Decorate<IGenericRepository<AuthUser>, CachingRepositoryDecorator<AuthUser>>();
+
+        // AutoMapper
         services.AddAutoMapper(typeof(AuthModule).Assembly);
+
+        services.RegisterModuleForMetrics("AuthModule");
 
         return services;
     }
