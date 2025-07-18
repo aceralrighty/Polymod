@@ -1,6 +1,4 @@
-﻿version: '3.9'
-
-services:
+﻿services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -13,9 +11,8 @@ services:
 
   sql-server:
     image: mcr.microsoft.com/azure-sql-edge:latest
-    platform: linux/amd64
     container_name: sql-server
-    user: "0:0"  # Run as root to avoid permission issues
+    platform: linux/amd64
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${SA_PASSWORD}
@@ -25,7 +22,7 @@ services:
     volumes:
       - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P ${SA_PASSWORD} -Q 'SELECT 1'"]
+      test: [ "CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P ${SA_PASSWORD} -Q 'SELECT 1'" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -38,7 +35,7 @@ services:
     container_name: polymod-app
     depends_on:
       sql-server:
-        condition: service_healthy  # Wait for SQL Server to be healthy
+        condition: service_healthy
     ports:
       - "5001:8080"
     environment:
