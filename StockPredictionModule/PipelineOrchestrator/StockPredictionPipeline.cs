@@ -24,19 +24,17 @@ public class StockPredictionPipeline : IStockPredictionPipeline
     private static readonly Meter Meter = new("TBD.StockPipeline", "1.0.0");
 
     private static readonly Counter<int> PipelineExecutions =
-        Meter.CreateCounter<int>("stock_pipeline_executions_total", "Total number of pipeline executions");
+        Meter.CreateCounter<int>("stock_pipeline_executions_total");
 
     private static readonly Counter<int> PredictionGenerationAttempts =
-        Meter.CreateCounter<int>("stock_pipeline_prediction_attempts_total",
-            "Total number of prediction generation attempts");
+        Meter.CreateCounter<int>("stock_pipeline_prediction_attempts_total");
 
     private static readonly Histogram<double> PipelineExecutionDuration =
-        Meter.CreateHistogram<double>("stock_pipeline_execution_duration_seconds",
-            "Duration of pipeline execution in seconds");
+        Meter.CreateHistogram<double>("stock_pipeline_execution_duration_seconds", "seconds");
 
     private static readonly Histogram<double> AccuracyCheckDuration =
-        Meter.CreateHistogram<double>("stock_pipeline_accuracy_check_duration_seconds",
-            "Duration of accuracy check in seconds");
+        Meter.CreateHistogram<double>("stock_pipeline_accuracy_check_duration_seconds", "seconds");
+
 
     public StockPredictionPipeline(
         StockEntityMapper entityMapper,

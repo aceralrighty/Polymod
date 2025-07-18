@@ -2,7 +2,6 @@ using OpenTelemetry.Trace;
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
-using TBD.MetricsModule;
 using TBD.MetricsModule.ModuleHealthCheck;
 using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.OpenTelemetry.Services;
@@ -24,18 +23,12 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddMetricsModule();
+
+// 1. Add OpenTelemetry metrics module first (registers the factory)
 builder.Services.AddOpenTelemetryMetricsModule();
 builder.Services.AddHealthModuleChecks();
-builder.Services.RegisterModuleForMetrics("Auth");
-builder.Services.RegisterModuleForMetrics("StockPrediction");
-builder.Services.RegisterModuleForMetrics("User");
-builder.Services.RegisterModuleForMetrics("Recommendations");
-builder.Services.RegisterModuleForMetrics("Address");
-builder.Services.RegisterModuleForMetrics("Schedule");
-builder.Services.RegisterModuleForMetrics("Service");
-builder.Services.RegisterModuleForMetrics("Metrics");
-// DI Containers
+
+// 2. Add all your modules (each will call RegisterModuleForMetrics internally)
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
@@ -43,13 +36,16 @@ builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
+
+// 3. Add other services
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
-// Extension method to call the autoMappers for my modules
 builder.Services.AddAutoMapperExtension();
-builder.Services.ConfigureOpenTelemetryMetrics();
 builder.Services.AddMemoryCache();
+
+// 4. Configure OpenTelemetry metrics (must be after all modules are registered)
+builder.Services.ConfigureOpenTelemetryMetrics();
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(providerBuilder => providerBuilder
@@ -58,7 +54,6 @@ builder.Services.AddOpenTelemetry()
 
 var app = builder.Build();
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -85,10 +80,7 @@ if (app.Environment.IsDevelopment())
             }
 
             Console.WriteLine("✅ Test metrics recorded");
-
-            // Wait a moment for metrics to be processed
             await Task.Delay(2000);
-
 
             // Seed users first and capture the result
             Console.WriteLine("👥 Seeding users...");
@@ -115,7 +107,6 @@ if (app.Environment.IsDevelopment())
             await Task.Delay(1000);
 
             // This is the combined seeding and training logic
-            // The RecommendationSeederAndTrainer will handle database recreation and data seeding for recommendations
             Console.WriteLine(
                 "💡 Starting RecommendationSeederAndTrainer workflow (seeding recommendations and training model)...");
             var recommendationSeederAndTrainer = scopedServices.GetRequiredService<RecommendationSeederAndTrainer>();
@@ -141,7 +132,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapOpenApi();
-
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TBD.Api v1"));
 app.MapControllerRoute(

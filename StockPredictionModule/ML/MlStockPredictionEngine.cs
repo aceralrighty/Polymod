@@ -34,11 +34,11 @@ public class MlStockPredictionEngine
     private static readonly Meter Meter = new("TBD.StockPrediction", "1.0.0");
 
     private static readonly Counter<int> PredictionAttempts =
-        Meter.CreateCounter<int>("stock_prediction_attempts_total", "Total number of prediction attempts");
+        Meter.CreateCounter<int>("stock_prediction_attempts_total");  // no description text
 
     private static readonly Histogram<double> PredictionDuration =
-        Meter.CreateHistogram<double>("stock_prediction_duration_seconds",
-            "Duration of prediction generation in seconds");
+        Meter.CreateHistogram<double>("stock_prediction_duration_seconds", "seconds"); // unit is okay here
+
 
     public Task<bool> IsModelTrainedAsync()
     {
@@ -58,6 +58,7 @@ public class MlStockPredictionEngine
             if (rawData == null || rawData.Count == 0)
             {
                 _metricsService.IncrementCounter("stock.train_model_failures_total");
+                _metricsService.RecordHistogram("model is trained", stopwatch.ElapsedMilliseconds);
                 throw new InvalidOperationException("No training data provided");
             }
 
