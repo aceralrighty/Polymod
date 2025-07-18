@@ -364,8 +364,6 @@ Each module follows a consistent, enterprise-ready structure:
 
 ---
 
----
-
 ## 📊 Monitoring & Grafana Dashboards
 
 To give you a clear picture of how monitoring works in the project, here are example Grafana dashboards showing real-time metrics and ML performance.
