@@ -10,24 +10,42 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - --config.file=/etc/prometheus/prometheus.yml
-    depends_on:
-      - sql-server
 
   sql-server:
     image: mcr.microsoft.com/azure-sql-edge:latest
+    platform: linux/amd64
     container_name: sql-server
+    user: "0:0"  # Run as root to avoid permission issues
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=${SA_PASSWORD}
+      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P "DevPassword123!" -Q "SELECT 1"
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P ${SA_PASSWORD} -Q 'SELECT 1'"]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 3
+      start_period: 60s
+
+  polymod-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: polymod-app
+    depends_on:
+      sql-server:
+        condition: service_healthy  # Wait for SQL Server to be healthy
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sql-server,1433;Database=Polymod;User Id=SA;Password=${SA_PASSWORD};TrustServerCertificate=true;
+    volumes:
+      - ./Logs:/app/Logs
 
 volumes:
   sqlserver_data:

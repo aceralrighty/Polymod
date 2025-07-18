@@ -1,28 +1,32 @@
-﻿# Stage 1: build
+﻿# Use .NET 9.0 SDK for building
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-WORKDIR /app
+WORKDIR /src
 
-# Copy everything
-COPY . ./
+# Copy csproj files and restore dependencies
+COPY *.csproj ./
+RUN dotnet restore
 
-# Restore dependencies
-RUN dotnet restore ./TBD.csproj
+# Copy source code
+COPY . .
 
-RUN dotnet restore ./TestProject/TestProject.csproj
+# Build the application
+RUN dotnet build -c Release -o /app/build
 
-# Build and publish
-RUN dotnet publish ./TBD.csproj -c Release -o /out
+# Publish the application
+RUN dotnet publish -c Release -o /app/publish
 
-RUN dotnet publish ./TestProject/TestProject.csproj -c Release -o /out
-
-# Stage 2: runtime
+# Use .NET 9.0 runtime for final image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
-COPY --from=build /out .
 
-# Expose HTTP and HTTPS
-EXPOSE 5000
-EXPOSE 5001
+# Copy published application
+COPY --from=build /app/publish .
 
-# Start app
+# Create logs directory
+RUN mkdir -p /app/Logs
+
+# Expose port
+EXPOSE 8080
+
+# Set entry point
 ENTRYPOINT ["dotnet", "TBD.dll"]
