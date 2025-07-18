@@ -364,31 +364,34 @@ Each module follows a consistent, enterprise-ready structure:
 
 ---
 
-## 📈 Live Monitoring (Local Development)
+---
 
-🔗 **Quick Links**:
+## 📊 Monitoring & Grafana Dashboards
 
-- [Prometheus Metrics](http://localhost:9090) - Real-time metrics
-- [Health Check](http://localhost:5000/api/healthcheck/health) - System status
-- [Performance Check—](http://localhost:5000/api/healthcheck/performance)Performance Check
-- [Summary Check—](http://localhost:5000/api/healthcheck/metrics/summary)Summary Check
-- [Module Check—](http://localhost:5000/api/healthcheck/modules)Module Check
-- [Demo](http://localhost:5000/api/healthcheck/demo) - Demo
-- [API Documentation—](http://localhost:5000/swagger)Interactive API docs
-- [Metrics Endpoint—](http://localhost:5000/api/system/metrics)Prometheus scraping
+To give you a clear picture of how monitoring works in the project, here are example Grafana dashboards showing real-time metrics and ML performance.
 
-💡 **Try it yourself**:
+### Stock Prediction Accuracy
 
-1. Run `docker-compose up -d`
-2. Execute `dotnet run`
-3. Visit the links above to see live data
+![Stock Prediction Accuracy Dashboard](DemoMaterial/Screenshot%202025-07-18%20at%204.46.05%E2%80%AFPM.png)  
+*Shows real-time stock prediction accuracy quantiles (p50, p90, p99) and average prediction error over time.*
 
-![API Testing Example](DemoMaterial/Postman_gif.gif)
+### System Performance Overview
+
+![System Performance Dashboard](DemoMaterial/Screenshot%202025-07-18%20at%203.25.49%E2%80%AFPM.png)  
+*Tracks API response times, error rates, memory usage, and database query performance.*
+
+### Module Health & Metrics
+
+![Module Health Dashboard](DemoMaterial/Postman_gif.gif)  
+*Visualizes the health and performance metrics across core modules, including Auth, User, and Metrics.*
 
 ---
 
-![Grafana Dashboard Example](DemoMaterial/Screenshot%202025-07-18%20at%203.25.49%E2%80%AFPM.png)
+These dashboards are powered by Prometheus metrics collected from the modular monolith and exposed via OpenTelemetry instrumentation. You can view these dashboards locally by accessing Grafana at `http://localhost:3000` after starting the monitoring stack.
+
 ---
+
+
 
 *MIT License. Enterprise-ready modular architecture with advanced ML capabilities and comprehensive monitoring for
 learning and production.* 🔧
