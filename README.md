@@ -384,6 +384,10 @@ Each module follows a consistent, enterprise-ready structure:
 3. Visit the links above to see live data
 
 ![API Testing Example](DemoMaterial/Postman_gif.gif)
+
+---
+
+![Grafana Dashboard Example](DemoMaterial/Screenshot%202025-07-18%20at%203.25.49%E2%80%AFPM.png)
 ---
 
 *MIT License. Enterprise-ready modular architecture with advanced ML capabilities and comprehensive monitoring for
