@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
@@ -27,7 +26,6 @@ public static class ScheduleSeeder
 
 
         metricsService.IncrementCounter("seeding.schedule_reseed_started");
-
         await userContext.Database.EnsureDeletedAsync();
         await scheduleContext.Database.EnsureDeletedAsync();
         await userContext.Database.MigrateAsync();

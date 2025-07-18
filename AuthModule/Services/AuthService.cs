@@ -87,7 +87,7 @@ public class AuthService(
                 _metricsService.IncrementCounter("auth.registration_failed_missing_fields");
                 logger.LogWarning("Registration failed - Missing required fields for username: {Username}",
                     request.Username);
-                return new AuthResponse { IsSuccessful = false, Message = $"All fields are required to be filled in"};
+                return new AuthResponse { IsSuccessful = false, Message = $"All fields are required to be filled in" };
             }
 
             var existingUser = await repository.GetUserByUsername(request.Username);
@@ -186,14 +186,14 @@ public class AuthService(
             var accessToken = GenerateJwtToken(authUser);
             var refreshToken = GenerateRefreshToken();
 
-            // Update user with refresh token
+            // Update user with refresh token - Use DbContext directly like RefreshTokenAsync does
             authUser.RefreshToken = refreshToken;
             authUser.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
 
             _metricsService.IncrementCounter("auth.login_successful");
             _metricsService.IncrementCounter("auth.refresh_tokens_generated");
 
-            await repository.UpdateAsync(authUser);
+            await dbContext.SaveChangesAsync(); // <-- Changed from repository.UpdateAsync to dbContext.SaveChangesAsync
 
             // Record login duration
             stopwatch.Stop();
