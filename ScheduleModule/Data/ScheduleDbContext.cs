@@ -17,11 +17,7 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Schedule>()
-            .HasOne(s => s.User)
-            .WithOne(u => u.Schedule)
-            .HasForeignKey<Schedule>(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Schedule>().HasIndex(u => u.UserId).IsUnique();
 
         modelBuilder.Entity<Schedule>()
             .Property(s => s.CreatedAt)

@@ -37,10 +37,10 @@ public class ScheduleTest
             Schedule = null
         };
 
-        var schedule = new Schedule { UserId = userMock.Id, User = userMock };
+        var schedule = new Schedule { UserId = userMock.Id};
 
         Assert.That(schedule.UserId, Is.EqualTo(userMock.Id));
-        Assert.That(schedule.User, Is.EqualTo(userMock));
+
     }
 
     #endregion

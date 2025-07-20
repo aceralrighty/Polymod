@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using TBD.Shared.GenericDBProperties;
-using TBD.UserModule.Models;
 
 namespace TBD.ScheduleModule.Models;
 
@@ -9,17 +8,9 @@ public class Schedule : BaseTableProperties
 {
     public float? TotalHoursWorked { get; set; } // Changed from double? to float?
 
-    // Have to explicitly call this constructor because my tests freak out when I don't
-    public Schedule() { }
-
-    public Schedule(User user)
-    {
-        UserId = user.Id;
-        User = user;
-    }
 
     public Guid UserId { get; set; }
-    [ForeignKey(nameof(UserId))] public User? User { get; set; }
+
 
     public float? BasePay { get; set; } // Changed from double? to float?
 

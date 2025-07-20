@@ -6,10 +6,12 @@ using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.EntityMappers;
+using TBD.Shared.Events.Interfaces;
 using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
+using TBD.UserModule.PubEvents;
 using TBD.UserModule.Repositories;
 using TBD.UserModule.Services;
 
@@ -45,6 +47,7 @@ public static class UserModule
 
         services.AddLogging();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IUserReadService, UserReadService>();
         services.AddScoped<IHasher, Hasher>();
         services.AddAutoMapper(typeof(UserMapping).Assembly);
         services.RegisterModuleForMetrics("UserModule");

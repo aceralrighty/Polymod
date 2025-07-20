@@ -126,7 +126,6 @@ public class RecommendationSeederAndTrainer(
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
-                User = user,
                 BasePay = (float?)template.BasePay,
                 DaysWorked = template.DaysWorked
             };
@@ -330,14 +329,7 @@ public class RecommendationSeederAndTrainer(
         var daysWorked = DistributeHoursAcrossDays(totalHours);
         var basePay = GenerateRealisticBasePay();
 
-        return new Schedule
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            User = user,
-            BasePay = basePay,
-            DaysWorked = daysWorked
-        };
+        return new Schedule { Id = Guid.NewGuid(), UserId = user.Id, BasePay = basePay, DaysWorked = daysWorked };
     }
 
     private int GenerateRealisticTotalHours()
