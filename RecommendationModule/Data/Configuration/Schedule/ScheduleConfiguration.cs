@@ -9,10 +9,7 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<ScheduleModule.Mod
     {
         builder.HasKey(s => s.Id);
 
-        builder.HasOne(s => s.User)
-            .WithOne(u => u.Schedule)
-            .HasForeignKey<ScheduleModule.Models.Schedule>(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(s => s.UserId).IsUnique();
 
         // Configure the JSON column for DaysWorked
         builder.Property(s => s.DaysWorkedJson)

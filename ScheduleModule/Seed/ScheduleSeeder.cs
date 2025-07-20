@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
+using TBD.Shared.Events.Interfaces;
 using TBD.Shared.Utils;
-using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 
 namespace TBD.ScheduleModule.Seed;
@@ -19,24 +19,29 @@ public static class ScheduleSeeder
         using var activity = ActivitySource.StartActivity("ReseedForTesting");
         activity?.SetTag("operation", "ReseedForTesting");
         using var scope = serviceProvider.CreateScope();
-        var scheduleContext = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
-        var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<ScheduleDbContext>();
+        var userService = scope.ServiceProvider.GetRequiredService<IUserReadService>();
+
+        var users = await userService.GetAllUsersAsync();
         var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
         var metricsService = factory.CreateMetricsService("ScheduleModule");
 
 
         metricsService.IncrementCounter("seeding.schedule_reseed_started");
-        await userContext.Database.EnsureDeletedAsync();
-        await scheduleContext.Database.EnsureDeletedAsync();
-        await userContext.Database.MigrateAsync();
-        await scheduleContext.Database.MigrateAsync();
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+        foreach (var user in users)
+        {
+            db.Schedules.Add(new Schedule { Id = Guid.NewGuid(), UserId = user.Id });
+        }
 
+        await db.SaveChangesAsync();
         metricsService.IncrementCounter("seeding.schedule_database_recreated");
 
-        await SeedScheduleAsync(scheduleContext, metricsService);
+        await SeedScheduleAsync(db, metricsService);
 
         metricsService.IncrementCounter("seeding.schedule_reseed_completed");
-        return await scheduleContext.Schedules.ToListAsync();
+        return await db.Schedules.ToListAsync();
     }
 
     private static async Task SeedScheduleAsync(ScheduleDbContext scheduleContext, IMetricsService metricsService)
@@ -65,7 +70,6 @@ public static class ScheduleSeeder
                 { "Sunday", 0 }
             },
             BasePay = 25.00f,
-            User = CreateScheduleUser("exact.forty", "Exactly40!", "exact40@test.com")
         };
 
         // Exactly 40.5 hours - minimal overtime (just over a threshold)
@@ -83,7 +87,6 @@ public static class ScheduleSeeder
                 { "Sunday", 1 } // 41 hours total
             },
             BasePay = 30.00f,
-            User = CreateScheduleUser("just.over.forty", "JustOver40!", "justover40@test.com")
         };
 
         // Exactly 60 hours - maximum 1.5x overtime, no 2x yet (critical boundary)
@@ -101,7 +104,6 @@ public static class ScheduleSeeder
                 { "Sunday", 0 }
             },
             BasePay = 35.00f,
-            User = CreateScheduleUser("exact.sixty", "Exactly60!", "exact60@test.com")
         };
 
         // Exactly 61 hours - minimal 2x overtime (just over threshold 60)
@@ -119,7 +121,6 @@ public static class ScheduleSeeder
                 { "Sunday", 1 }
             },
             BasePay = 32.00f,
-            User = CreateScheduleUser("just.over.sixty", "JustOver60!", "justover60@test.com")
         };
 
         // EXTREME CASES
@@ -139,7 +140,6 @@ public static class ScheduleSeeder
                 { "Sunday", 0 }
             },
             BasePay = 20.00f,
-            User = CreateScheduleUser("zero.hours", "NoWork123!", "zero@test.com")
         };
 
         // Single-hour worked
@@ -157,7 +157,6 @@ public static class ScheduleSeeder
                 { "Sunday", 0 }
             },
             BasePay = 15.00f,
-            User = CreateScheduleUser("one.hour", "SingleHour!", "onehour@test.com")
         };
 
         // Massive overtime - 100+ hours (stress test)
@@ -175,7 +174,6 @@ public static class ScheduleSeeder
                 { "Sunday", 16 }
             }, // 112 hours total
             BasePay = 25.00f,
-            User = CreateScheduleUser("workaholic.extreme", "Work247365!", "extreme@test.com")
         };
 
         // FRACTIONAL BOUNDARY TESTS (if your system supports fractional hours)
@@ -195,7 +193,6 @@ public static class ScheduleSeeder
                 { "Sunday", 1 } // 40 hours (or use 7.5 + 0.5 if you support decimals)
             },
             BasePay = 22.50f,
-            User = CreateScheduleUser("just.under.forty", "AlmostForty!", "under40@test.com")
         };
 
         // 59.5 hours - just under 60
@@ -213,7 +210,6 @@ public static class ScheduleSeeder
                 { "Sunday", 5 }
             }, // 59 hours
             BasePay = 28.00f,
-            User = CreateScheduleUser("just.under.sixty", "AlmostSixty!", "under60@test.com")
         };
 
         // HIGH-VALUE EDGE CASES
@@ -233,7 +229,6 @@ public static class ScheduleSeeder
                 { "Sunday", 0 }
             },
             BasePay = 75.00f, // High rate to test large dollar calculations
-            User = CreateScheduleUser("executive.sixty", "HighPay60!", "exec60@test.com")
         };
 
         // Low pay rate with massive overtime
@@ -251,7 +246,6 @@ public static class ScheduleSeeder
                 { "Sunday", 8 }
             }, // 90 hours
             BasePay = 12.50f, // Minimum wage scenario
-            User = CreateScheduleUser("minimum.wage.hero", "WorkHard!", "minwage@test.com")
         };
 
         // UNUSUAL PATTERNS
@@ -271,7 +265,6 @@ public static class ScheduleSeeder
                 { "Sunday", 0 }
             },
             BasePay = 30.00f,
-            User = CreateScheduleUser("marathon.worker", "OneDay65!", "marathon@test.com")
         };
 
         // Perfect distribution across all tiers
@@ -289,7 +282,6 @@ public static class ScheduleSeeder
                 { "Sunday", 12 }
             }, // 62 hours: 40 regular + 20 at 1.5x + 2 at 2x
             BasePay = 25.00f,
-            User = CreateScheduleUser("perfect.tiers", "AllTiers!", "tiers@test.com")
         };
 
         schedules.AddRange([
@@ -331,14 +323,7 @@ public static class ScheduleSeeder
 
             var basePay = (double)Random.Next(15, 60); // Random pay between $15-$60
 
-            var newSchedule = new Schedule
-            {
-                Id = Guid.NewGuid(),
-                DaysWorked = daysWorked,
-                BasePay = (float?)basePay,
-                User = CreateScheduleUser($"dynamic.user.{i + 1}", $"DynamicPass{i + 1}!",
-                    $"dynamic{i + 1}@test.com")
-            };
+            var newSchedule = new Schedule { Id = Guid.NewGuid(), DaysWorked = daysWorked, BasePay = (float?)basePay, };
             schedules.Add(newSchedule);
         }
         // --- End of NEW section ---

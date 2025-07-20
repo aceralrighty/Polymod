@@ -23,10 +23,5 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .ValueGeneratedOnAdd()
             .Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
-        builder
-            .HasOne(u => u.Schedule)
-            .WithOne(s => s.User)
-            .HasForeignKey<Schedule>(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }

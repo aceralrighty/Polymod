@@ -9,9 +9,5 @@ public class UserConfiguration : IEntityTypeConfiguration<UserModule.Models.User
     {
         builder.HasKey(u => u.Id);
 
-        builder.HasOne(u => u.Schedule)
-            .WithOne(s => s.User)
-            .HasForeignKey<ScheduleModule.Models.Schedule>(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }
