@@ -20,7 +20,7 @@ public static class ScheduleSeeder
     ];
 
     public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider,
-        int numberOfAdditionalRandomSchedules = 50)
+        int numberOfAdditionalRandomSchedules = 500)
     {
         using var activity = ActivitySource.StartActivity("ReseedForTesting");
         activity?.SetTag("operation", "ReseedForTesting");
@@ -44,26 +44,6 @@ public static class ScheduleSeeder
 
         var users = await userService.GetAllUsersAsync();
         Console.WriteLine($"👥 Found {users.Count} users from UserModule.");
-
-        if (users.Count != 0 && !await db.Schedules.AnyAsync())
-        {
-            Console.WriteLine("Creating initial empty schedules for users...");
-            foreach (var user in users.OfType<UserDto>())
-            {
-                var newSchedule = new Schedule
-                {
-                    Id = Guid.NewGuid(),
-                    UserId = user.Id,
-                    DaysWorked = new Dictionary<string, int>(),
-                    BasePay = 0.0f
-                };
-                newSchedule.RecalculateTotalHours();
-                db.Schedules.Add(newSchedule);
-            }
-
-            await db.SaveChangesAsync();
-            Console.WriteLine($"Created {users.Count} initial empty schedules.");
-        }
 
         metricsService.IncrementCounter("seeding.schedule_database_recreated");
 

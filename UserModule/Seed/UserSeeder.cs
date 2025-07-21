@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.MetricsModule.Services.Interfaces;
-using TBD.ScheduleModule.Models;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
@@ -22,7 +21,8 @@ public static class UserSeeder
     /// <param name="serviceProvider">The service provider to resolve dependencies.</param>
     /// <param name="numberOfFakeUsers">The number of fake users to generate. Defaults to 50 if not specified.</param>
     /// <returns>A list of the seeded users.</returns>
-    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider, int numberOfFakeUsers = 50)
+    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider,
+        int numberOfFakeUsers = 500)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.ReseedForTesting");
         activity?.SetTag("operation", "reseed_for_testing");
@@ -88,7 +88,8 @@ public static class UserSeeder
                 Console.WriteLine($"   👤 {user.Username} (ID: {user.Id})");
             }
 
-            await SeedUserAddressesAsync(addressContext, userContext, metricsService, activity, numberOfFakeUsers); // Pass numberOfFakeUsers
+            await SeedUserAddressesAsync(addressContext, userContext, metricsService, activity,
+                numberOfFakeUsers); // Pass numberOfFakeUsers
             metricsService.IncrementCounter("seeding.user_addresses_seeded");
 
             var operationDuration = DateTime.UtcNow - operationStartTime;
@@ -175,7 +176,7 @@ public static class UserSeeder
                 metricsService.IncrementCounter("seeding.address_db_migration_completed");
                 Console.WriteLine("📊 Address database migrated");
             }
-            catch (SqlException ex) when (ex.Number == 2714) // Table already exists
+            catch (SqlException ex) when (ex.Number == 2714)
             {
                 metricsService.IncrementCounter("seeding.address_db_migration_skipped_existing_tables");
                 Console.WriteLine("⚠️ Address context tables already exist, skipping migration");
@@ -211,11 +212,11 @@ public static class UserSeeder
 
         // Configure a Faker for the User model
         var userFaker = new Faker<User>()
-            .RuleFor(u => u.Id, f => Guid.NewGuid())
+            .RuleFor(u => u.Id, _ => Guid.NewGuid())
             .RuleFor(u => u.Username, f => f.Internet.UserName(f.Name.FirstName(), f.Name.LastName()))
             .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Username))
             .RuleFor(u => u.Password,
-                f => hasher.HashPassword(f.Internet.Password(8, memorable: true, prefix: "#Aa1"))) // Strong password
+                f => hasher.HashPassword(f.Internet.Password(16, memorable: true, prefix: "#Aa1")))
             .RuleFor(u => u.CreatedAt, f => f.Date.Past(2)) // Created up to 2 years ago
             .RuleFor(u => u.UpdatedAt, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow));
 
@@ -294,16 +295,16 @@ public static class UserSeeder
         }
 
         var addresses = new List<UserAddress>();
-        var faker = new Faker(); // General faker instance
+        var faker = new Faker();
 
         foreach (var user in users)
         {
             // For each user, generate 1 to maxAddressesPerUser addresses
             var numberOfAddressesForUser = faker.Random.Int(1, maxAddressesPerUser);
             var userAddressFaker = new Faker<UserAddress>()
-                .RuleFor(ua => ua.Id, f => Guid.NewGuid())
-                .RuleFor(ua => ua.UserId, f => user.Id)
-                .RuleFor(ua => ua.User, f => user) // Link to the user object (if needed for EF Core)
+                .RuleFor(ua => ua.Id, _ => Guid.NewGuid())
+                .RuleFor(ua => ua.UserId, _ => user.Id)
+                .RuleFor(ua => ua.User, _ => user) // Link to the user object (if needed for EF Core)
                 .RuleFor(ua => ua.Address1, f => f.Address.StreetAddress())
                 .RuleFor(ua => ua.Address2, f => f.Address.SecondaryAddress())
                 .RuleFor(ua => ua.City, f => f.Address.City())
