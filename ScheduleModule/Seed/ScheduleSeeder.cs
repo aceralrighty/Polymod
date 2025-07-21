@@ -7,9 +7,6 @@ using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
 using TBD.Shared.Events.Interfaces;
 
-// Import Bogus
-
-// Needed for explicit JSON handling if not using the property setter
 
 namespace TBD.ScheduleModule.Seed;
 
@@ -59,7 +56,10 @@ public static class ScheduleSeeder
                 // Set DaysWorked dictionary, which will populate DaysWorkedJson
                 var newSchedule = new Schedule
                 {
-                    Id = Guid.NewGuid(), UserId = user.Id, DaysWorked = new Dictionary<string, int>(), BasePay = 0.0f
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    DaysWorked = new Dictionary<string, int>(),
+                    BasePay = 0.0f
                 };
                 newSchedule.RecalculateTotalHours(); // Recalculate after setting DaysWorked
                 db.Schedules.Add(newSchedule);

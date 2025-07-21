@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.OpenTelemetry;
-using TBD.MetricsModule.OpenTelemetry.Services;
-using TBD.MetricsModule.Services;
-using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.EntityMappers;
 using TBD.Shared.Events.Interfaces;
