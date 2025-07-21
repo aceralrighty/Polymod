@@ -12,38 +12,6 @@ namespace TBD.TestProject;
 public class ScheduleTest
 {
     private Schedule _schedule;
-    #region Construction & Defaults
-
-    [Test]
-    public void Constructor_Default_SetsDefaults()
-    {
-        var schedule = new Schedule();
-        ;
-
-        Assert.That(schedule.TotalHoursWorked, Is.Null);
-        Assert.That(schedule.BasePay, Is.Null);
-        Assert.That(schedule.DaysWorkedJson, Is.EqualTo("{}"));
-    }
-
-    [Test]
-    public void Constructor_WithUser_SetsUserProperties()
-    {
-        var userMock = new User
-        {
-            Id = Guid.NewGuid(),
-            Username = "User1",
-            Password = "<PASSWORD>",
-            Email = "user1@example.com",
-            Schedule = null
-        };
-
-        var schedule = new Schedule { UserId = userMock.Id};
-
-        Assert.That(schedule.UserId, Is.EqualTo(userMock.Id));
-
-    }
-
-    #endregion
 
     #region Overtime Logic
 

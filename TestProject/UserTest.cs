@@ -53,7 +53,6 @@ public class UserServiceTests
             Username = TestUserDto.Username,
             Email = TestUserDto.Email,
             Password = "hashedpassword", // Placeholder
-            Schedule = null
         };
         _userRepositoryMock.Setup(r => r.GetByIdAsync(TestUserDto.Id)).ReturnsAsync(user);
         _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
@@ -82,7 +81,6 @@ public class UserServiceTests
             Email = TestUserDto.Email,
             Username = TestUserDto.Username,
             Password = "hashedpassword", // Placeholder
-            Schedule = null
         };
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(TestUserDto.Email ?? string.Empty)).ReturnsAsync(user);
         _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
@@ -127,7 +125,6 @@ public class UserServiceTests
             Username = TestUserDto.Username,
             Email = TestUserDto.Email,
             Password = "hashedpassword", // Placeholder
-            Schedule = null
         };
         _userRepositoryMock.Setup(r => r.GetByUsernameAsync(TestUserDto.Username ?? string.Empty)).ReturnsAsync(user);
         _mapperMock.Setup(m => m.Map<UserDto>(user)).Returns(TestUserDto);
@@ -152,8 +149,8 @@ public class UserServiceTests
         // Arrange
         var users = new List<User>
         {
-            new User { Username = "user1", Email = "e1@e.com", Password = "p1", Schedule = null },
-            new User { Username = "user2", Email = "e2@e.com", Password = "p2", Schedule = null }
+            new User { Username = "user1", Email = "e1@e.com", Password = "p1", },
+            new User { Username = "user2", Email = "e2@e.com", Password = "p2", }
         };
         var userDtos = new List<UserDto> { new UserDto(), new UserDto() };
         const int totalCount = 10;
@@ -237,15 +234,12 @@ public class UserServiceTests
             .Returns(true);
 
 
-
-
         var capturedUser = new User
         {
             Id = TestUserDto.Id,
             Username = TestUserDto.Username,
             Email = TestUserDto.Email,
             Password = "plainPassword123", // This is the plain text password from DTO
-            Schedule = null
         };
 
         _mapperMock.Setup(m => m.Map<User>(TestUserDto))
@@ -254,7 +248,6 @@ public class UserServiceTests
                 Password = TestUserDto.Password, // This is the plain text password from DTO
                 Username = TestUserDto.Username,
                 Email = TestUserDto.Email,
-                Schedule = null
             });
 
         _userRepositoryMock.Setup(r => r.AddAsync(It.IsAny<User>()))
@@ -305,7 +298,6 @@ public class UserServiceTests
                 Password = invalidUserDto.Password,
                 Username = invalidUserDto.Username,
                 Email = invalidUserDto.Email,
-                Schedule = null
             });
 
         // Act & Assert
@@ -328,11 +320,7 @@ public class UserServiceTests
         };
         var mappedUser = new User
         {
-            Id = userDto.Id,
-            Username = userDto.Username,
-            Email = userDto.Email,
-            Password = userDto.Password,
-            Schedule = null
+            Id = userDto.Id, Username = userDto.Username, Email = userDto.Email, Password = userDto.Password,
         };
 
         _mapperMock.Setup(m => m.Map<User>(userDto)).Returns(mappedUser);
@@ -366,11 +354,7 @@ public class UserServiceTests
         var userId = Guid.NewGuid();
         var userToDelete = new User
         {
-            Id = userId,
-            Username = "any",
-            Email = "any@any.com",
-            Password = "any",
-            Schedule = null
+            Id = userId, Username = "any", Email = "any@any.com", Password = "any",
         };
         _userRepositoryMock.Setup(r => r.GetByIdAsync(userId)).ReturnsAsync(userToDelete);
         _userRepositoryMock.Setup(r => r.RemoveAsync(userToDelete)).Returns(Task.CompletedTask);

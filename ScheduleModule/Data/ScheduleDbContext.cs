@@ -22,7 +22,7 @@ public class ScheduleDbContext(DbContextOptions<ScheduleDbContext> options) : Db
         modelBuilder.Entity<Schedule>()
             .Property(s => s.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
-        modelBuilder.Entity<Schedule>().Property(s => s.DaysWorkedJson).HasColumnType("varchar(255)");
+        modelBuilder.Entity<Schedule>().Property(s => s.DaysWorkedJson).HasColumnType("varchar(max)");
         modelBuilder.Entity<Schedule>()
             .Property(s => s.TotalPay)
             .HasComputedColumnSql(

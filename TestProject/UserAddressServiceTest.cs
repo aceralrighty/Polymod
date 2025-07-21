@@ -43,7 +43,6 @@ public class UserAddressServiceTests
             Email = "testuser@example.com",
             Password = "testpassword123",
             Username = "testuser",
-            Schedule = null
         };
 
         // Add the user to the context first

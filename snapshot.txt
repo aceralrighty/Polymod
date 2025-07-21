@@ -1,0 +1,339 @@
+.
+├── AddressModule
+│   ├── AddressModule.cs
+│   ├── Controllers
+│   │   └── AddressController.cs
+│   ├── Data
+│   │   └── AddressDbContext.cs
+│   ├── Exceptions
+│   │   ├── CityGroupingNotAvailableException.cs
+│   │   └── UserStateGroupException.cs
+│   ├── Models
+│   │   └── UserAddress.cs
+│   ├── Repositories
+│   │   ├── IUserAddressRepository.cs
+│   │   └── UserAddressRepository.cs
+│   ├── Seed
+│   └── Services
+│       ├── IUserAddressService.cs
+│       └── UserAddressService.cs
+├── API
+│   └── DTOs
+│       ├── AuthDTO
+│       │   ├── AuthResponse.cs
+│       │   ├── LoginRequest.cs
+│       │   └── RegisterRequest.cs
+│       ├── CreateServiceDTO.cs
+│       ├── PagedResult.cs
+│       ├── ServiceDTO.cs
+│       └── Users
+│           ├── UserAddressRequest.cs
+│           ├── UserAddressResponse.cs
+│           ├── UserDTO.cs
+│           └── UserSchedule.cs
+├── appsettings.Development.json
+├── appsettings.json
+├── AuthModule
+│   ├── AuthModule.cs
+│   ├── Controllers
+│   │   └── AuthController.cs
+│   ├── Data
+│   │   └── AuthDbContext.cs
+│   ├── Exceptions
+│   │   └── ErrorDuringUserRegistrationException.cs
+│   ├── Models
+│   │   └── AuthUser.cs
+│   ├── Repositories
+│   │   ├── AuthRepository.cs
+│   │   └── IAuthRepository.cs
+│   ├── Seed
+│   │   └── AuthSeeder.cs
+│   ├── Services
+│   │   ├── AuthService.cs
+│   │   └── IAuthService.cs
+│   └── Views
+├── compose.yaml
+├── coverage.cobertura.xml
+├── DemoMaterial
+│   ├── Postman_gif 2.gif
+│   ├── Postman_gif.gif
+│   ├── Screenshot 2025-07-18 at 3.25.49 PM 2.png
+│   ├── Screenshot 2025-07-18 at 3.25.49 PM.png
+│   ├── Screenshot 2025-07-18 at 4.46.05 PM 2.png
+│   ├── Screenshot 2025-07-18 at 4.46.05 PM.png
+│   ├── Startup_gif 2.gif
+│   └── Startup_gif.gif
+├── DesignTimeFactories
+│   ├── AddressDbContextFactory.cs
+│   ├── AuthDbContextFactory.cs
+│   ├── RecommendationDbContextFactory.cs
+│   ├── ScheduleDbContextFactory.cs
+│   ├── ServiceDbContextFactory.cs
+│   └── UserDbContextFactory.cs
+├── diagrams
+│   └── Pipeline.png
+├── Dockerfile
+├── Logs
+│   ├── logseedingstatistics-metrics20250718.log
+│   ├── logseedingstatistics-metrics20250720.log
+│   ├── schedulemodule-metrics20250720.log
+│   └── usermodule-metrics20250720.log
+├── MetricsModule
+│   ├── Controller
+│   │   └── HealthCheckController.cs
+│   ├── ModuleHealthCheck
+│   │   ├── BaseHealthCheck
+│   │   │   ├── DBLevel
+│   │   │   │   └── DatabaseModuleHealthCheck.cs
+│   │   │   └── ModuleLevel
+│   │   │       └── BaseModuleHealthCheck.cs
+│   │   ├── BaseHealthCheck 2
+│   │   ├── HealthCheckModule.cs
+│   │   ├── Interfaces
+│   │   │   └── IModuleHealthCheck.cs
+│   │   ├── Interfaces 2
+│   │   ├── Model
+│   │   │   └── ModuleHealthResult.cs
+│   │   ├── Model 2
+│   │   ├── ModuleChecks
+│   │   │   ├── AddressModuleHealthCheck.cs
+│   │   │   ├── AuthModuleHealthCheck.cs
+│   │   │   ├── MetricsModuleHealthCheck.cs
+│   │   │   ├── RecommendationsModuleHealthCheck.cs
+│   │   │   ├── ScheduleModuleHealthCheck.cs
+│   │   │   ├── ServiceModuleHealthCheck.cs
+│   │   │   ├── StockPredictionModuleHealthCheck.cs
+│   │   │   └── UserModuleHealthCheck.cs
+│   │   └── ModuleChecks 2
+│   ├── OpenTelemetry
+│   │   ├── OpenTelemetryModule.cs
+│   │   └── Services
+│   │       ├── OpenTelemetryMetricsService.cs
+│   │       └── OpenTelemetryMetricsServiceFactory.cs
+│   └── Services
+│       ├── Interfaces
+│       │   ├── IMetricsService.cs
+│       │   └── IMetricsServiceFactory.cs
+│       ├── MetricsCollector.cs
+│       ├── MetricsService.cs
+│       └── MetricsServiceFactory.cs
+├── migrate-database.sh
+├── Migrations
+│   ├── 20250720213313_InitUser.cs
+│   ├── 20250720213313_InitUser.Designer.cs
+│   ├── AddressDb
+│   │   ├── 20250720214042_InitAddress.cs
+│   │   ├── 20250720214042_InitAddress.Designer.cs
+│   │   └── AddressDbContextModelSnapshot.cs
+│   ├── AuthDb
+│   │   ├── 20250720213736_InitAuth.cs
+│   │   ├── 20250720213736_InitAuth.Designer.cs
+│   │   └── AuthDbContextModelSnapshot.cs
+│   ├── RecommendationDb
+│   │   ├── 20250720213857_InitRec.cs
+│   │   ├── 20250720213857_InitRec.Designer.cs
+│   │   └── RecommendationDbContextModelSnapshot.cs
+│   ├── ScheduleDb
+│   │   ├── 20250720213552_InitSchedule.cs
+│   │   ├── 20250720213552_InitSchedule.Designer.cs
+│   │   └── ScheduleDbContextModelSnapshot.cs
+│   ├── ServiceDb
+│   │   ├── 20250720213800_InitService.cs
+│   │   ├── 20250720213800_InitService.Designer.cs
+│   │   └── ServiceDbContextModelSnapshot.cs
+│   └── UserDbContextModelSnapshot.cs
+├── Program.cs
+├── prometheus.yml
+├── prometheus.yml.template
+├── Properties
+│   └── launchSettings.json
+├── README.md
+├── RecommendationModule
+│   ├── Controllers
+│   │   └── RecommendationController.cs
+│   ├── Data
+│   │   ├── Configuration
+│   │   │   ├── Recommendation
+│   │   │   │   ├── RecommendationOutputConfiguration.cs
+│   │   │   │   └── UserRecommendationConfiguration.cs
+│   │   │   ├── Schedule
+│   │   │   │   └── ScheduleConfiguration.cs
+│   │   │   ├── Service
+│   │   │   │   └── ServiceConfiguration.cs
+│   │   │   └── User
+│   │   │       └── UserConfiguration.cs
+│   │   └── RecommendationDbContext.cs
+│   ├── Exceptions
+│   │   └── GuidNotEmptyAttribute.cs
+│   ├── ML
+│   │   ├── Interface
+│   │   │   └── IMLRecommendationEngine.cs
+│   │   └── MLRecommendationEngine.cs
+│   ├── Models
+│   │   ├── Recommendations
+│   │   │   ├── RecommendationAnalytics.cs
+│   │   │   ├── RecommendationOutput.cs
+│   │   │   └── UserRecommendation.cs
+│   │   ├── ServiceRating.cs
+│   │   └── ServiceRatingPrediction.cs
+│   ├── RecommendationModule.cs
+│   ├── Repositories
+│   │   ├── Interfaces
+│   │   │   ├── IRecommendationOutputRepository.cs
+│   │   │   └── IRecommendationRepository.cs
+│   │   ├── RecommendationOutputRepository.cs
+│   │   └── RecommendationRepository.cs
+│   ├── Seed
+│   │   └── RecommendationSeederAndTrainer.cs
+│   └── Services
+│       ├── BackgroundProcesses
+│       │   └── ModelTrainingBackgroundService.cs
+│       ├── Interface
+│       │   └── IRecommendationService.cs
+│       └── RecommendationService.cs
+├── ScheduleModule
+│   ├── Controllers
+│   │   └── ScheduleController.cs
+│   ├── Data
+│   │   └── ScheduleDbContext.cs
+│   ├── Models
+│   │   ├── Schedule.cs
+│   │   └── ScheduleStatistics.cs
+│   ├── Repositories
+│   │   ├── IScheduleRepository.cs
+│   │   └── ScheduleRepository.cs
+│   ├── ScheduleModule.cs
+│   ├── Seed
+│   │   └── ScheduleSeeder.cs
+│   └── Services
+│       ├── IScheduleService.cs
+│       └── ScheduleService.cs
+├── ServiceModule
+│   ├── Data
+│   │   └── ServiceDbContext.cs
+│   ├── Models
+│   │   └── Service.cs
+│   ├── Repositories
+│   │   ├── IServiceRepository.cs
+│   │   └── ServiceRepository.cs
+│   ├── Seed
+│   │   └── ServiceSeeder.cs
+│   ├── ServiceModule.cs
+│   └── Services
+│       ├── IServicesService.cs
+│       └── ServicesService.cs
+├── Shared
+│   ├── CachingConfiguration
+│   │   ├── CacheOptions.cs
+│   │   ├── CachingRepositoryDecorator.cs
+│   │   └── ConcurrentHashSet.cs
+│   ├── Contracts
+│   │   └── SeededUser.cs
+│   ├── EntityMappers
+│   │   ├── AuthUserMapping.cs
+│   │   ├── AutoMapperExtensions.cs
+│   │   ├── NullableFloatConverter.cs
+│   │   ├── RawDataMap.cs
+│   │   ├── ServiceMapping.cs
+│   │   ├── StockEntityMapper.cs
+│   │   ├── UserAddressMapping.cs
+│   │   ├── UserMapping.cs
+│   │   └── UserScheduleMapping.cs
+│   ├── EventHandlers
+│   │   └── Interface
+│   ├── Events
+│   │   └── Interfaces
+│   │       └── IUserReadService.cs
+│   ├── GenericDBProperties
+│   │   ├── BaseTableProperties.cs
+│   │   ├── DateableObject.cs
+│   │   └── IWithId.cs
+│   ├── Repositories
+│   │   ├── GenericRepository.cs
+│   │   └── IGenericRepository.cs
+│   └── Utils
+│       ├── Hasher.cs
+│       ├── IHasher.cs
+│       └── JwtTokenGenerator.cs
+├── snapshot.txt
+├── StockPredictionModule
+│   ├── Context
+│   │   ├── Configuration
+│   │   │   ├── RawDataConfiguration.cs
+│   │   │   └── StockPredictionConfiguration.cs
+│   │   └── StockDbContext.cs
+│   ├── Controllers
+│   │   └── StockController.cs
+│   ├── Dataset
+│   │   └── all_stocks_5yr.csv
+│   ├── Load
+│   │   └── LoadCsvData.cs
+│   ├── ML
+│   │   ├── Interface
+│   │   │   └── IMlStockPredictionEngine.cs
+│   │   └── MlStockPredictionEngine.cs
+│   ├── Models
+│   │   ├── RawData.cs
+│   │   └── Stocks
+│   │       ├── Stock.cs
+│   │       ├── StockFeatureVector.cs
+│   │       └── StockPrediction.cs
+│   ├── PipelineOrchestrator
+│   │   ├── FeatureEngineering.cs
+│   │   ├── Interface
+│   │   │   └── IStockPredictionPipeline.cs
+│   │   └── StockPredictionPipeline.cs
+│   ├── Repository
+│   │   ├── Interfaces
+│   │   │   ├── IStockPredictionRepository.cs
+│   │   │   └── IStockRepository.cs
+│   │   ├── StockPredictionRepository.cs
+│   │   └── StockRepository.cs
+│   └── StockModule.cs
+├── TBD.csproj
+├── TBD.http
+├── TBD.sln
+├── TBD.sln.DotSettings.user
+├── TBD.TestProject
+├── TestProject
+│   ├── AuthServiceTests.cs
+│   ├── CachingRepositoryDecoratorTests.cs
+│   ├── coverage
+│   │   └── coverage.cobertura.xml
+
+│   ├── RecommendationServiceTests.cs
+│   ├── ScheduleTest.cs
+│   ├── TestEntity.cs
+│   ├── TestProject.csproj
+│   ├── tools
+│   │   └── reportgenerator
+│   ├── UserAddressServiceTest.cs
+│   ├── UserRecommendationTest.cs
+│   └── UserTest.cs
+├── UserModule
+│   ├── Controllers
+│   │   └── UserController.cs
+│   ├── Data
+│   │   ├── Configuration
+│   │   │   └── UserEntityConfiguration.cs
+│   │   └── UserDbContext.cs
+│   ├── Models
+│   │   └── User.cs
+│   ├── PubEvents
+│   │   ├── UserReadService.cs
+│   │   └── UserRegisteredNotification.cs
+│   ├── Repositories
+│   │   ├── IUserRepository.cs
+│   │   └── UserRepository.cs
+│   ├── Seed
+│   │   └── DataSeeder.cs
+│   ├── Services
+│   │   ├── IUserService.cs
+│   │   └── UserService.cs
+│   └── UserModule.cs
+└── Views
+    └── Shared
+        ├── _Layout.cshtml
+        └── _ValidationScriptsPartial.cshtml
+
+3156 directories, 6105 files

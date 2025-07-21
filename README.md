@@ -13,21 +13,11 @@ also organized per module.
 ## 🧱 Project Structure
 
 ``` plaintext
-.
 ├── API/                                    # Shared DTOs & contracts
 │   └── DTOs/
 │       ├── AuthDTO/
-│       │   ├── AuthResponse.cs
-│       │   ├── LoginRequest.cs
-│       │   └── RegisterRequest.cs
-│       ├── CreateServiceDTO.cs
-│       ├── PagedResult.cs
-│       ├── ServiceDTO.cs
-│       └── Users/
-│           ├── UserAddressRequest.cs
-│           ├── UserAddressResponse.cs
-│           ├── UserDTO.cs
-│           └── UserSchedule.cs
+│       ├── Users/
+│       └── Service & Pagination DTOs
 │
 ├── AddressModule/                          # Geographic management
 │   ├── Controllers/
@@ -48,6 +38,15 @@ also organized per module.
 │   ├── Seed/
 │   └── Views/
 │
+├── UserModule/                             # User management
+│   ├── Controllers/
+│   ├── Data/Configuration/
+│   ├── Models/
+│   ├── Repositories/
+│   ├── Services/
+│   ├── PubEvents/
+│   └── Seed/
+│
 ├── ScheduleModule/                         # User scheduling
 │   ├── Controllers/
 │   ├── Data/
@@ -57,7 +56,6 @@ also organized per module.
 │   └── Seed/
 │
 ├── ServiceModule/                          # Service catalog
-│   ├── Controllers/
 │   ├── Data/
 │   ├── Models/
 │   ├── Repositories/
@@ -67,10 +65,10 @@ also organized per module.
 ├── RecommendationModule/                   # ML recommendations
 │   ├── Controllers/
 │   ├── Data/Configuration/
-│   ├── Models/
+│   ├── Models/Recommendations/
 │   ├── Repositories/Interfaces/
-│   ├── Services/
-│   ├── ML/
+│   ├── Services/BackgroundProcesses/
+│   ├── ML/Interface/
 │   ├── Seed/
 │   └── Exceptions/
 │
@@ -78,28 +76,51 @@ also organized per module.
 │   ├── Controllers/
 │   ├── Context/Configuration/
 │   ├── Dataset/
-│   │   └── all_stocks_5yr.csv            # 619,040 records (50k+ lines)
+│   │   └── all_stocks_5yr.csv            # 619,040 records
 │   ├── Load/
-│   ├── ML/
-│   ├── Models/
+│   ├── ML/Interface/
+│   ├── Models/Stocks/
 │   ├── PipelineOrchestrator/
-│   └── Repository/
+│   └── Repository/Interfaces/
 │
 ├── MetricsModule/                          # Analytics & monitoring
-│   └── Services/
+│   ├── Controller/
+│   ├── ModuleHealthCheck/
+│   │   ├── BaseHealthCheck/
+│   │   └── ModuleChecks/
+│   ├── OpenTelemetry/Services/
+│   └── Services/Interfaces/
 │
 ├── Shared/                                 # Cross-cutting concerns
 │   ├── CachingConfiguration/
+│   ├── Contracts/
 │   ├── EntityMappers/
+│   ├── Events/Interfaces/
 │   ├── GenericDBProperties/
 │   ├── Repositories/
 │   └── Utils/
 │
-├── UserModule/                             # User management
+├── TestProject/                            # Comprehensive testing
+│   ├── AuthServiceTests.cs
+│   ├── RecommendationServiceTests.cs
+│   ├── CachingRepositoryDecoratorTests.cs
+│   └── coverage/
+│
 ├── DesignTimeFactories/                    # EF Core factories
 ├── Migrations/                             # DB migrations by module
+│   ├── AddressDb/
+│   ├── AuthDb/
+│   ├── RecommendationDb/
+│   ├── ScheduleDb/
+│   └── ServiceDb/
+├── DemoMaterial/                           # Screenshots & GIFs
 ├── Logs/                                   # Module-specific logs
-└── TBD.TestProject/                        # Comprehensive testing
+└── Configuration Files
+    ├── Program.cs
+    ├── TBD.csproj
+    ├── compose.yaml
+    ├── prometheus.yml
+    └── appsettings.json
 ```
 
 ---

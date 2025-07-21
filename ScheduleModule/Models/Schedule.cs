@@ -141,7 +141,7 @@ public class Schedule : BaseTableProperties
                 var result = JsonSerializer.Deserialize<Dictionary<string, int>>(DaysWorkedJson);
                 if (result == null)
                 {
-                    throw new InvalidOperationException("Deserialization resulted in a null dictionary.");
+                    return new Dictionary<string, int>();
                 }
 
                 return result;
