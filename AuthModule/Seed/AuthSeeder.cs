@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Bogus;
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
 using TBD.MetricsModule.Services.Interfaces;
@@ -64,6 +65,16 @@ public static class AuthSeeder
 
         var hasher = new Hasher();
         var now = DateTime.UtcNow;
+        var authFaker = new Faker<AuthUser>().RuleFor(u => u.Id, _ => Guid.NewGuid())
+            .RuleFor(a => a.Email, f => f.Person.Email).RuleFor(a => a.Username, f => f.Person.UserName)
+            .RuleFor(a => a.HashedPassword, f => hasher.HashPassword(f.Internet.Password(16, memorable: true)))
+            .RuleFor(a => a.RefreshToken, _ => JwtTokenGenerator.GenerateJwtToken(64))
+            .RuleFor(a => a.RefreshTokenExpiry, f => f.Date.Soon(20))
+            .RuleFor(a => a.FailedLoginAttempts, f => f.Random.Int(0, 4))
+            .RuleFor(a => a.CreatedAt, f => f.Date.Past(6))
+            .RuleFor(a => a.UpdatedAt, f => f.Date.Future(7))
+            .RuleFor(a => a.LastLogin, f => f.Date.Past(5));
+
 
         var authUsers = new List<AuthUser>
         {
@@ -203,22 +214,24 @@ public static class AuthSeeder
 
         try
         {
-            await authContext.AuthUsers.AddRangeAsync(authUsers);
+            var testAuthUsers = authFaker.Generate(50);
+            var allUsers = authUsers.Concat(testAuthUsers).ToList();
+            await authContext.AuthUsers.AddRangeAsync(allUsers);
             var savedCount = await authContext.SaveChangesAsync();
             Console.WriteLine($"✅ Seeded {savedCount} Auth users.");
 
             var totalUsers = authUsers.Count;
             metricsService.IncrementCounter($"seeding.users_created_total -> {totalUsers}");
 
-            var deletedUsers = authUsers.Count(u => u.DeletedAt.HasValue);
+            var deletedUsers = allUsers.Count(u => u.DeletedAt.HasValue);
             var activeUsers = totalUsers - deletedUsers;
-            var secureUsers = authUsers.Count(IsSecureUser);
-            var riskUsers = authUsers.Count(IsRiskUser);
-            var recentUsers = authUsers.Count(IsRecentUser);
-            var longTokenUsers = authUsers.Count(IsLongTokenUser);
-            var shortTokenUsers = authUsers.Count(IsShortTokenUser);
-            var frequentFailedLoginUsers = authUsers.Count(u => u.FailedLoginAttempts >= 3);
-            var expiringSoonUsers = authUsers.Count(IsExpiringSoon);
+            var secureUsers = allUsers.Count(IsSecureUser);
+            var riskUsers = allUsers.Count(IsRiskUser);
+            var recentUsers = allUsers.Count(IsRecentUser);
+            var longTokenUsers = allUsers.Count(IsLongTokenUser);
+            var shortTokenUsers = allUsers.Count(IsShortTokenUser);
+            var frequentFailedLoginUsers = allUsers.Count(u => u.FailedLoginAttempts >= 3);
+            var expiringSoonUsers = allUsers.Count(IsExpiringSoon);
 
             metricsService.IncrementCounter($"seeding.users_created_active -> {activeUsers}");
             metricsService.IncrementCounter($"seeding.users_created_deleted -> {deletedUsers}");
