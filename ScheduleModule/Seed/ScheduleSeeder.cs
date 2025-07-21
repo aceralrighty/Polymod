@@ -165,7 +165,7 @@ public static class ScheduleSeeder
 
                 break;
             }
-            case > 0 when !availableUsers.Any():
+            case > 0 when availableUsers.Count == 0:
                 Console.WriteLine("⚠️ No more available users to create additional random schedules.");
                 break;
         }
@@ -227,82 +227,38 @@ public static class ScheduleSeeder
         metricsService.IncrementCounter($"seeding.schedules_created_single_day -> {singleDaySchedules}");
     }
 
+
     private static List<(Dictionary<string, int> DaysWorked, float BasePay)> GetTestScheduleData()
     {
-        return
-        [
-            (new Dictionary<string, int>
+        var faker = new Faker();
+        var daysOfWeek = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+        var generated = new HashSet<string>(); // To ensure uniqueness
+        var result = new List<(Dictionary<string, int> DaysWorked, float BasePay)>();
+
+        while (result.Count < 50)
+        {
+            var schedule = new Dictionary<string, int>();
+            foreach (var day in daysOfWeek)
             {
-                { "Monday", 8 },
-                { "Tuesday", 8 },
-                { "Wednesday", 8 },
-                { "Thursday", 8 },
-                { "Friday", 8 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 25.00f),
+                // Random hours: 0–12 per day
+                schedule[day] = faker.Random.Int(0, 12);
+            }
 
+            // Random pay: $15–$100
+            var basePay = (float)Math.Round(faker.Random.Float(15f, 100f), 2);
 
-            (new Dictionary<string, int>
+            // Ensure uniqueness by serializing schedule + pay as a key
+            var uniquenessKey = string.Join(",", schedule.Values) + "|" + basePay;
+            if (generated.Add(uniquenessKey))
             {
-                { "Monday", 8 },
-                { "Tuesday", 8 },
-                { "Wednesday", 8 },
-                { "Thursday", 8 },
-                { "Friday", 8 },
-                { "Saturday", 0 },
-                { "Sunday", 1 }
-            }, 30.00f),
+                result.Add((schedule, basePay));
+            }
+        }
 
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 10 },
-                { "Tuesday", 10 },
-                { "Wednesday", 10 },
-                { "Thursday", 10 },
-                { "Friday", 10 },
-                { "Saturday", 10 },
-                { "Sunday", 0 }
-            }, 35.00f),
-
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 10 },
-                { "Tuesday", 10 },
-                { "Wednesday", 10 },
-                { "Thursday", 10 },
-                { "Friday", 10 },
-                { "Saturday", 10 },
-                { "Sunday", 1 }
-            }, 32.00f),
-
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 0 },
-                { "Tuesday", 0 },
-                { "Wednesday", 0 },
-                { "Thursday", 0 },
-                { "Friday", 0 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 20.00f),
-
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 1 },
-                { "Tuesday", 0 },
-                { "Wednesday", 0 },
-                { "Thursday", 0 },
-                { "Friday", 0 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 15.00f)
-        ];
+        return result;
     }
+
 
     private static float GetTotalHours(Schedule schedule) => schedule.DaysWorked.Values.Sum();
 
