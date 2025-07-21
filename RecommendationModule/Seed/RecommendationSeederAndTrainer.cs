@@ -688,20 +688,6 @@ public class RecommendationSeederAndTrainer(
     {
         logger.LogInformation("👥 Seeding base entities...");
 
-        // Prepare users with proper timestamps
-        foreach (var user in users)
-        {
-            EnsureProperTimestamps(user);
-
-            // Handle a schedule relationship
-            if (user.Schedule == null)
-            {
-                continue;
-            }
-
-            EnsureProperTimestamps(user.Schedule);
-            user.Schedule.UserId = user.Id;
-        }
 
         // Prepare services with proper timestamps
         foreach (var servicesId in services)

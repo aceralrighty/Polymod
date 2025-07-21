@@ -7,24 +7,24 @@ using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
 using TBD.Shared.Events.Interfaces;
 
+// Import Bogus
+
+// Needed for explicit JSON handling if not using the property setter
+
 namespace TBD.ScheduleModule.Seed;
 
 public static class ScheduleSeeder
 {
     private static readonly Random Random = new();
     private static readonly ActivitySource ActivitySource = new("TBD.ScheduleModule.ScheduleSeeder");
-    private static readonly string[] stringArray = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 
-    /// <summary>
-    /// Reseeds the schedule database for testing purposes, generating schedules for existing users.
-    /// You can control the number of additional random schedules to create beyond the base test data.
-    /// </summary>
-    /// <param name="serviceProvider">The service provider to resolve dependencies.</param>
-    /// <param name="numberOfAdditionalRandomSchedules">The number of extra random schedules to generate if users are available.
-    ///     This is in addition to the fixed test schedules.</param>
-    /// <returns>A list of the seeded schedules.</returns>
+    private static readonly string[] StringArray =
+    [
+        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+    ];
+
     public static async Task ReseedForTestingAsync(IServiceProvider serviceProvider,
-        int numberOfAdditionalRandomSchedules = 500)
+        int numberOfAdditionalRandomSchedules = 50)
     {
         using var activity = ActivitySource.StartActivity("ReseedForTesting");
         activity?.SetTag("operation", "ReseedForTesting");
@@ -56,7 +56,13 @@ public static class ScheduleSeeder
             Console.WriteLine("Creating initial empty schedules for users...");
             foreach (var user in users.OfType<UserDto>())
             {
-                db.Schedules.Add(new Schedule { Id = Guid.NewGuid(), UserId = user.Id });
+                // Set DaysWorked dictionary, which will populate DaysWorkedJson
+                var newSchedule = new Schedule
+                {
+                    Id = Guid.NewGuid(), UserId = user.Id, DaysWorked = new Dictionary<string, int>(), BasePay = 0.0f
+                };
+                newSchedule.RecalculateTotalHours(); // Recalculate after setting DaysWorked
+                db.Schedules.Add(newSchedule);
             }
 
             await db.SaveChangesAsync();
@@ -65,7 +71,7 @@ public static class ScheduleSeeder
 
         metricsService.IncrementCounter("seeding.schedule_database_recreated");
 
-        // Pass numberOfAdditionalRandomSchedules to the seeding method
+        // Pass a numberOfAdditionalRandomSchedules to the seeding method
         await SeedScheduleAsync(db, metricsService, users.OfType<UserDto>().ToList(),
             numberOfAdditionalRandomSchedules);
 
@@ -77,7 +83,7 @@ public static class ScheduleSeeder
     private static async Task SeedScheduleAsync(ScheduleDbContext scheduleContext, IMetricsService metricsService,
         List<UserDto> users, int numberOfAdditionalRandomSchedules)
     {
-        using var activity = ActivitySource.StartActivity("SeedScheduleAsync");
+        using var activity = ActivitySource.StartActivity();
         activity?.SetTag("step", "seed_schedules");
         activity?.SetTag("number_of_additional_random_schedules", numberOfAdditionalRandomSchedules);
 
@@ -111,10 +117,15 @@ public static class ScheduleSeeder
                 var user = availableUsers[Random.Next(availableUsers.Count)];
                 availableUsers.Remove(user); // Ensure unique user assignment for test schedules
 
-                schedulesToSeed.Add(new Schedule
+                var newSchedule = new Schedule
                 {
-                    Id = Guid.NewGuid(), UserId = user.Id, DaysWorked = data.DaysWorked, BasePay = data.BasePay
-                });
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    DaysWorked = data.DaysWorked, // Set the Dictionary property
+                    BasePay = data.BasePay
+                };
+                newSchedule.RecalculateTotalHours(); // Ensure TotalHoursWorked is calculated
+                schedulesToSeed.Add(newSchedule);
             }
             else
             {
@@ -133,16 +144,16 @@ public static class ScheduleSeeder
                 // Create a Faker for the Schedule model
                 var scheduleFaker = new Faker<Schedule>()
                     .RuleFor(s => s.Id, _ => Guid.NewGuid())
+                    .RuleFor(s => s.UserId, f => f.PickRandom(users.Select(u => u.Id).ToArray()))
                     .RuleFor(s => s.DaysWorked, f =>
                     {
                         var daysWorked = new Dictionary<string, int>();
                         var totalHours = f.Random.Int(0, 80); // Total hours between 0 and 80 for random schedules
                         var remainingHours = totalHours;
-                        var days = stringArray;
+                        var days = StringArray;
 
                         // Distribute hours somewhat randomly across days
-                        foreach (var day in
-                                 days.OrderBy(_ => f.Random.Guid())) // Randomize day order using Guid for consistency
+                        foreach (var day in days.OrderBy(_ => f.Random.Guid())) // Randomize day order
                         {
                             if (remainingHours <= 0) break;
 
@@ -179,6 +190,7 @@ public static class ScheduleSeeder
                     var user = availableUsers[Random.Next(availableUsers.Count)];
                     availableUsers.Remove(user);
                     schedule.UserId = user.Id;
+                    schedule.RecalculateTotalHours(); // Recalculate TotalHoursWorked after DaysWorked is set by Faker
                     schedulesToSeed.Add(schedule);
                 }
 
@@ -187,12 +199,6 @@ public static class ScheduleSeeder
             case > 0 when !availableUsers.Any():
                 Console.WriteLine("⚠️ No more available users to create additional random schedules.");
                 break;
-        }
-
-        // Recalculate total hours for all schedules before saving
-        foreach (var calc in schedulesToSeed)
-        {
-            calc.RecalculateTotalHours();
         }
 
         // Add schedules to context and save
@@ -216,6 +222,7 @@ public static class ScheduleSeeder
         activity?.SetStatus(ActivityStatusCode.Ok);
     }
 
+    // Helper to log metrics for a list of schedules
     private static void LogScheduleMetrics(List<Schedule> schedules, IMetricsService metricsService, Activity? activity)
     {
         var regularTimeSchedules = schedules.Count(s => GetTotalHours(s) <= 40);
@@ -223,8 +230,8 @@ public static class ScheduleSeeder
         var doubleOvertimeSchedules = schedules.Count(s => GetTotalHours(s) > 60);
         var zeroHourSchedules = schedules.Count(s => GetTotalHours(s) == 0);
         var extremeHourSchedules = schedules.Count(s => GetTotalHours(s) > 80);
-        var highPaySchedules = schedules.Count(s => s.BasePay > 50.00);
-        var lowPaySchedules = schedules.Count(s => s.BasePay < 20.00);
+        var highPaySchedules = schedules.Count(s => s.BasePay > 50.00f); // Note: Used float? in model
+        var lowPaySchedules = schedules.Count(s => s.BasePay < 20.00f); // Note: Used float? in model
         var boundarySchedules = schedules.Count(IsBoundarySchedule);
         var weekendWorkSchedules = schedules.Count(HasWeekendWork);
         var singleDaySchedules = schedules.Count(IsSingleDaySchedule);
@@ -253,6 +260,7 @@ public static class ScheduleSeeder
         metricsService.IncrementCounter($"seeding.schedules_created_weekend_work -> {weekendWorkSchedules}");
         metricsService.IncrementCounter($"seeding.schedules_created_single_day -> {singleDaySchedules}");
     }
+
 
     private static List<(Dictionary<string, int> DaysWorked, float BasePay)> GetTestScheduleData()
     {
@@ -844,8 +852,7 @@ public static class ScheduleSeeder
         ];
     }
 
-
-    private static int GetTotalHours(Schedule schedule)
+    private static float GetTotalHours(Schedule schedule) // Changed return type to float
     {
         return schedule.DaysWorked.Values.Sum();
     }

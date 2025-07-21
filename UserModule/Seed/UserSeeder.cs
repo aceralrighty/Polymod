@@ -22,7 +22,7 @@ public static class UserSeeder
     /// <param name="serviceProvider">The service provider to resolve dependencies.</param>
     /// <param name="numberOfFakeUsers">The number of fake users to generate. Defaults to 50 if not specified.</param>
     /// <returns>A list of the seeded users.</returns>
-    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider, int numberOfFakeUsers = 500)
+    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider, int numberOfFakeUsers = 50)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.ReseedForTesting");
         activity?.SetTag("operation", "reseed_for_testing");
@@ -214,10 +214,10 @@ public static class UserSeeder
             .RuleFor(u => u.Id, f => Guid.NewGuid())
             .RuleFor(u => u.Username, f => f.Internet.UserName(f.Name.FirstName(), f.Name.LastName()))
             .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Username))
-            .RuleFor(u => u.Password, f => hasher.HashPassword(f.Internet.Password(8, memorable: true, prefix: "#Aa1"))) // Strong password
+            .RuleFor(u => u.Password,
+                f => hasher.HashPassword(f.Internet.Password(8, memorable: true, prefix: "#Aa1"))) // Strong password
             .RuleFor(u => u.CreatedAt, f => f.Date.Past(2)) // Created up to 2 years ago
-            .RuleFor(u => u.UpdatedAt, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow))
-            .RuleFor(u => u.Schedule, f => new Schedule()); // Assuming Schedule is a default-constructible model
+            .RuleFor(u => u.UpdatedAt, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow));
 
         // Generate the specified number of fake users
         var users = userFaker.Generate(count);
