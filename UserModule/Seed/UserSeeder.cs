@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Bogus;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
@@ -11,14 +12,21 @@ using TBD.UserModule.Models;
 
 namespace TBD.UserModule.Seed;
 
-public static class DataSeeder
+public static class UserSeeder
 {
     private static readonly ActivitySource ActivitySource = new("TBD.UserModule.DataSeeder");
 
-    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider)
+    /// <summary>
+    /// Reseeds the database for testing purposes, generating a specified number of fake users and their addresses.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider to resolve dependencies.</param>
+    /// <param name="numberOfFakeUsers">The number of fake users to generate. Defaults to 50 if not specified.</param>
+    /// <returns>A list of the seeded users.</returns>
+    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider, int numberOfFakeUsers = 500)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.ReseedForTesting");
         activity?.SetTag("operation", "reseed_for_testing");
+        activity?.SetTag("number_of_fake_users", numberOfFakeUsers);
 
         using var scope = serviceProvider.CreateScope();
 
@@ -55,7 +63,8 @@ public static class DataSeeder
             activity?.SetTag("user_db_accessible_after", userDbExistsAfter);
             activity?.SetTag("address_db_accessible_after", addressDbExistsAfter);
 
-            var seededUsers = await SeedUsersAsync(userContext, metricsService, activity);
+            // Pass numberOfFakeUsers to SeedUsersAsync
+            var seededUsers = await SeedUsersAsync(userContext, metricsService, activity, numberOfFakeUsers);
             Console.WriteLine($"✅ Successfully seeded {seededUsers.Count} users");
 
             activity?.SetTag("users_seeded_count", seededUsers.Count);
@@ -73,13 +82,13 @@ public static class DataSeeder
             }
 
             var usersInDb = await userContext.Set<User>().Take(3).Select(u => new { u.Id, u.Username }).ToListAsync();
-            Console.WriteLine("📝 Users in database:");
+            Console.WriteLine("📝 Users in database (first 3):");
             foreach (var user in usersInDb)
             {
                 Console.WriteLine($"   👤 {user.Username} (ID: {user.Id})");
             }
 
-            await SeedUserAddressesAsync(addressContext, userContext, metricsService, activity);
+            await SeedUserAddressesAsync(addressContext, userContext, metricsService, activity, numberOfFakeUsers); // Pass numberOfFakeUsers
             metricsService.IncrementCounter("seeding.user_addresses_seeded");
 
             var operationDuration = DateTime.UtcNow - operationStartTime;
@@ -189,75 +198,33 @@ public static class DataSeeder
     }
 
     private static async Task<List<User>> SeedUsersAsync(
-        UserDbContext context, IMetricsService metricsService, Activity? parentActivity)
+        UserDbContext context, IMetricsService metricsService, Activity? parentActivity, int count)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUsers", ActivityKind.Internal,
             parentActivity?.Context ?? default);
         activity?.SetTag("step", "seed_users");
 
-        Console.WriteLine("🌱 Starting user seeding...");
+        Console.WriteLine($"🌱 Starting user seeding for {count} users...");
 
         var seedingStartTime = DateTime.UtcNow;
-        var baseDate = DateTime.UtcNow;
-        var hasher = new Hasher();
+        var hasher = new Hasher(); // Assuming Hasher is a utility for password hashing
 
-        var users = new List<User>
-        {
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "john.doe",
-                Email = "john.doe@example.com",
-                Password = hasher.HashPassword("SecurePass123!"),
-                CreatedAt = baseDate.AddDays(-365),
-                UpdatedAt = baseDate.AddDays(-20),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "jane.smith",
-                Email = "jane.smith@gmail.com",
-                Password = hasher.HashPassword("MyPassword456$"),
-                CreatedAt = baseDate.AddDays(-180),
-                UpdatedAt = baseDate.AddDays(-10),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "admin.user",
-                Email = "admin@company.org",
-                Password = hasher.HashPassword("AdminSecure789#"),
-                CreatedAt = baseDate.AddDays(-730),
-                UpdatedAt = baseDate.AddDays(-1),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "maria.rodriguez",
-                Email = "maria.rodriguez@outlook.com",
-                Password = hasher.HashPassword("ContraseñaSegura321"),
-                CreatedAt = baseDate.AddDays(-90),
-                UpdatedAt = baseDate.AddDays(-5),
-                Schedule = new Schedule()
-            },
-            new()
-            {
-                Id = Guid.NewGuid(),
-                Username = "wei.zhang",
-                Email = "w.zhang@university.edu",
-                Password = hasher.HashPassword("密码安全654"),
-                CreatedAt = baseDate.AddDays(-45),
-                UpdatedAt = baseDate.AddDays(-2),
-                Schedule = new Schedule()
-            }
-        };
+        // Configure a Faker for the User model
+        var userFaker = new Faker<User>()
+            .RuleFor(u => u.Id, f => Guid.NewGuid())
+            .RuleFor(u => u.Username, f => f.Internet.UserName(f.Name.FirstName(), f.Name.LastName()))
+            .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Username))
+            .RuleFor(u => u.Password, f => hasher.HashPassword(f.Internet.Password(8, memorable: true, prefix: "#Aa1"))) // Strong password
+            .RuleFor(u => u.CreatedAt, f => f.Date.Past(2)) // Created up to 2 years ago
+            .RuleFor(u => u.UpdatedAt, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow))
+            .RuleFor(u => u.Schedule, f => new Schedule()); // Assuming Schedule is a default-constructible model
+
+        // Generate the specified number of fake users
+        var users = userFaker.Generate(count);
 
         activity?.SetTag("users_to_create", users.Count);
 
-        foreach (var user in users.Take(3))
+        foreach (var user in users.Take(Math.Min(3, users.Count))) // Log only the first few for brevity
         {
             Console.WriteLine($"   👤 Preparing user {user.Username} (ID: {user.Id})");
         }
@@ -302,7 +269,7 @@ public static class DataSeeder
 
     private static async Task SeedUserAddressesAsync(
         AddressDbContext addressContext, UserDbContext userContext,
-        IMetricsService metricsService, Activity? parentActivity)
+        IMetricsService metricsService, Activity? parentActivity, int maxAddressesPerUser = 2)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUserAddresses", ActivityKind.Internal,
             parentActivity?.Context ?? default);
@@ -311,6 +278,7 @@ public static class DataSeeder
         Console.WriteLine("🌱 Starting address seeding...");
 
         var seedingStartTime = DateTime.UtcNow;
+        // Fetch all users to associate addresses
         var users = await userContext.Set<User>().ToListAsync();
 
         activity?.SetTag("users_found_for_address_seeding", users.Count);
@@ -325,12 +293,25 @@ public static class DataSeeder
             return;
         }
 
-        var addresses = new List<UserAddress>
+        var addresses = new List<UserAddress>();
+        var faker = new Faker(); // General faker instance
+
+        foreach (var user in users)
         {
-            new(users[0].Id, users[0], "123 Main St", "Apt 1", "New York", "NY", "10001") { Id = Guid.NewGuid() },
-            new(users[1].Id, users[1], "456 Oak Ave", null, "Boston", "MA", "02108") { Id = Guid.NewGuid() },
-            new(users[2].Id, users[2], "789 Pine Rd", "Suite 300", "Chicago", "IL", "60601") { Id = Guid.NewGuid() }
-        };
+            // For each user, generate 1 to maxAddressesPerUser addresses
+            var numberOfAddressesForUser = faker.Random.Int(1, maxAddressesPerUser);
+            var userAddressFaker = new Faker<UserAddress>()
+                .RuleFor(ua => ua.Id, f => Guid.NewGuid())
+                .RuleFor(ua => ua.UserId, f => user.Id)
+                .RuleFor(ua => ua.User, f => user) // Link to the user object (if needed for EF Core)
+                .RuleFor(ua => ua.Address1, f => f.Address.StreetAddress())
+                .RuleFor(ua => ua.Address2, f => f.Address.SecondaryAddress())
+                .RuleFor(ua => ua.City, f => f.Address.City())
+                .RuleFor(ua => ua.State, f => f.Address.StateAbbr())
+                .RuleFor(ua => ua.ZipCode, f => f.Address.ZipCode());
+
+            addresses.AddRange(userAddressFaker.Generate(numberOfAddressesForUser));
+        }
 
         try
         {

@@ -84,7 +84,7 @@ if (app.Environment.IsDevelopment())
 
             // Seed users first and capture the result
             Console.WriteLine("👥 Seeding users...");
-            var seededUsers = await DataSeeder.ReseedForTestingAsync(scopedServices);
+            var seededUsers = await UserSeeder.ReseedForTestingAsync(scopedServices);
             Console.WriteLine($"✅ User seeding complete - {seededUsers.Count} users created");
             await Task.Delay(1000);
 
