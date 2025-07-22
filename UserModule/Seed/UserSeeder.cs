@@ -170,7 +170,7 @@ public static class UserSeeder
             .RuleFor(u => u.Username, f => f.Internet.UserName())
             .RuleFor(u => u.Email, f => f.Internet.Email())
             .RuleFor(u => u.Password,
-                f => hasher.HashPassword(f.Internet.Password(16, memorable: true, prefix: "#Aa1")))
+                f => hasher.HashPassword(f.Internet.Password(32, memorable: true, prefix: "#Aa1")))
             .RuleFor(u => u.CreatedAt, f => f.Date.Past(2))
             .RuleFor(u => u.UpdatedAt, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow));
 
@@ -186,7 +186,7 @@ public static class UserSeeder
                 .GroupBy(u => u.Username, StringComparer.OrdinalIgnoreCase).Select(g => g.First())
                 .GroupBy(u => u.Email, StringComparer.OrdinalIgnoreCase).Select(g => g.First())
                 .Where(u => !users.Any(existing =>
-                    existing.Username != null && existing.Email != null &&
+                    existing is { Username: not null, Email: not null } &&
                     (existing.Username.Equals(u.Username, StringComparison.OrdinalIgnoreCase) ||
                      existing.Email.Equals(u.Email, StringComparison.OrdinalIgnoreCase))))
                 .ToList();
@@ -256,14 +256,16 @@ public static class UserSeeder
                 addressBatch.AddRange(userAddressFaker.Generate(numberOfAddressesForUser));
                 processedUsers++;
 
-                if (addressBatch.Count >= batchSize)
+                if (addressBatch.Count < batchSize)
                 {
-                    await addressRepository.BulkInsertAsync(addressBatch);
-                    totalAddresses += addressBatch.Count;
-                    addressBatch.Clear();
-                    Console.WriteLine(
-                        $"📈 Processed {processedUsers:N0} users, bulk inserted {totalAddresses:N0} addresses");
+                    continue;
                 }
+
+                await addressRepository.BulkInsertAsync(addressBatch);
+                totalAddresses += addressBatch.Count;
+                addressBatch.Clear();
+                Console.WriteLine(
+                    $"📈 Processed {processedUsers:N0} users, bulk inserted {totalAddresses:N0} addresses");
             }
 
             if (addressBatch.Count > 0)
