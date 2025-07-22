@@ -214,7 +214,7 @@ public static class AuthSeeder
 
         try
         {
-            var testAuthUsers = authFaker.Generate(50);
+            var testAuthUsers = authFaker.Generate(4990);
             var allUsers = authUsers.Concat(testAuthUsers).ToList();
             await authContext.AuthUsers.AddRangeAsync(allUsers);
             var savedCount = await authContext.SaveChangesAsync();

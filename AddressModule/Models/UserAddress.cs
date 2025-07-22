@@ -12,6 +12,7 @@ public class UserAddress
 
     [Required]
     [ForeignKey(nameof(UserId))]
+    [NotMapped]
     public User? User { get; set; }
 
     [Required] [MaxLength(255)] public string? Address1 { get; set; }

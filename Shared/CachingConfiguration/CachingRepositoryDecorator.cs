@@ -4,6 +4,7 @@ using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using TBD.Shared.Repositories;
+using TBD.Shared.Repositories.Configuration;
 
 namespace TBD.Shared.CachingConfiguration;
 
@@ -54,6 +55,187 @@ public class CachingRepositoryDecorator<T>(
         var allAsync = result as T[] ?? result.ToArray();
         SetCache(cacheKey, allAsync, cacheOptions);
         return allAsync;
+    }
+
+    public async Task<List<T>> GetAllChunkedAsync(int chunkSize)
+    {
+        if (!_options.EnableCaching)
+            return await inner.GetAllChunkedAsync(chunkSize);
+
+        var cacheKey = GenerateCacheKey("AllChunked", chunkSize.ToString());
+
+        if (cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
+        {
+            logger?.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return cached;
+        }
+
+        logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
+        var result = await inner.GetAllChunkedAsync(chunkSize);
+
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = _options.GetAllCacheDuration,
+            Priority = CacheItemPriority.Normal,
+            Size = Math.Max(1, result.Count / 1000) // Size based on result count
+        };
+
+        cacheOptions.RegisterPostEvictionCallback(OnCacheItemEvicted);
+        SetCache(cacheKey, result, cacheOptions);
+
+        return result;
+    }
+
+    public async Task<List<T>> GetAllOptimizedAsync()
+    {
+        if (!_options.EnableCaching)
+            return await inner.GetAllOptimizedAsync();
+
+        var cacheKey = GenerateCacheKey("AllOptimized");
+
+        if (cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
+        {
+            logger?.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return cached;
+        }
+
+        logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
+        var result = await inner.GetAllOptimizedAsync();
+
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = _options.GetAllCacheDuration,
+            Priority = CacheItemPriority.High, // Optimized queries are valuable
+            Size = Math.Max(1, result.Count / 1000)
+        };
+
+        cacheOptions.RegisterPostEvictionCallback(OnCacheItemEvicted);
+        SetCache(cacheKey, result, cacheOptions);
+
+        return result;
+    }
+
+    public async IAsyncEnumerable<T> GetAllStreamingAsync(int bufferSize)
+    {
+        // Streaming methods are inherently designed for memory efficiency and real-time data
+        // Caching defeats the purpose, so we bypass cache and delegate directly
+        logger?.LogDebug("GetAllStreamingAsync called - bypassing cache for streaming operation");
+
+        await foreach (var item in inner.GetAllStreamingAsync(bufferSize))
+        {
+            yield return item;
+        }
+    }
+
+    public async Task<List<T>> GetAllParallelAsync(int partitionCount)
+    {
+        if (!_options.EnableCaching)
+            return await inner.GetAllParallelAsync(partitionCount);
+
+        var cacheKey = GenerateCacheKey("AllParallel", partitionCount.ToString());
+
+        if (cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
+        {
+            logger?.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return cached;
+        }
+
+        logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
+        var result = await inner.GetAllParallelAsync(partitionCount);
+
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = _options.GetAllCacheDuration,
+            Priority = CacheItemPriority.High, // Parallel queries are expensive
+            Size = Math.Max(1, result.Count / 1000)
+        };
+
+        cacheOptions.RegisterPostEvictionCallback(OnCacheItemEvicted);
+        SetCache(cacheKey, result, cacheOptions);
+
+        return result;
+    }
+
+    public async Task<List<T>> GetAllMemoryMappedAsync()
+    {
+        if (!_options.EnableCaching)
+            return await inner.GetAllMemoryMappedAsync();
+
+        var cacheKey = GenerateCacheKey("AllMemoryMapped");
+
+        if (cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
+        {
+            logger?.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return cached;
+        }
+
+        logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
+        var result = await inner.GetAllMemoryMappedAsync();
+
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = _options.GetAllCacheDuration,
+            Priority = CacheItemPriority.High, // Memory-mapped queries are for large datasets
+            Size = Math.Max(1, result.Count / 1000)
+        };
+
+        cacheOptions.RegisterPostEvictionCallback(OnCacheItemEvicted);
+        SetCache(cacheKey, result, cacheOptions);
+
+        return result;
+    }
+
+    public async Task<List<T>> GetAllConfigurableAsync(QueryOptions options)
+    {
+        if (!_options.EnableCaching)
+            return await inner.GetAllConfigurableAsync(options);
+
+        // Create cache key based on strategy and relevant parameters
+        string strategyParams = options.Strategy switch
+        {
+            QueryStrategy.Chunked => options.ChunkSize.ToString(),
+            QueryStrategy.Parallel => options.ParallelPartitions.ToString(),
+            QueryStrategy.Streaming => options.StreamingBufferSize.ToString(),
+            QueryStrategy.MemoryMapped => "default",
+            _ => "standard"
+        };
+
+        var cacheKey = GenerateCacheKey("AllConfigurable", options.Strategy.ToString(), strategyParams);
+
+        // Skip caching for streaming strategy as it's designed for memory efficiency
+        if (options.Strategy == QueryStrategy.Streaming)
+        {
+            logger?.LogDebug("GetAllConfigurableAsync with Streaming strategy - bypassing cache");
+            return await inner.GetAllConfigurableAsync(options);
+        }
+
+        if (cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
+        {
+            logger?.LogDebug("Cache hit for {CacheKey}", cacheKey);
+            return cached;
+        }
+
+        logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
+        var result = await inner.GetAllConfigurableAsync(options);
+
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = _options.GetAllCacheDuration,
+            Priority = options.Strategy == QueryStrategy.Standard
+                ? CacheItemPriority.Normal
+                : CacheItemPriority.High, // High-performance strategies get higher priority
+            Size = Math.Max(1, result.Count / 1000)
+        };
+
+        cacheOptions.RegisterPostEvictionCallback(OnCacheItemEvicted);
+        SetCache(cacheKey, result, cacheOptions);
+
+        return result;
+    }
+
+    public async Task BulkInsertAsync(IEnumerable<T> entities)
+    {
+        await inner.BulkInsertAsync(entities);
     }
 
     public async Task<T> GetByIdAsync(Guid id)
@@ -125,29 +307,46 @@ public class CachingRepositoryDecorator<T>(
             key, options.AbsoluteExpirationRelativeToNow);
     }
 
-    private async Task InvalidateCacheAsync(T entity, string operation)
+    private Task InvalidateCacheAsync(T entity, string operation)
     {
-        if (!_options.EnableCaching) return;
+        if (!_options.EnableCaching)
+            return Task.CompletedTask;
 
-        // Always invalidate "All" cache
-        var allKey = GenerateCacheKey("All");
-        RemoveFromCache(allKey);
-
-        // Try to invalidate a specific entity cache if we can get its ID
+        var entityName = typeof(T).Name;
         var entityId = GetEntityId(entity);
+        var invalidatedKeys = new List<string>();
+
+        // Create the prefix to match against
+        var allKeysPrefix = $"{_options.CacheKeyPrefix}_{entityName}_All";
+
+        // Invalidate all "GetAll*" related caches since the dataset has changed
+        var keysSnapshot = _cachedKeys.ToList();
+
+        foreach (var key in keysSnapshot)
+        {
+            if (key.StartsWith(allKeysPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                RemoveFromCache(key);
+                invalidatedKeys.Add(key);
+            }
+        }
+
+        // Invalidate specific entity cache if we can get its ID
         if (entityId != null)
         {
             var idKey = GenerateCacheKey("Id", entityId.ToString()!);
-            RemoveFromCache(idKey);
+            if (_cachedKeys.Contains(idKey))
+            {
+                RemoveFromCache(idKey);
+                invalidatedKeys.Add(idKey);
+            }
         }
 
-        // For extensive invalidation, you might want to invalidate related caches
-        // This could be extended based on your domain relationships
+        logger?.LogDebug(
+            "Cache invalidated for {EntityType} after {Operation}. Entity ID: {EntityId}. Keys invalidated: {KeyCount}",
+            entityName, operation, entityId, invalidatedKeys.Count);
 
-        logger?.LogDebug("Cache invalidated for {EntityType} after {Operation}. Entity ID: {EntityId}",
-            typeof(T).Name, operation, entityId);
-
-        await Task.CompletedTask; // Placeholder for any async invalidation logic
+        return Task.CompletedTask;
     }
 
     private void RemoveFromCache(string key)

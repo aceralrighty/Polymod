@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Models;
 using TBD.MetricsModule.Services.Interfaces;
+using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
@@ -22,7 +23,7 @@ public static class UserSeeder
     /// <param name="numberOfFakeUsers">The number of fake users to generate. Defaults to 50 if not specified.</param>
     /// <returns>A list of the seeded users.</returns>
     public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider,
-        int numberOfFakeUsers = 500)
+        int numberOfFakeUsers = 4000)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.ReseedForTesting");
         activity?.SetTag("operation", "reseed_for_testing");
@@ -30,8 +31,11 @@ public static class UserSeeder
 
         using var scope = serviceProvider.CreateScope();
 
+        // Resolve DbContexts for schema management and repositories for data operations
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<User>>();
+        var addressRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<UserAddress>>();
 
         var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
         var metricsService = factory.CreateMetricsService("UserModule");
@@ -39,62 +43,21 @@ public static class UserSeeder
         try
         {
             Console.WriteLine("🔄 Starting user database operations...");
-
             var operationStartTime = DateTime.UtcNow;
-
-            var userDbExists = await userContext.Database.CanConnectAsync();
-            var addressDbExists = await addressContext.Database.CanConnectAsync();
-
-            Console.WriteLine($"👥 User database accessible before deletion: {userDbExists}");
-            Console.WriteLine($"📍 Address database accessible before deletion: {addressDbExists}");
-
-            activity?.SetTag("user_db_accessible_before", userDbExists);
-            activity?.SetTag("address_db_accessible_before", addressDbExists);
 
             await DeleteDatabasesAsync(userContext, addressContext, metricsService, activity);
             await MigrateDatabasesAsync(userContext, addressContext, metricsService, activity);
 
-            var userDbExistsAfter = await userContext.Database.CanConnectAsync();
-            var addressDbExistsAfter = await addressContext.Database.CanConnectAsync();
-
-            Console.WriteLine($"👥 User database accessible after migration: {userDbExistsAfter}");
-            Console.WriteLine($"📍 Address database accessible after migration: {addressDbExistsAfter}");
-
-            activity?.SetTag("user_db_accessible_after", userDbExistsAfter);
-            activity?.SetTag("address_db_accessible_after", addressDbExistsAfter);
-
-            // Pass numberOfFakeUsers to SeedUsersAsync
-            var seededUsers = await SeedUsersAsync(userContext, metricsService, activity, numberOfFakeUsers);
+            // Seed users using the repository
+            var seededUsers = await SeedUsersAsync(userRepository, metricsService, activity, numberOfFakeUsers);
             Console.WriteLine($"✅ Successfully seeded {seededUsers.Count} users");
-
             activity?.SetTag("users_seeded_count", seededUsers.Count);
-            metricsService.IncrementCounter($"seeding.users_seeded -> {seededUsers.Count}");
 
-            var userCountAfterSeeding = await userContext.Set<User>().CountAsync();
-            Console.WriteLine($"🔢 User count in database after seeding: {userCountAfterSeeding}");
-
-            if (userCountAfterSeeding != seededUsers.Count)
-            {
-                Console.WriteLine(
-                    $"⚠️ WARNING: Expected {seededUsers.Count} users but found {userCountAfterSeeding} in database!");
-                activity?.SetTag("users_count_mismatch", true);
-                metricsService.IncrementCounter("seeding.users_count_mismatch");
-            }
-
-            var usersInDb = await userContext.Set<User>().Take(3).Select(u => new { u.Id, u.Username }).ToListAsync();
-            Console.WriteLine("📝 Users in database (first 3):");
-            foreach (var user in usersInDb)
-            {
-                Console.WriteLine($"   👤 {user.Username} (ID: {user.Id})");
-            }
-
-            await SeedUserAddressesAsync(addressContext, userContext, metricsService, activity,
-                numberOfFakeUsers); // Pass numberOfFakeUsers
-            metricsService.IncrementCounter("seeding.user_addresses_seeded");
+            // Seed addresses using repositories
+            await SeedUserAddressesAsync(userRepository, addressRepository, metricsService, activity);
 
             var operationDuration = DateTime.UtcNow - operationStartTime;
             metricsService.RecordHistogram("seeding.total_operation_duration_seconds", operationDuration.TotalSeconds);
-
             activity?.SetTag("total_duration_seconds", operationDuration.TotalSeconds);
             activity?.SetStatus(ActivityStatusCode.Ok);
 
@@ -104,14 +67,7 @@ public static class UserSeeder
         {
             Console.WriteLine($"❌ Error in DataSeeder: {ex.Message}");
             Console.WriteLine($"🔍 Stack trace: {ex.StackTrace}");
-
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            activity?.SetTag("error.type", ex.GetType().Name);
-            activity?.SetTag("error.message", ex.Message);
-
-            metricsService.IncrementCounter("seeding.errors_total");
-            metricsService.IncrementCounter($"seeding.errors_{ex.GetType().Name}");
-
             throw;
         }
     }
@@ -199,139 +155,135 @@ public static class UserSeeder
     }
 
     private static async Task<List<User>> SeedUsersAsync(
-        UserDbContext context, IMetricsService metricsService, Activity? parentActivity, int count)
+        IGenericRepository<User> userRepository, IMetricsService metricsService, Activity? parentActivity, int count)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUsers", ActivityKind.Internal,
             parentActivity?.Context ?? default);
         activity?.SetTag("step", "seed_users");
 
         Console.WriteLine($"🌱 Starting user seeding for {count} users...");
-
         var seedingStartTime = DateTime.UtcNow;
-        var hasher = new Hasher(); // Assuming Hasher is a utility for password hashing
 
-        // Configure a Faker for the User model
+        var hasher = new Hasher();
         var userFaker = new Faker<User>()
             .RuleFor(u => u.Id, _ => Guid.NewGuid())
-            .RuleFor(u => u.Username, f => f.Internet.UserName(f.Name.FirstName(), f.Name.LastName()))
-            .RuleFor(u => u.Email, (f, u) => f.Internet.Email(u.Username))
+            .RuleFor(u => u.Username, f => f.Internet.UserName())
+            .RuleFor(u => u.Email, f => f.Internet.Email())
             .RuleFor(u => u.Password,
                 f => hasher.HashPassword(f.Internet.Password(16, memorable: true, prefix: "#Aa1")))
-            .RuleFor(u => u.CreatedAt, f => f.Date.Past(2)) // Created up to 2 years ago
+            .RuleFor(u => u.CreatedAt, f => f.Date.Past(2))
             .RuleFor(u => u.UpdatedAt, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow));
 
-        // Generate the specified number of fake users
-        var users = userFaker.Generate(count);
+        var users = new List<User>();
+        var attempts = 0;
+        var maxAttempts = count * 3;
 
-        activity?.SetTag("users_to_create", users.Count);
-
-        foreach (var user in users.Take(Math.Min(3, users.Count))) // Log only the first few for brevity
+        while (users.Count < count && attempts < maxAttempts)
         {
-            Console.WriteLine($"   👤 Preparing user {user.Username} (ID: {user.Id})");
+            var batchSize = Math.Min(1000, count - users.Count);
+            var batch = userFaker.Generate(batchSize);
+            var uniqueBatch = batch
+                .GroupBy(u => u.Username, StringComparer.OrdinalIgnoreCase).Select(g => g.First())
+                .GroupBy(u => u.Email, StringComparer.OrdinalIgnoreCase).Select(g => g.First())
+                .Where(u => !users.Any(existing =>
+                    existing.Username != null && existing.Email != null &&
+                    (existing.Username.Equals(u.Username, StringComparison.OrdinalIgnoreCase) ||
+                     existing.Email.Equals(u.Email, StringComparison.OrdinalIgnoreCase))))
+                .ToList();
+            users.AddRange(uniqueBatch);
+            attempts += batchSize;
         }
+
+        users = users.Take(count).ToList();
+        activity?.SetTag("users_to_create", users.Count);
 
         try
         {
-            await context.Set<User>().AddRangeAsync(users);
-            var saveResult = await context.SaveChangesAsync();
+            // Use the repository's efficient bulk insert method
+            await userRepository.BulkInsertAsync(users);
 
-            activity?.SetTag("save_result", saveResult);
             metricsService.IncrementCounter($"seeding.users_seeded_successfully -> {users.Count}");
             activity?.SetTag("users_seeded_count", users.Count);
-
-            var countAfterSave = await context.Set<User>().CountAsync();
-            Console.WriteLine($"🔢 Users in database after SaveChanges: {countAfterSave}");
-
-            if (countAfterSave != users.Count)
-            {
-                Console.WriteLine($"⚠️ WARNING: Expected {users.Count} users but found {countAfterSave} in database!");
-                activity?.SetTag("users_count_mismatch", true);
-                metricsService.IncrementCounter("seeding.users_count_mismatch");
-            }
 
             var seedingDuration = DateTime.UtcNow - seedingStartTime;
             metricsService.RecordHistogram("seeding.user_seeding_duration_seconds", seedingDuration.TotalSeconds);
             activity?.SetTag("seeding_duration_seconds", seedingDuration.TotalSeconds);
             activity?.SetStatus(ActivityStatusCode.Ok);
 
+            Console.WriteLine($"✅ Bulk inserted {users.Count} users in {seedingDuration.TotalSeconds:F2} seconds.");
             return users;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error saving users: {ex.Message}");
-            Console.WriteLine($"🔍 Inner exception: {ex.InnerException?.Message}");
-
+            Console.WriteLine($"❌ Error saving users with BulkInsert: {ex.Message}");
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             metricsService.IncrementCounter("seeding.user_seeding_errors");
-
             throw;
         }
     }
 
     private static async Task SeedUserAddressesAsync(
-        AddressDbContext addressContext, UserDbContext userContext,
+        IGenericRepository<User> userRepository, IGenericRepository<UserAddress> addressRepository,
         IMetricsService metricsService, Activity? parentActivity, int maxAddressesPerUser = 2)
     {
-        using var activity = ActivitySource.StartActivity("DataSeeder.SeedUserAddresses", ActivityKind.Internal,
-            parentActivity?.Context ?? default);
-        activity?.SetTag("step", "seed_addresses");
+        using var activity = ActivitySource.StartActivity("DataSeeder.SeedUserAddressesStreaming",
+            ActivityKind.Internal, parentActivity?.Context ?? default);
 
-        Console.WriteLine("🌱 Starting address seeding...");
-
+        Console.WriteLine("🌱 Starting streaming address seeding...");
         var seedingStartTime = DateTime.UtcNow;
-        // Fetch all users to associate addresses
-        var users = await userContext.Set<User>().ToListAsync();
-
-        activity?.SetTag("users_found_for_address_seeding", users.Count);
-        Console.WriteLine($"👥 Found {users.Count} users for address seeding");
-
-        if (users.Count == 0)
-        {
-            Console.WriteLine("❌ No users found for address seeding, skipping.");
-            metricsService.IncrementCounter("seeding.user_addresses_skipped_no_users");
-            activity?.SetTag("skipped_no_users", true);
-            activity?.SetStatus(ActivityStatusCode.Ok);
-            return;
-        }
-
-        var addresses = new List<UserAddress>();
-        var faker = new Faker();
-
-        foreach (var user in users)
-        {
-            // For each user, generate 1 to maxAddressesPerUser addresses
-            var numberOfAddressesForUser = faker.Random.Int(1, maxAddressesPerUser);
-            var userAddressFaker = new Faker<UserAddress>()
-                .RuleFor(ua => ua.Id, _ => Guid.NewGuid())
-                .RuleFor(ua => ua.UserId, _ => user.Id)
-                .RuleFor(ua => ua.User, _ => user) // Link to the user object (if needed for EF Core)
-                .RuleFor(ua => ua.Address1, f => f.Address.StreetAddress())
-                .RuleFor(ua => ua.Address2, f => f.Address.SecondaryAddress())
-                .RuleFor(ua => ua.City, f => f.Address.City())
-                .RuleFor(ua => ua.State, f => f.Address.StateAbbr())
-                .RuleFor(ua => ua.ZipCode, f => f.Address.ZipCode());
-
-            addresses.AddRange(userAddressFaker.Generate(numberOfAddressesForUser));
-        }
+        var totalAddresses = 0;
+        var processedUsers = 0;
+        var addressBatch = new List<UserAddress>();
+        const int batchSize = 5000;
 
         try
         {
-            await addressContext.UserAddress.AddRangeAsync(addresses);
-            var savedAddresses = await addressContext.SaveChangesAsync();
+            // Stream users from the repository to keep memory usage low
+            await foreach (var user in userRepository.GetAllStreamingAsync(bufferSize: 1000))
+            {
+                var faker = new Faker();
+                var numberOfAddressesForUser = faker.Random.Int(1, maxAddressesPerUser);
 
-            metricsService.IncrementCounter($"seeding.user_addresses_seeded_successfully -> {addresses.Count}");
-            activity?.SetTag("addresses_seeded_count", addresses.Count);
+                var userAddressFaker = new Faker<UserAddress>()
+                    .RuleFor(ua => ua.Id, _ => Guid.NewGuid())
+                    .RuleFor(ua => ua.UserId, _ => user.Id)
+                    .RuleFor(ua => ua.Address1, f => f.Address.StreetAddress())
+                    .RuleFor(ua => ua.Address2, f => f.Address.SecondaryAddress())
+                    .RuleFor(ua => ua.City, f => f.Address.City())
+                    .RuleFor(ua => ua.State, f => f.Address.StateAbbr())
+                    .RuleFor(ua => ua.ZipCode, f => f.Address.ZipCode());
+
+                addressBatch.AddRange(userAddressFaker.Generate(numberOfAddressesForUser));
+                processedUsers++;
+
+                if (addressBatch.Count >= batchSize)
+                {
+                    await addressRepository.BulkInsertAsync(addressBatch);
+                    totalAddresses += addressBatch.Count;
+                    addressBatch.Clear();
+                    Console.WriteLine(
+                        $"📈 Processed {processedUsers:N0} users, bulk inserted {totalAddresses:N0} addresses");
+                }
+            }
+
+            if (addressBatch.Count > 0)
+            {
+                await addressRepository.BulkInsertAsync(addressBatch);
+                totalAddresses += addressBatch.Count;
+            }
 
             var seedingDuration = DateTime.UtcNow - seedingStartTime;
+            metricsService.IncrementCounter($"seeding.user_addresses_seeded_successfully -> {totalAddresses}");
             metricsService.RecordHistogram("seeding.address_seeding_duration_seconds", seedingDuration.TotalSeconds);
-            activity?.SetTag("seeding_duration_seconds", seedingDuration.TotalSeconds);
+            activity?.SetTag("addresses_seeded_count", totalAddresses);
             activity?.SetStatus(ActivityStatusCode.Ok);
 
-            Console.WriteLine($"✅ Seeded {savedAddresses} addresses for {users.Count} users");
+            Console.WriteLine(
+                $"✅ Streaming seeded {totalAddresses:N0} addresses for {processedUsers:N0} users in {seedingDuration.TotalSeconds:F2} seconds");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Error seeding addresses: {ex.Message}");
+            Console.WriteLine($"❌ Error during streaming address seeding: {ex.Message}");
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             metricsService.IncrementCounter("seeding.address_seeding_errors");
             throw;
