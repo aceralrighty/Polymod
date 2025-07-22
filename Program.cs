@@ -102,7 +102,7 @@ if (app.Environment.IsDevelopment())
 
             // Seed auth
             Console.WriteLine("🔐 Seeding auth...");
-            await AuthSeeder.ReseedSeedAsync(scopedServices);
+            await AuthSeeder.ReseedAsync(scopedServices);
             Console.WriteLine("✅ Auth seeding complete");
             await Task.Delay(1000);
 

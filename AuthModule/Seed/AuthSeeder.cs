@@ -11,7 +11,7 @@ public static class AuthSeeder
 {
     private static readonly ActivitySource ActivitySource = new("TBD.AuthModule.AuthSeeder");
 
-    public static async Task ReseedSeedAsync(IServiceProvider serviceProvider)
+    public static async Task ReseedAsync(IServiceProvider serviceProvider)
     {
         using var activity = ActivitySource.StartActivity("AuthSeeder.ReseedSeed");
         activity?.SetTag("operation", "reseed_seed");
@@ -214,7 +214,7 @@ public static class AuthSeeder
 
         try
         {
-            var testAuthUsers = authFaker.Generate(50);
+            var testAuthUsers = authFaker.Generate(4990);
             var allUsers = authUsers.Concat(testAuthUsers).ToList();
             await authContext.AuthUsers.AddRangeAsync(allUsers);
             var savedCount = await authContext.SaveChangesAsync();
