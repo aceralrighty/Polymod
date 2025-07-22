@@ -11,7 +11,7 @@ public static class AuthSeeder
 {
     private static readonly ActivitySource ActivitySource = new("TBD.AuthModule.AuthSeeder");
 
-    public static async Task ReseedSeedAsync(IServiceProvider serviceProvider)
+    public static async Task ReseedAsync(IServiceProvider serviceProvider)
     {
         using var activity = ActivitySource.StartActivity("AuthSeeder.ReseedSeed");
         activity?.SetTag("operation", "reseed_seed");
