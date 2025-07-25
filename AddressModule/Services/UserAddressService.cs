@@ -64,7 +64,7 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
 
     public async Task<IEnumerable<UserAddress>> GetAllAsync(Guid userId)
     {
-        return await _dbSet.ToListAsync();
+        return await _dbSet.Where(ua => ua.UserId == userId).ToListAsync();
     }
 
     public async Task<IEnumerable<UserAddress>> FindAsync(
@@ -82,9 +82,9 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
     public async Task AddAsync(UserAddress entity)
     {
         if (entity == null)
-            throw new ArgumentNullException(nameof(entity), "The address collection cannot be null.");
+            throw new ArgumentNullException(nameof(entity), "The address entity cannot be null.");
 
-        await _dbSet.AddRangeAsync(entity);
+        await _dbSet.AddAsync(entity);
         await context.SaveChangesAsync();
     }
 
@@ -101,36 +101,35 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
 
     public async Task UpdateAsync(UserAddress entity)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         _dbSet.Update(entity);
         await context.SaveChangesAsync();
     }
 
     public async Task RemoveAsync(UserAddress entity)
     {
+        ArgumentNullException.ThrowIfNull(entity);
         _dbSet.Remove(entity);
         await context.SaveChangesAsync();
     }
 
     public async Task<UserAddress> UpdateUserAddress(UserAddressRequest userAddressDto)
     {
-        // 1. Validate the user exists before updating the address
         var user = await userService.GetUserByIdAsync(userAddressDto.UserId);
         if (user == null)
         {
             throw new ArgumentException("User not found, cannot update address.");
         }
 
-        // 2. Fetch existing address entity
+
         var existingAddress = await _dbSet.FirstOrDefaultAsync(i => i.Id == userAddressDto.Id);
         if (existingAddress == null)
         {
             throw new ArgumentNullException(nameof(existingAddress), "User Address does not exist");
         }
 
-        // 3. Map updated fields from DTO to the entity
         mapper.Map(userAddressDto, existingAddress);
 
-        // 4. Save changes to DB
         await context.SaveChangesAsync();
 
         return existingAddress;
