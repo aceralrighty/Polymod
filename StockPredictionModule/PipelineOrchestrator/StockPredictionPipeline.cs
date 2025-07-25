@@ -62,33 +62,71 @@ public class StockPredictionPipeline : IStockPredictionPipeline
 
         try
         {
-            Console.WriteLine("Step 1: Loading CSV to memory...");
-            var loadStopwatch = Stopwatch.StartNew();
-            var rawData = await LoadCsvData.LoadRawDataAsync(csvFilePath);
-            loadStopwatch.Stop();
+            Console.WriteLine("Step 1: Getting record count...");
+            var totalRecords = await LoadCsvData.GetRecordCountAsync(csvFilePath);
+            Console.WriteLine($"Found {totalRecords:N0} records in CSV file");
 
-            _openTelemetryMetrics?.RecordHistogram("stock.pipeline_csv_load_duration_seconds",
-                loadStopwatch.Elapsed.TotalSeconds);
-            _openTelemetryMetrics?.RecordHistogram("stock.pipeline_raw_records_loaded", rawData.Count);
+            _openTelemetryMetrics?.RecordHistogram("stock.pipeline_total_records_found", totalRecords);
 
-            Console.WriteLine($"Loaded {rawData.Count} records into memory");
+            Console.WriteLine("Step 2: Processing data in streaming batches...");
+            var groupedBySymbol = new Dictionary<string, List<RawData>>();
+            var batchNumber = 0;
+            var totalProcessed = 0;
 
-            Console.WriteLine("Step 2: Grouping data by symbol...");
-            var groupStopwatch = Stopwatch.StartNew();
-            var groupedBySymbol = rawData
-                .GroupBy(r => r.Symbol)
-                .ToDictionary(g => g.Key, g => g.OrderBy(r => DateTime.Parse(r.Date)).ToList());
-            groupStopwatch.Stop();
+            // Process in true streaming fashion - only keep grouped data, not all raw data
+            await foreach (var batch in LoadCsvData.LoadRawDataBatchedAsync(csvFilePath, batchSize: 2000))
+            {
+                batchNumber++;
+                totalProcessed += batch.Count;
+                Console.WriteLine(
+                    $"Processing batch {batchNumber}: {batch.Count:N0} records (Total: {totalProcessed:N0})");
 
-            _openTelemetryMetrics?.RecordHistogram("stock.pipeline_grouping_duration_seconds",
-                groupStopwatch.Elapsed.TotalSeconds);
+                // Group by symbol as we go, but don't keep the original batch
+                foreach (var record in batch)
+                {
+                    if (!groupedBySymbol.ContainsKey(record.Symbol))
+                    {
+                        groupedBySymbol[record.Symbol] = new List<RawData>();
+                    }
+
+                    groupedBySymbol[record.Symbol].Add(record);
+                }
+
+                _openTelemetryMetrics?.RecordHistogram("stock.pipeline_batch_processed", batch.Count);
+
+                // Force garbage collection every 10 batches to manage memory
+                if (batchNumber % 10 != 0)
+                {
+                    continue;
+                }
+
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                var memoryUsed = GC.GetTotalMemory(false) / (1024.0 * 1024.0);
+                Console.WriteLine($"    Memory check at batch {batchNumber}: {memoryUsed:F1} MB");
+            }
+
+            // Sort each symbol's data by date efficiently
+            Console.WriteLine("Step 2.5: Sorting symbol data by date...");
+            var sortStopwatch = Stopwatch.StartNew();
+
+            foreach (var symbol in groupedBySymbol.Keys.ToList())
+            {
+                groupedBySymbol[symbol].Sort((a, b) => DateTime.Parse(a.Date).CompareTo(DateTime.Parse(b.Date)));
+            }
+
+            sortStopwatch.Stop();
+            _openTelemetryMetrics?.RecordHistogram("stock.pipeline_sort_duration_seconds",
+                sortStopwatch.Elapsed.TotalSeconds);
+
+            Console.WriteLine($"Processed {totalProcessed:N0} records across {groupedBySymbol.Count} symbols");
             _openTelemetryMetrics?.RecordHistogram("stock.pipeline_unique_symbols_found", groupedBySymbol.Count);
 
-            Console.WriteLine($"Found {groupedBySymbol.Count} unique symbols");
-
-            Console.WriteLine("Step 3: Training model with all historical data...");
+            Console.WriteLine("Step 3: Training model with streaming data...");
             var trainStopwatch = Stopwatch.StartNew();
-            await _mlEngine.TrainModelAsync(rawData);
+
+            // Train model using streaming approach instead of loading all data
+            await _mlEngine.TrainModelStreamingAsync(csvFilePath);
             trainStopwatch.Stop();
 
             _openTelemetryMetrics?.RecordHistogram("stock.pipeline_model_training_duration_seconds",
@@ -117,7 +155,7 @@ public class StockPredictionPipeline : IStockPredictionPipeline
 
                     PredictionGenerationAttempts.Add(1);
 
-                    var prediction = await _mlEngine.GeneratePredictAsync(rawData, symbol);
+                    var prediction = await _mlEngine.GeneratePredictAsync(groupedBySymbol, symbol);
                     prediction.BatchId = batchId;
 
                     allPredictions.Add(prediction);
@@ -143,22 +181,41 @@ public class StockPredictionPipeline : IStockPredictionPipeline
             _openTelemetryMetrics?.RecordHistogram("stock.pipeline_successful_predictions", successfulPredictions);
             _openTelemetryMetrics?.RecordHistogram("stock.pipeline_failed_predictions", failedPredictions);
 
-            Console.WriteLine("Step 6: Transforming raw data to stocks...");
+            Console.WriteLine("Step 6: Transforming data to stocks in batches...");
             var transformStopwatch = Stopwatch.StartNew();
-            var stonks = _entityMapper.TransformRawDataToStocks(rawData);
+            var allStocks = new List<Stock>();
+
+            // Transform in batches to avoid loading all data again
+            var transformBatchNumber = 0;
+            await foreach (var batch in LoadCsvData.LoadRawDataBatchedAsync(csvFilePath, batchSize: 2000))
+            {
+                transformBatchNumber++;
+                var stockBatch = _entityMapper.TransformRawDataToStocks(batch);
+                allStocks.AddRange(stockBatch);
+
+                Console.WriteLine(
+                    $"Transformed batch {transformBatchNumber}: {batch.Count} records -> {stockBatch.Count} stocks");
+
+                // Clean up batch immediately
+                if (transformBatchNumber % 5 == 0)
+                {
+                    GC.Collect();
+                }
+            }
+
             transformStopwatch.Stop();
 
             _openTelemetryMetrics?.RecordHistogram("stock.pipeline_data_transformation_duration_seconds",
                 transformStopwatch.Elapsed.TotalSeconds);
-            _openTelemetryMetrics?.RecordHistogram("stock.pipeline_stocks_created", stonks.Count);
+            _openTelemetryMetrics?.RecordHistogram("stock.pipeline_stocks_created", allStocks.Count);
 
-            Console.WriteLine($"EntityMapper created {stonks.Count} stocks from {rawData.Count} raw data records");
+            Console.WriteLine($"EntityMapper created {allStocks.Count} stocks from {totalProcessed} raw data records");
 
             Console.WriteLine($"Step 7: Saving {allPredictions.Count} predictions to database...");
             var saveStopwatch = Stopwatch.StartNew();
 
             await _stockPredictionRepository.SaveStockPredictionBatchAsync(allPredictions);
-            await _stockRepository.SaveStockAsync(stonks);
+            await _stockRepository.SaveStockAsync(allStocks);
 
             saveStopwatch.Stop();
             _openTelemetryMetrics?.RecordHistogram("stock.pipeline_database_save_duration_seconds",

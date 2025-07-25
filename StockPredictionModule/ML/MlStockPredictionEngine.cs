@@ -1,8 +1,9 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.ML;
-using TBD.MetricsModule.Services.Interfaces;
 using TBD.MetricsModule.OpenTelemetry.Services;
+using TBD.MetricsModule.Services.Interfaces;
+using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML.Interface;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.Models.Stocks;
@@ -10,13 +11,11 @@ using TBD.StockPredictionModule.PipelineOrchestrator;
 
 namespace TBD.StockPredictionModule.ML;
 
-public class MlStockPredictionEngine
-    : IMlStockPredictionEngine
+public class MlStockPredictionEngine : IMlStockPredictionEngine
 {
     private static readonly MLContext MlContext = new(seed: 0);
     private ITransformer? _model;
     private PredictionEngine<StockFeatureVector, StockPrediction>? _predictionEngine;
-
 
     // Use interface for basic counters (supports both text and OpenTelemetry)
     private readonly IMetricsService _metricsService;
@@ -34,11 +33,10 @@ public class MlStockPredictionEngine
     private static readonly Meter Meter = new("TBD.StockPrediction", "1.0.0");
 
     private static readonly Counter<int> PredictionAttempts =
-        Meter.CreateCounter<int>("stock_prediction_attempts_total");  // no description text
+        Meter.CreateCounter<int>("stock_prediction_attempts_total");
 
     private static readonly Histogram<double> PredictionDuration =
-        Meter.CreateHistogram<double>("stock_prediction_duration_seconds", "seconds"); // unit is okay here
-
+        Meter.CreateHistogram<double>("stock_prediction_duration_seconds", "seconds");
 
     public Task<bool> IsModelTrainedAsync()
     {
@@ -81,7 +79,6 @@ public class MlStockPredictionEngine
             }
 
             var features = FeatureEngineering.GenerateFeatures(rawData);
-            // _openTelemetryMetrics.RecordHistogram("stock.feature_vectors_generated", features.Count);
 
             Console.WriteLine($"Generated {features.Count} training feature rows");
 
@@ -137,11 +134,106 @@ public class MlStockPredictionEngine
         }
     }
 
-    public Task<StockPrediction> GeneratePredictAsync(List<RawData> rawData, string symbol)
+    // NEW: Streaming training method
+    public async Task TrainModelStreamingAsync(string csvFilePath)
+    {
+        Console.WriteLine("🧠 Training model with streaming data...");
+
+        var trainingData = new List<RawData>();
+        var batchCount = 0;
+        const int maxTrainingRecords = 50000; // Limit training data size
+
+        await foreach (var batch in LoadCsvData.LoadRawDataBatchedAsync(csvFilePath, batchSize: 1000))
+        {
+            batchCount++;
+            trainingData.AddRange(batch);
+
+            Console.WriteLine($"Training batch {batchCount}: {batch.Count} records (Total: {trainingData.Count})");
+
+            // Stop if we have enough training data
+            if (trainingData.Count < maxTrainingRecords)
+            {
+                continue;
+            }
+
+            Console.WriteLine($"Reached training limit of {maxTrainingRecords:N0} records");
+            trainingData = trainingData.Take(maxTrainingRecords).ToList();
+            break;
+        }
+
+        Console.WriteLine($"Training model with {trainingData.Count:N0} records...");
+        await TrainModelAsync(trainingData);
+
+        // Clean up training data
+        trainingData.Clear();
+        GC.Collect();
+    }
+
+    // Original GeneratePredictAsync method
+    // public Task<StockPrediction> GeneratePredictAsync(List<RawData> rawData, string symbol)
+    // {
+    //     var stopwatch = Stopwatch.StartNew();
+    //
+    //     // Use static counter for high-frequency metric
+    //     PredictionAttempts.Add(1);
+    //
+    //     try
+    //     {
+    //         if (string.IsNullOrWhiteSpace(symbol))
+    //         {
+    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
+    //             throw new ArgumentException("Symbol is required", nameof(symbol));
+    //         }
+    //
+    //         if (_predictionEngine == null)
+    //         {
+    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
+    //             throw new InvalidOperationException("Model must be trained before predictions");
+    //         }
+    //
+    //         var ordered = rawData
+    //             .Where(r => r.Symbol == symbol && r.Close > 0)
+    //             .OrderBy(r => DateTime.Parse(r.Date))
+    //             .ToList();
+    //
+    //         if (ordered.Count < 11)
+    //         {
+    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
+    //             throw new InvalidOperationException("Not enough data for feature generation");
+    //         }
+    //
+    //         return Task.FromResult(GeneratePredictionFromData(ordered, symbol));
+    //     }
+    //     catch (Exception)
+    //     {
+    //         _metricsService.IncrementCounter("stock.prediction_failures_total");
+    //         throw;
+    //     }
+    //     finally
+    //     {
+    //         stopwatch.Stop();
+    //         // Use static histogram for high-frequency metric
+    //         PredictionDuration.Record(stopwatch.Elapsed.TotalSeconds,
+    //             new KeyValuePair<string, object?>("symbol", symbol));
+    //     }
+    // }
+
+    // NEW: Generate prediction from grouped data
+    public async Task<StockPrediction> GeneratePredictAsync(Dictionary<string, List<RawData>> groupedData,
+        string symbol)
+    {
+        if (!groupedData.TryGetValue(symbol, out var symbolData))
+        {
+            throw new ArgumentException($"No data found for symbol: {symbol}");
+        }
+
+        return await GeneratePredictAsync(symbolData, symbol);
+    }
+
+    // NEW: Generate prediction with just symbol data (memory efficient)
+    public Task<StockPrediction> GeneratePredictAsync(List<RawData> symbolData, string symbol)
     {
         var stopwatch = Stopwatch.StartNew();
-
-        // Use static counter for high-frequency metric
         PredictionAttempts.Add(1);
 
         try
@@ -158,58 +250,27 @@ public class MlStockPredictionEngine
                 throw new InvalidOperationException("Model must be trained before predictions");
             }
 
-            var ordered = rawData
-                .Where(r => r.Symbol == symbol && r.Close > 0)
+            if (symbolData.Count < 11)
+            {
+                _metricsService.IncrementCounter("stock.prediction_failures_total");
+                throw new InvalidOperationException(
+                    $"Not enough data for {symbol}: {symbolData.Count} records (need at least 11)");
+            }
+
+            // Data should already be sorted, but ensure it is
+            var ordered = symbolData
+                .Where(r => r.Close > 0)
                 .OrderBy(r => DateTime.Parse(r.Date))
                 .ToList();
 
-            if (ordered.Count < 11)
+            if (ordered.Count >= 11)
             {
-                _metricsService.IncrementCounter("stock.prediction_failures_total");
-                throw new InvalidOperationException("Not enough data for feature generation");
+                return Task.FromResult(GeneratePredictionFromData(ordered, symbol));
             }
 
-            var i = ordered.Count - 1;
-            var window5 = ordered.Skip(i - 4).Take(5).ToList();
-            var window10 = ordered.Skip(i - 9).Take(10).ToList();
-            var today = ordered[i];
-
-            var input = new StockFeatureVector
-            {
-                Open = today.Open,
-                High = today.High,
-                Low = today.Low,
-                Close = today.Close,
-                Volume = today.Volume,
-                MA5 = window5.Average(x => x.Close),
-                MA10 = window10.Average(x => x.Close),
-                Volatility5 =
-                    (float)Math.Sqrt(window5.Average(x => Math.Pow(x.Close - window5.Average(w => w.Close), 2))),
-                Return1D = (today.Close - ordered[i - 1].Close) / ordered[i - 1].Close
-            };
-
-            var predicted = _predictionEngine.Predict(input);
-
-            _metricsService.IncrementCounter("stock.prediction_successes_total");
-
-            // Record predicted price with symbol tag for filtering in Prometheus
-            _openTelemetryMetrics?.RecordHistogram("stock.predicted_price", predicted.PredictedPrice,
-                new KeyValuePair<string, object?>("symbol", symbol));
-
-            var result = new StockPrediction
-            {
-                Id = Guid.NewGuid(),
-                Symbol = symbol,
-                BatchId = Guid.NewGuid(),
-                PredictedPrice = Math.Max(0.01f, predicted.PredictedPrice),
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.UtcNow,
-                DeletedAt = null
-            };
-
-            Console.WriteLine($"🔮 {symbol}: Predicted next close = ${result.PredictedPrice:F2}");
-
-            return Task.FromResult(result);
+            _metricsService.IncrementCounter("stock.prediction_failures_total");
+            throw new InvalidOperationException(
+                $"Not enough valid data for {symbol} after filtering: {ordered.Count} records");
         }
         catch (Exception)
         {
@@ -219,10 +280,55 @@ public class MlStockPredictionEngine
         finally
         {
             stopwatch.Stop();
-            // Use static histogram for high-frequency metric
             PredictionDuration.Record(stopwatch.Elapsed.TotalSeconds,
                 new KeyValuePair<string, object?>("symbol", symbol));
         }
+    }
+
+    // Helper method to generate prediction from ordered data
+    private StockPrediction GeneratePredictionFromData(List<RawData> ordered, string symbol)
+    {
+        var i = ordered.Count - 1;
+        var window5 = ordered.Skip(i - 4).Take(5).ToList();
+        var window10 = ordered.Skip(i - 9).Take(10).ToList();
+        var today = ordered[i];
+
+        var input = new StockFeatureVector
+        {
+            Open = today.Open,
+            High = today.High,
+            Low = today.Low,
+            Close = today.Close,
+            Volume = today.Volume,
+            MA5 = window5.Average(x => x.Close),
+            MA10 = window10.Average(x => x.Close),
+            Volatility5 =
+                (float)Math.Sqrt(window5.Average(x => Math.Pow(x.Close - window5.Average(w => w.Close), 2))),
+            Return1D = (today.Close - ordered[i - 1].Close) / ordered[i - 1].Close
+        };
+
+        var predicted = _predictionEngine!.Predict(input);
+
+        _metricsService.IncrementCounter("stock.prediction_successes_total");
+
+        // Record predicted price with symbol tag for filtering in Prometheus
+        _openTelemetryMetrics?.RecordHistogram("stock.predicted_price", predicted.PredictedPrice,
+            new KeyValuePair<string, object?>("symbol", symbol));
+
+        var result = new StockPrediction
+        {
+            Id = Guid.NewGuid(),
+            Symbol = symbol,
+            BatchId = Guid.NewGuid(),
+            PredictedPrice = Math.Max(0.01f, predicted.PredictedPrice),
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.UtcNow,
+            DeletedAt = null
+        };
+
+        Console.WriteLine($"🔮 {symbol}: Predicted next close = ${result.PredictedPrice:F2}");
+
+        return result;
     }
 
     public List<RawData> CleanTrainingData(List<RawData> rawData)
