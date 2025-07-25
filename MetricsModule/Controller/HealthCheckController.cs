@@ -15,11 +15,17 @@ public class HealthCheckController(
     ILogger<HealthCheckController> logger)
     : ControllerBase
 {
-    private readonly IMetricsServiceFactory _metricsFactory = metricsFactory;
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
-    private readonly IMetricsService _systemMetrics = metricsFactory.CreateMetricsService("SystemMetrics"); // Create via factory
-        // Still keep this for compatibility
-        private readonly ILogger<HealthCheckController> _logger = logger;
+    private readonly IMetricsService
+        _systemMetrics = metricsFactory.CreateMetricsService("SystemMetrics"); // Create via factory
+
+    private static readonly string[] Value = ["/api/stock/predict/{symbol}"];
+    private static readonly string[] ValueArray = ["/api/recommendations/user/{id}"];
+    private static readonly string[] ValueArray0 = ["/api/address", "/api/address/search"];
+    private static readonly string[] ValueArray1 = ["/api/schedule", "/api/schedule/user/{id}"];
+    private static readonly string[] ValueArray2 = ["/api/service", "/api/service/{id}"];
+    private static readonly string[] ValueArray3 = ["/api/system/health", "/api/system/metrics/summary"];
+
+    // Still keep this for compatibility
 
     [HttpGet("health")]
     public async Task<IActionResult> GetHealth()
@@ -182,7 +188,7 @@ public class HealthCheckController(
                     {
                         status = "✅ Model loaded, 97.78% accuracy",
                         description = "ML.NET stock prediction with 619k records",
-                        endpoints = new[] { "/api/stock/predict/{symbol}" },
+                        endpoints = Value,
                         accuracy = "97.78% R²",
                         datasetSize = "619,040 records"
                     },
@@ -198,34 +204,34 @@ public class HealthCheckController(
                     {
                         status = "✅ ML Ready",
                         description = "Machine learning recommendation engine",
-                        endpoints = new[] { "/api/recommendations/user/{id}" }
+                        endpoints = ValueArray
                     },
                 address =
                     new
                     {
                         status = "✅ Geographic data loaded",
                         description = "Address and location management",
-                        endpoints = new[] { "/api/address", "/api/address/search" }
+                        endpoints = ValueArray0
                     },
                 schedule =
                     new
                     {
                         status = "✅ Scheduling active",
                         description = "User scheduling and availability",
-                        endpoints = new[] { "/api/schedule", "/api/schedule/user/{id}" }
+                        endpoints = ValueArray1
                     },
                 service =
                     new
                     {
                         status = "✅ Service catalog ready",
                         description = "Service management and catalog",
-                        endpoints = new[] { "/api/service", "/api/service/{id}" }
+                        endpoints = ValueArray2
                     },
                 metrics = new
                 {
                     status = "✅ Collecting data",
                     description = "OpenTelemetry metrics and monitoring",
-                    endpoints = new[] { "/api/system/health", "/api/system/metrics/summary" }
+                    endpoints = ValueArray3
                 }
             }
         });

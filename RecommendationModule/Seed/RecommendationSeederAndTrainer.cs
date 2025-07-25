@@ -1,3 +1,4 @@
+using Bogus;
 using Microsoft.EntityFrameworkCore;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
@@ -115,7 +116,7 @@ public class RecommendationSeederAndTrainer(
     private List<Schedule> CreateBoundaryTestSchedules(List<User> testUsers)
     {
         var schedules = new List<Schedule>();
-        var scheduleTemplates = GetBoundaryTestTemplates();
+        var scheduleTemplates = GetRandomizedSchedules();
 
         for (var i = 0; i < Math.Min(testUsers.Count, scheduleTemplates.Count); i++)
         {
@@ -136,187 +137,54 @@ public class RecommendationSeederAndTrainer(
         return schedules;
     }
 
-    private List<(Dictionary<string, int> DaysWorked, double BasePay)> GetBoundaryTestTemplates()
+    private static List<(Dictionary<string, int> DaysWorked, double BasePay)> GetRandomizedSchedules(int count = 10)
     {
-        return
-        [
-            (new Dictionary<string, int>
+        var faker = new Faker();
+        var weekdays = new[] { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
+
+        var schedules = new List<(Dictionary<string, int>, double)>();
+
+        for (var i = 0; i < count; i++)
+        {
+            var schedule = new Dictionary<string, int>();
+            var totalHours = 0;
+
+            foreach (var day in weekdays)
             {
-                { "Monday", 8 },
-                { "Tuesday", 8 },
-                { "Wednesday", 8 },
-                { "Thursday", 8 },
-                { "Friday", 8 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 25.00f),
+                // More hours on weekdays, less on weekends
+                var hours = day switch
+                {
+                    "Saturday" or "Sunday" => faker.Random.Int(0, 8),
+                    _ => faker.Random.Int(6, 10)
+                };
 
-            // Just over 40 hours - minimal overtime
+                schedule[day] = hours;
+                totalHours += hours;
+            }
 
-            (new Dictionary<string, int>
+            // Base pay loosely tied to workload range and randomness
+            var basePay = faker.Random.Double(15, 50);
+
+            switch (totalHours)
             {
-                { "Monday", 8 },
-                { "Tuesday", 8 },
-                { "Wednesday", 8 },
-                { "Thursday", 8 },
-                { "Friday", 8 },
-                { "Saturday", 0 },
-                { "Sunday", 1 }
-            }, 30.00f),
+                // Bump pay if heavy schedule
+                case > 60:
+                    basePay += faker.Random.Double(5, 20);
+                    break;
+                case < 20:
+                    basePay -= faker.Random.Double(0, 5);
+                    break;
+            }
 
-            // Exactly 60 hours - maximum 1.5x overtime, no 2x yet
+            // Ensure it's not below minimum wage
+            basePay = Math.Round(Math.Max(basePay, 12.00), 2);
 
-            (new Dictionary<string, int>
-            {
-                { "Monday", 10 },
-                { "Tuesday", 10 },
-                { "Wednesday", 10 },
-                { "Thursday", 10 },
-                { "Friday", 10 },
-                { "Saturday", 10 },
-                { "Sunday", 0 }
-            }, 35.00f),
+            schedules.Add((schedule, basePay));
+        }
 
-            // Just over 60 hours - minimal 2x overtime
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 10 },
-                { "Tuesday", 10 },
-                { "Wednesday", 10 },
-                { "Thursday", 10 },
-                { "Friday", 10 },
-                { "Saturday", 10 },
-                { "Sunday", 1 }
-            }, 32.00f),
-
-            // Zero hours worked
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 0 },
-                { "Tuesday", 0 },
-                { "Wednesday", 0 },
-                { "Thursday", 0 },
-                { "Friday", 0 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 20.00f),
-
-            // Single-hour worked
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 1 },
-                { "Tuesday", 0 },
-                { "Wednesday", 0 },
-                { "Thursday", 0 },
-                { "Friday", 0 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 15.00f),
-
-            // Massive overtime - 100+ hours
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 16 },
-                { "Tuesday", 16 },
-                { "Wednesday", 16 },
-                { "Thursday", 16 },
-                { "Friday", 16 },
-                { "Saturday", 16 },
-                { "Sunday", 16 }
-            }, 25.00f),
-
-            // Just under 40 hours
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 8 },
-                { "Tuesday", 8 },
-                { "Wednesday", 8 },
-                { "Thursday", 8 },
-                { "Friday", 7 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 22.50f),
-
-            // Just under 60 hours
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 9 },
-                { "Tuesday", 9 },
-                { "Wednesday", 9 },
-                { "Thursday", 9 },
-                { "Friday", 9 },
-                { "Saturday", 9 },
-                { "Sunday", 5 }
-            }, 28.00),
-
-            // High pay with exact 60 hours
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 10 },
-                { "Tuesday", 10 },
-                { "Wednesday", 10 },
-                { "Thursday", 10 },
-                { "Friday", 10 },
-                { "Saturday", 10 },
-                { "Sunday", 0 }
-            }, 75.00f),
-
-            // All hours on one day
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 65 },
-                { "Tuesday", 0 },
-                { "Wednesday", 0 },
-                { "Thursday", 0 },
-                { "Friday", 0 },
-                { "Saturday", 0 },
-                { "Sunday", 0 }
-            }, 30.00f),
-
-            // Perfect tier distribution (40 regular + 20 at 1.5x + 2 at 2x)
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 8 },
-                { "Tuesday", 8 },
-                { "Wednesday", 8 },
-                { "Thursday", 8 },
-                { "Friday", 8 },
-                { "Saturday", 10 },
-                { "Sunday", 12 }
-            }, 25.00f),
-
-            // Low pay with massive overtime
-
-            (new Dictionary<string, int>
-            {
-                { "Monday", 14 },
-                { "Tuesday", 14 },
-                { "Wednesday", 14 },
-                { "Thursday", 14 },
-                { "Friday", 14 },
-                { "Saturday", 12 },
-                { "Sunday", 8 }
-            }, 12.50f),
-            (new Dictionary<string, int>
-            {
-                { "Monday", 14 },
-                { "Tuesday", 14 },
-                { "Wednesday", 14 },
-                { "Thursday", 14 },
-                { "Friday", 14 },
-                { "Saturday", 0 },
-            }, 80.00f)
-        ];
+        return schedules;
     }
+
 
     private List<Schedule> CreateRealisticSchedules(List<User> users)
     {
@@ -517,63 +385,40 @@ public class RecommendationSeederAndTrainer(
             recommendationOutputs.Count, users.Count);
     }
 
-    /// <summary>
-    /// Create a single recommendation output with realistic ML data
-    /// </summary>
     private RecommendationOutput CreateRecommendationOutput(Guid userId, Guid serviceId, Guid batchId, int rank)
     {
-        var now = DateTime.UtcNow;
-        var score = GenerateRealisticScore(rank);
-        var context = GenerateRecommendationContext();
-        var strategy = GenerateRecommendationStrategy();
+        var faker = new Faker();
+        var createdAt = faker.Date.Past(10);
 
-        // Simulate some user interactions
-        var generatedAt = GenerateRealisticTimestamp(now);
-        var hasBeenViewed = _random.NextDouble() < 0.7; // 70% viewed
-        var hasBeenClicked = hasBeenViewed && _random.NextDouble() < 0.3; // 30% of viewed get clicked
+
+        var updatedAt = faker.Date.Between(createdAt, DateTime.UtcNow);
+
+        var generatedAt = faker.Date.Between(updatedAt, DateTime.UtcNow);
+
+        var hasBeenViewed = faker.Random.Bool();
+        var hasBeenClicked = faker.Random.Bool();
+
+        var viewedAt = hasBeenViewed ? faker.Date.Between(createdAt, updatedAt) : (DateTime?)null;
+        var clickedAt = hasBeenClicked ? faker.Date.Between(createdAt, updatedAt) : (DateTime?)null;
 
         return new RecommendationOutput
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             ServiceId = serviceId,
-            Score = score,
-            Rank = rank,
-            Strategy = strategy,
-            Context = context,
             BatchId = batchId,
-            GeneratedAt = generatedAt,
+            Rank = rank,
             HasBeenViewed = hasBeenViewed,
             HasBeenClicked = hasBeenClicked,
-            ViewedAt = hasBeenViewed ? GenerateViewTime(generatedAt) : null, // Viewed within the last 12 hours
-            ClickedAt =
-                hasBeenClicked ? now.AddMinutes(-_random.Next(0, 360)) : null, // Clicked within the last 6 hours
-            CreatedAt = now,
-            UpdatedAt = now
+            ViewedAt = viewedAt,
+            ClickedAt = clickedAt,
+            CreatedAt = createdAt,
+            UpdatedAt = updatedAt,
+            GeneratedAt = generatedAt,
+            Score = GenerateRealisticScore(rank),
+            Strategy = faker.PickRandom(GenerateRecommendationStrategy()),
+            Context = faker.PickRandom(GenerateRecommendationContext())
         };
-    }
-
-    // helper method 1
-    private DateTime GenerateRealisticTimestamp(DateTime now)
-    {
-        // ML recommendations are usually generated in batches
-        var batchTimes = new[] { 6, 12, 18, 24 }; // Hours
-        var lastBatchHour = batchTimes[_random.Next(batchTimes.Length)];
-        return now.Date.AddHours(lastBatchHour).AddMinutes(-_random.Next(0, 60));
-    }
-
-    // helper method 2
-    private DateTime GenerateViewTime(DateTime generatedAt)
-    {
-        // Users typically view recommendations within hours of generation
-        var minutesAfter = _random.NextDouble() switch
-        {
-            < 0.4 => _random.Next(1, 60), // 40% within 1 hour
-            < 0.7 => _random.Next(60, 360), // 30% within 6 hours
-            < 0.9 => _random.Next(360, 1440), // 20% within 24 hours
-            _ => _random.Next(1440, 4320) // 10% within 3 days
-        };
-        return generatedAt.AddMinutes(minutesAfter);
     }
 
 
@@ -788,6 +633,7 @@ public class RecommendationSeederAndTrainer(
         // Add some randomness but keep realistic
         var noise = (_random.NextSingle() - 0.5f) * 0.3f; // ±0.15 rating noise
         baseRating = Math.Max(1.0f, Math.Min(5.0f, baseRating + noise));
+        baseRating = (float)(Math.Round(baseRating * 2, MidpointRounding.AwayFromZero) / 2);
         if (_random.NextDouble() < 0.1)
         {
             baseRating = Math.Max(1.0f, baseRating - 2.0f);
@@ -890,7 +736,7 @@ public class RecommendationSeederAndTrainer(
 
             // Log to metrics service
             service.IncrementCounter($"stats.total_users_{totalUsers}");
-            service.IncrementCounter($"stats.total_schedules_{totalSchedules}"); // ⭐ NEW
+            service.IncrementCounter($"stats.total_schedules_{totalSchedules}");
             service.IncrementCounter($"stats.total_recommendations_{totalRecommendations}");
             service.IncrementCounter($"stats.total_outputs_{totalOutputs}");
             service.IncrementCounter($"avg.AverageRecommendationsPerUser_{avgRecommendationsPerUser:F1}");
