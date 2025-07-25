@@ -15,7 +15,7 @@ public class LoadCsvData
         {
             PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
             MissingFieldFound = null,
-            BadDataFound = null // Ignore bad data instead of throwing
+            BadDataFound = null
         };
         using var csv = new CsvReader(reader, csvConfig);
         csv.Context.RegisterClassMap<RawDataMap>();
@@ -23,7 +23,6 @@ public class LoadCsvData
         var records = new List<RawData>();
         await foreach (var record in csv.GetRecordsAsync<RawData>())
         {
-            // Skip records with invalid or missing critical data
             if (IsValidRecord(record))
             {
                 records.Add(record);
@@ -33,10 +32,95 @@ public class LoadCsvData
         return records;
     }
 
+    // NEW: Streaming method to avoid large memory allocation
+    public static async IAsyncEnumerable<RawData> LoadRawDataStreamingAsync(string filePath, int batchSize = 1000)
+    {
+        using var reader = new StreamReader(filePath);
+        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
+            MissingFieldFound = null,
+            BadDataFound = null
+        };
+        using var csv = new CsvReader(reader, csvConfig);
+        csv.Context.RegisterClassMap<RawDataMap>();
+
+        await foreach (var record in csv.GetRecordsAsync<RawData>())
+        {
+            if (IsValidRecord(record))
+            {
+                yield return record;
+            }
+        }
+    }
+
+    public static async IAsyncEnumerable<List<RawData>> LoadRawDataBatchedAsync(string filePath, int batchSize = 1000)
+    {
+        using var reader = new StreamReader(filePath);
+        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
+            MissingFieldFound = null,
+            BadDataFound = null
+        };
+        using var csv = new CsvReader(reader, csvConfig);
+        csv.Context.RegisterClassMap<RawDataMap>();
+
+        var batch = new List<RawData>(batchSize);
+
+        await foreach (var record in csv.GetRecordsAsync<RawData>())
+        {
+            if (!IsValidRecord(record))
+            {
+                continue;
+            }
+
+            batch.Add(record);
+
+            if (batch.Count < batchSize)
+            {
+                continue;
+            }
+
+            yield return batch;
+            batch = new List<RawData>(batchSize);
+        }
+
+        // Return the final partial batch if any records remain
+        if (batch.Count > 0)
+        {
+            yield return batch;
+        }
+    }
+
+    // NEW: Get total record count without loading all data
+    public static async Task<int> GetRecordCountAsync(string filePath)
+    {
+        using var reader = new StreamReader(filePath);
+        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
+            MissingFieldFound = null,
+            BadDataFound = null
+        };
+        using var csv = new CsvReader(reader, csvConfig);
+        csv.Context.RegisterClassMap<RawDataMap>();
+
+        var count = 0;
+        await foreach (var record in csv.GetRecordsAsync<RawData>())
+        {
+            if (IsValidRecord(record))
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private static bool IsValidRecord(RawData record)
     {
         return !string.IsNullOrWhiteSpace(record.Date) &&
                !string.IsNullOrWhiteSpace(record.Symbol) &&
-               record.Close > 0; // At minimum, we need a valid close price
+               record.Close > 0;
     }
 }

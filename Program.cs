@@ -24,11 +24,11 @@ builder.Logging.AddConsole();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 1. Add OpenTelemetry metrics module first (registers the factory)
+// Open Telemetry modules
 builder.Services.AddOpenTelemetryMetricsModule();
 builder.Services.AddHealthModuleChecks();
 
-// 2. Add all your modules (each will call RegisterModuleForMetrics internally)
+// DI Containers, calling the module registration internally
 builder.Services.AddUserService(builder.Configuration);
 builder.Services.AddAddressService(builder.Configuration);
 builder.Services.AddScheduleModule(builder.Configuration);
@@ -37,14 +37,14 @@ builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
 
-// 3. Add other services
+// Other services
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 builder.Services.AddOpenApi();
 builder.Services.AddAutoMapperExtension();
 builder.Services.AddMemoryCache();
 
-// 4. Configure OpenTelemetry metrics (must be after all modules are registered)
+// Must be after all my other modules
 builder.Services.ConfigureOpenTelemetryMetrics();
 
 builder.Services.AddOpenTelemetry()
