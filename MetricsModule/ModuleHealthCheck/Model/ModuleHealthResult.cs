@@ -1,4 +1,4 @@
-namespace TBD.MetricsModule.Model;
+namespace TBD.MetricsModule.ModuleHealthCheck.Model;
 
 public class ModuleHealthResult
 {
@@ -7,6 +7,6 @@ public class ModuleHealthResult
     public Dictionary<string, object> AdditionalData { get; set; } = new();
     public bool IsHealthy { get; set; }
     public TimeSpan ResponseTime { get; set; }
-    public string[] Endpoints { get; set; } = Array.Empty<string>();
+    public string[] Endpoints { get; set; } = [];
     public Exception? Exception { get; set; }
 }

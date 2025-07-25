@@ -1,5 +1,5 @@
-using TBD.MetricsModule.Model;
 using TBD.MetricsModule.ModuleHealthCheck.BaseHealthCheck.ModuleLevel;
+using TBD.MetricsModule.ModuleHealthCheck.Model;
 using TBD.MetricsModule.Services.Interfaces;
 
 namespace TBD.MetricsModule.ModuleHealthCheck.ModuleChecks;
