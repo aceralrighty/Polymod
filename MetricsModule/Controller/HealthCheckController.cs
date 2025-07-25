@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using TBD.MetricsModule.Model;
 using TBD.MetricsModule.ModuleHealthCheck.Interfaces;
+using TBD.MetricsModule.ModuleHealthCheck.Model;
 using TBD.MetricsModule.OpenTelemetry.Services;
 using TBD.MetricsModule.Services.Interfaces;
 

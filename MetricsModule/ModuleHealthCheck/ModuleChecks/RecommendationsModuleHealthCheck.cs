@@ -37,6 +37,6 @@ public class RecommendationsModuleHealthCheck(IServiceProvider serviceProvider, 
 
     protected override string[] GetEndpoints()
     {
-        return new[] { "/api/recommendations/user/{id}", "/api/recommendations/trending" };
+        return ["/api/recommendations/user/{id}", "/api/recommendations/trending"];
     }
 }

@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using TBD.MetricsModule.Model;
 using TBD.MetricsModule.ModuleHealthCheck.Interfaces;
+using TBD.MetricsModule.ModuleHealthCheck.Model;
 
 namespace TBD.MetricsModule.ModuleHealthCheck.BaseHealthCheck.ModuleLevel;
 

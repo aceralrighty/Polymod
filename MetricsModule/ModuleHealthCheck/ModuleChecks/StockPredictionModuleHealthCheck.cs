@@ -54,7 +54,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
             {
                 try
                 {
-                    // Get sample data for accuracy check
+                    // Get sample data for an accuracy check
                     var sampleData = await GetSampleDataForAccuracyCheck(dbContext, cancellationToken);
 
                     if (sampleData.Count != 0)
@@ -111,9 +111,9 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
 
     protected override string GetHealthyStatus(Dictionary<string, object> additionalData)
     {
-        if (additionalData.ContainsKey("error"))
+        if (additionalData.TryGetValue("error", out var value))
         {
-            return $"❌ Error: {additionalData["error"]}";
+            return $"❌ Error: {value}";
         }
 
         var serviceAvailable = (bool)additionalData["serviceAvailable"];
@@ -133,14 +133,12 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
             return "⚠️ Model not loaded or prediction failed";
         }
 
-        if (accuracy < 50.0)
+        switch (accuracy)
         {
-            return $"❌ Model accuracy critically low: {accuracy:F2}%";
-        }
-
-        if (accuracy < 90.0)
-        {
-            return $"⚠️ Model accuracy low: {accuracy:F2}%";
+            case < 50.0:
+                return $"❌ Model accuracy critically low: {accuracy:F2}%";
+            case < 90.0:
+                return $"⚠️ Model accuracy low: {accuracy:F2}%";
         }
 
         if (recordCount < 100000)
@@ -148,18 +146,12 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
             return $"⚠️ Low data volume: {recordCount:N0} records";
         }
 
-        if (overallScore >= 0.9)
+        return overallScore switch
         {
-            return $"✅ Excellent - Model: {accuracy:F2}% accuracy, {recordCount:N0} records";
-        }
-        else if (overallScore >= 0.7)
-        {
-            return $"🟡 Good - Model: {accuracy:F2}% accuracy, {recordCount:N0} records";
-        }
-        else
-        {
-            return $"⚠️ Needs attention - Model: {accuracy:F2}% accuracy, {recordCount:N0} records";
-        }
+            >= 0.9 => $"✅ Excellent - Model: {accuracy:F2}% accuracy, {recordCount:N0} records",
+            >= 0.7 => $"🟡 Good - Model: {accuracy:F2}% accuracy, {recordCount:N0} records",
+            _ => $"⚠️ Needs attention - Model: {accuracy:F2}% accuracy, {recordCount:N0} records"
+        };
     }
 
     protected override string GetDescription()
@@ -215,13 +207,13 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
     {
         try
         {
-            if (!sampleData.Any()) return -1;
+            if (sampleData.Count == 0) return -1;
 
             var times = new List<double>();
             var testCount = Math.Min(3, sampleData.Count); // Test with up to 3 symbols
             var testData = sampleData.Take(testCount).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-            for (int i = 0; i < testCount; i++)
+            for (var i = 0; i < testCount; i++)
             {
                 var stopwatch = Stopwatch.StartNew();
 
@@ -232,7 +224,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
                 times.Add(stopwatch.ElapsedMilliseconds);
             }
 
-            return times.Any() ? times.Average() : -1;
+            return times.Count != 0 ? times.Average() : -1;
         }
         catch (Exception ex)
         {
@@ -243,7 +235,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
 
     private double CalculateDataQualityScore(int recordCount, int recentDataCount, int uniqueSymbols, DateTime? lastUpdated)
     {
-        double score = 0.0;
+        var score = 0.0;
 
         score += recordCount switch
         {
@@ -297,7 +289,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
 
     private double CalculateOverallHealthScore(Dictionary<string, object> healthData)
     {
-        double score = 0.0;
+        var score = 0.0;
 
         // Service availability (20%)
         if ((bool)healthData["serviceAvailable"])

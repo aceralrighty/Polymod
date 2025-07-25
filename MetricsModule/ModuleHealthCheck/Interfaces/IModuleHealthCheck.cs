@@ -1,4 +1,4 @@
-using TBD.MetricsModule.Model;
+using TBD.MetricsModule.ModuleHealthCheck.Model;
 
 namespace TBD.MetricsModule.ModuleHealthCheck.Interfaces;
 

@@ -18,10 +18,10 @@ public class UserRecommendationTest
     [Test]
     public void UserRecommendation_Should_Have_Default_Values()
     {
-        // Act
+
         var recommendation = new UserRecommendation();
 
-        // Assert
+
         recommendation.UserId.Should().Be(Guid.Empty);
         recommendation.ServiceId.Should().Be(Guid.Empty);
         recommendation.Rating.Should().Be(0);
@@ -34,7 +34,7 @@ public class UserRecommendationTest
     [Test]
     public void UserRecommendation_Should_StoreAssigned_Values()
     {
-        // Arrange
+
         var userId = Guid.NewGuid();
         var serviceId = Guid.NewGuid();
         const float rating = 4.5f;
@@ -44,7 +44,7 @@ public class UserRecommendationTest
         var userMock = new Mock<User>();
         var serviceMock = new Mock<Service>();
 
-        // Act
+
         var recommendation = new UserRecommendation
         {
             UserId = userId,

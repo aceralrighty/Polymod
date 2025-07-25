@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.MetricsModule.Model;
 using TBD.MetricsModule.ModuleHealthCheck.BaseHealthCheck.ModuleLevel;
+using TBD.MetricsModule.ModuleHealthCheck.Model;
 
 namespace TBD.MetricsModule.ModuleHealthCheck.BaseHealthCheck.DBLevel;
 
