@@ -65,16 +65,25 @@ public static class AuthSeeder
 
         var hasher = new Hasher();
         var now = DateTime.UtcNow;
-        var authFaker = new Faker<AuthUser>().RuleFor(u => u.Id, _ => Guid.NewGuid())
-            .RuleFor(a => a.Email, f => f.Person.Email).RuleFor(a => a.Username, f => f.Person.UserName)
+        var authFaker = new Faker<AuthUser>()
+            .RuleFor(u => u.Id, _ => Guid.NewGuid())
+            .RuleFor(a => a.Email, f => f.Person.Email)
+            .RuleFor(a => a.Username, f => f.Person.UserName)
             .RuleFor(a => a.HashedPassword, f => hasher.HashPassword(f.Internet.Password(16, memorable: true)))
             .RuleFor(a => a.RefreshToken, _ => JwtTokenGenerator.GenerateJwtToken(64))
+            .RuleFor(a => a.CreatedAt, f => f.Date.Past(6))
+            .RuleFor(a => a.UpdatedAt, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow))
+            .RuleFor(a => a.LastLogin, (f, u) => f.Date.Between(u.CreatedAt, DateTime.UtcNow))
             .RuleFor(a => a.RefreshTokenExpiry, f => f.Date.Soon(20))
             .RuleFor(a => a.FailedLoginAttempts, f => f.Random.Int(0, 4))
-            .RuleFor(a => a.CreatedAt, f => f.Date.Past(6))
-            .RuleFor(a => a.UpdatedAt, f => f.Date.Future(7))
-            .RuleFor(a => a.LastLogin, f => f.Date.Past(5));
-
+            .RuleFor(a => a.DeletedAt, (f, u) =>
+            {
+                if (f.Random.Bool(0.25f)) // 25% chance deleted
+                {
+                    return f.Date.Between(u.CreatedAt, DateTime.UtcNow);
+                }
+                return null;
+            });
 
         var authUsers = new List<AuthUser>
         {

@@ -7,16 +7,14 @@ namespace TBD.UserModule.PubEvents;
 
 public class UserReadService(UserDbContext context) : IUserReadService
 {
-    private readonly UserDbContext _context = context;
-
     public async Task<UserDto?> GetUserAsync(Guid userId)
     {
-        var user = await _context.Users.FindAsync(userId);
-        return user == null ? null : new UserDto(user.Id, user.Email);
+        var user = await context.Users.FindAsync(userId);
+        return user == null ? null : new UserDto(user.Id, user.Email ?? throw new InvalidOperationException("something went wrong here"));
     }
 
     public async Task<List<UserDto?>> GetAllUsersAsync()
     {
-        return await _context.Users.Select(u => new UserDto(u.Id, u.Email)).ToListAsync();
+        return await context.Users.Select(u => new UserDto(u.Id, u.Email)).ToListAsync();
     }
 }

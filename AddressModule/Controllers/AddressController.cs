@@ -10,8 +10,6 @@ namespace TBD.AddressModule.Controllers;
 
 public class AddressController(AddressDbContext context, UserDbContext userContext) : Controller
 {
-    private readonly UserDbContext _userContext = userContext;
-
     // GET: Address
     public async Task<IActionResult> Index()
     {

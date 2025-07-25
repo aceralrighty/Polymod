@@ -149,7 +149,21 @@ public static class ScheduleSeeder
 
                         return daysWorked;
                     })
-                    .RuleFor(s => s.BasePay, f => (float)Math.Round(f.Random.Double(12.00, 75.00), 2));
+                    .RuleFor(s => s.BasePay, f => (float)Math.Round(f.Random.Double(12.00, 100.00), 2))
+                    .RuleFor(s => s.CreatedAt, f => f.Date.Between(DateTime.UtcNow.AddYears(-10), DateTime.UtcNow))
+                    .RuleFor(s => s.UpdatedAt, (f, s) => f.Date.Between(s.CreatedAt, DateTime.UtcNow))
+                    .RuleFor(s => s.DeletedAt, (f, s) =>
+                    {
+                        // 30% chance to be deleted
+                        if (f.Random.Bool(0.3f))
+                        {
+                            // DeletedAt after CreatedAt and before now
+                            return f.Date.Between(s.CreatedAt, DateTime.UtcNow);
+                        }
+
+                        return null;
+                    });
+
 
                 var toGenerate = Math.Min(numberOfAdditionalRandomSchedules, availableUsers.Count);
                 var newRandomSchedules = scheduleFaker.Generate(toGenerate);
