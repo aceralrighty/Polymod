@@ -58,14 +58,16 @@ internal class MlRecommendationEngine(
 {
     _metricsService.IncrementCounter("rec.train_model");
 
-    // Use the optimized method with configurable strategy
+    // query strategy
     var queryOptions = new QueryOptions
     {
         Strategy = QueryStrategy.Standard, // Can be changed based on data size
-        ChunkSize = 10000
+        ChunkSize = 10000,
+        ParallelPartitions = 5,
+        StreamingBufferSize = 5
     };
 
-    var allRecommendations = await repository.GetAllWithRatingsAsync();
+    var allRecommendations = await repository.GetAllWithRatingsConfigurableAsync(queryOptions);
 
     var userRecommendations = allRecommendations as UserRecommendation[] ?? allRecommendations.ToArray();
     if (userRecommendations.Length == 0)

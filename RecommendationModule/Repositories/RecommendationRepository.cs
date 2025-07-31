@@ -51,7 +51,7 @@ internal class RecommendationRepository(RecommendationDbContext context)
             WHERE Rating > 0
             ORDER BY RecommendedAt DESC";
 
-        Console.WriteLine($"📊 Executing optimized GetAllWithRatingsAsync query...");
+        Console.WriteLine("📊 Executing optimized GetAllWithRatingsAsync query...");
         var stopwatch = Stopwatch.StartNew();
 
         var result = await dbConnection.QueryAsync<UserRecommendation>(sql);
