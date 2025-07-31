@@ -10,7 +10,9 @@ public class UserReadService(UserDbContext context) : IUserReadService
     public async Task<UserDto?> GetUserAsync(Guid userId)
     {
         var user = await context.Users.FindAsync(userId);
-        return user == null ? null : new UserDto(user.Id, user.Email ?? throw new InvalidOperationException("something went wrong here"));
+        return user == null
+            ? null
+            : new UserDto(user.Id, user.Email ?? throw new InvalidOperationException("something went wrong here"));
     }
 
     public async Task<List<UserDto?>> GetAllUsersAsync()
