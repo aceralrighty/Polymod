@@ -1,10 +1,12 @@
 using Isopoh.Cryptography.Argon2;
+using System.Runtime;
 
 namespace TBD.Shared.Utils;
 
 /**
  *<summary>
- * this Hasher adapts the hashing algorithm to the available memory and CPU cores (based on system environment), as to not allow for GC pressure and avoid LOH allocation.
+ * This Hasher adapts the hashing algorithm to the available memory and CPU cores,
+ * optimized to minimize GC pressure and avoid LOH allocation.
  * </summary>
  */
 public class Hasher : IHasher
@@ -20,22 +22,41 @@ public class Hasher : IHasher
 
     private static HashingConfig DetermineOptimalConfig()
     {
-        // Determine available memory and CPU cores
-        var availableMemoryMb = GC.GetTotalMemory(false) / (1024 * 1024);
+        // Get actual system memory info
+        var gcMemoryInfo = GC.GetGCMemoryInfo();
+        var availableMemoryBytes = gcMemoryInfo.HighMemoryLoadThresholdBytes - gcMemoryInfo.MemoryLoadBytes;
+        var availableMemoryMb = Math.Max(512, availableMemoryBytes / (1024 * 1024)); // Minimum 512MB assumption
+
         var processorCount = Environment.ProcessorCount;
 
-        // Conservative settings that avoid LOH
+        // Calculate memory cost in KB (Argon2 parameter is in KB)
+        // LOH threshold is 85KB, so we want to stay well below that per thread
+        // Argon2 memory usage ≈ memoryCost KB * parallelism
+        const int maxMemoryPerThreadKb = 32; // Stay well below LOH threshold
+        var totalMemoryBudgetKb = Math.Min(
+            (int)(availableMemoryMb * 1024 * 0.05), // Use max 5% of available memory
+            maxMemoryPerThreadKb * Math.Min(processorCount, 4) // Limit total based on parallelism
+        );
+
+        var parallelism = Math.Min(processorCount, 4);
+        var memoryCostKb = Math.Max(8, totalMemoryBudgetKb / parallelism); // Minimum 8KB per thread
+
         return new HashingConfig
         {
-            MemoryCost = Math.Min(16384, (int)(availableMemoryMb * 0.1)), // Max 16MB or 10% of available
-            TimeCost = availableMemoryMb > 1000 ? 4 : 8, // More time if less memory
-            Parallelism = Math.Min(processorCount, 4) // Limit parallelism
+            MemoryCost = memoryCostKb,
+            TimeCost = memoryCostKb < 32 ? 6 : 3, // More iterations if less memory
+            Parallelism = parallelism
         };
     }
 
-    // Now explicit implementation of interface methods
     public string HashPassword(string password)
     {
+        // Force garbage collection before intensive operation if needed
+        if (GC.GetTotalMemory(false) > 100 * 1024 * 1024) // If > 100MB in managed heap
+        {
+            GC.Collect(0, GCCollectionMode.Optimized);
+        }
+
         return Argon2.Hash(
             password,
             timeCost: Config.TimeCost,
@@ -48,6 +69,14 @@ public class Hasher : IHasher
 
     public bool Verify(string encodedHash, string password)
     {
+        // Verification typically uses parameters from the hash itself,
+        // so memory pressure should be less of an issue
         return Argon2.Verify(encodedHash, password);
+    }
+
+    // Optional: Method to check current configuration (useful for debugging)
+    public (int MemoryCost, int TimeCost, int Parallelism) GetCurrentConfig()
+    {
+        return (Config.MemoryCost, Config.TimeCost, Config.Parallelism);
     }
 }
