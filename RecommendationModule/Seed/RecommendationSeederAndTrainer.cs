@@ -397,10 +397,10 @@ public class RecommendationSeederAndTrainer(
 
         var hasBeenViewed = faker.Random.Bool();
         var hasBeenClicked = faker.Random.Bool();
-
+        var hasBeenDeleted = faker.Random.Bool();
         var viewedAt = hasBeenViewed ? faker.Date.Between(createdAt, updatedAt) : (DateTime?)null;
         var clickedAt = hasBeenClicked ? faker.Date.Between(createdAt, updatedAt) : (DateTime?)null;
-
+        var deletedAt = hasBeenDeleted ? faker.Date.Between(createdAt, updatedAt) : (DateTime?)null;
         return new RecommendationOutput
         {
             Id = Guid.NewGuid(),
@@ -414,6 +414,7 @@ public class RecommendationSeederAndTrainer(
             ClickedAt = clickedAt,
             CreatedAt = createdAt,
             UpdatedAt = updatedAt,
+            DeletedAt = deletedAt,
             GeneratedAt = generatedAt,
             Score = GenerateRealisticScore(rank),
             Strategy = faker.PickRandom(GenerateRecommendationStrategy()),
@@ -686,7 +687,7 @@ public class RecommendationSeederAndTrainer(
         try
         {
             var totalUsers = await context.Users.CountAsync();
-            var totalSchedules = await context.Schedules.CountAsync(); // ⭐ NEW
+            var totalSchedules = await context.Schedules.CountAsync();
             var totalRecommendations = await context.UserRecommendations.CountAsync();
             var totalOutputs = await context.RecommendationOutputs.CountAsync();
             var totalWithRatings = await context.UserRecommendations.CountAsync(r => r.Rating > 0);
@@ -721,7 +722,7 @@ public class RecommendationSeederAndTrainer(
                 avgRecommendationsPerUser);
             logger.LogInformation("   • Avg ML Outputs per User: {AvgOutputsPerUser:F1}",
                 avgOutputsPerUser);
-
+            await Task.Delay(500);
             // ⭐ NEW - Log schedule statistics
             if (scheduleStats != null)
             {

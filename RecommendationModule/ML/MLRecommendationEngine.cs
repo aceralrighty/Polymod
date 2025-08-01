@@ -5,6 +5,7 @@ using TBD.RecommendationModule.ML.Interface;
 using TBD.RecommendationModule.Models;
 using TBD.RecommendationModule.Models.Recommendations;
 using TBD.RecommendationModule.Repositories.Interfaces;
+using TBD.Shared.Repositories.Configuration;
 
 namespace TBD.RecommendationModule.ML;
 
@@ -54,77 +55,97 @@ internal class MlRecommendationEngine(
     }
 
     public async Task TrainModelAsync()
+{
+    _metricsService.IncrementCounter("rec.train_model");
+
+    // query strategy
+    var queryOptions = new QueryOptions
     {
-        _metricsService.IncrementCounter("rec.train_model");
-        var allRecommendations = await repository.GetAllWithRatingsAsync();
+        Strategy = QueryStrategy.Standard, // Can be changed based on data size
+        ChunkSize = 10000,
+        ParallelPartitions = 5,
+        StreamingBufferSize = 5
+    };
 
-        var userRecommendations = allRecommendations as UserRecommendation[] ?? allRecommendations.ToArray();
-        if (userRecommendations.Length == 0)
-        {
-            _metricsService.IncrementCounter("rec.train_model_empty_data");
-            return;
-        }
+    var allRecommendations = await repository.GetAllWithRatingsConfigurableAsync(queryOptions);
 
-        var trainingData = userRecommendations.Select(r => new ServiceRating
-        {
-            UserId = HashGuid(r.UserId), ServiceId = HashGuid(r.ServiceId), Label = r.Rating
-        }).ToList();
-
-        var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
-
-        _metricsService.IncrementCounter("rec.prep_model_training_pipeline");
-        var pipeline = _mlContext.Transforms.Conversion
-            .MapValueToKey(inputColumnName: "UserId", outputColumnName: "UserIdEncoded")
-            .Append(_mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "ServiceId",
-                outputColumnName: "ServiceIdEncoded"))
-            .Append(_mlContext.Recommendation().Trainers.MatrixFactorization(
-                new MatrixFactorizationTrainer.Options
-                {
-                    MatrixColumnIndexColumnName = "UserIdEncoded",
-                    MatrixRowIndexColumnName = "ServiceIdEncoded",
-                    LabelColumnName = "Label",
-                    NumberOfIterations = 20,
-                    ApproximationRank = 100,
-                }));
-
-        // Train the model
-        _model = pipeline.Fit(dataView);
-
-        // Save the trained model
-        try
-        {
-            var modelDirectory = Path.GetDirectoryName(_modelPath);
-
-            Console.WriteLine($"DEBUG: Model Path: {_modelPath}");
-            Console.WriteLine($"DEBUG: Model Directory: {modelDirectory}");
-
-            if (!string.IsNullOrEmpty(modelDirectory) && !Directory.Exists(modelDirectory))
-            {
-                Console.WriteLine($"DEBUG: Directory '{modelDirectory}' does not exist. Attempting to create...");
-                Directory.CreateDirectory(modelDirectory);
-                Console.WriteLine(
-                    $"DEBUG: Directory exists after creation attempt: {Directory.Exists(modelDirectory)}");
-            }
-            else if (Directory.Exists(modelDirectory))
-            {
-                Console.WriteLine($"DEBUG: Directory '{modelDirectory}' already exists.");
-            }
-            else
-            {
-                Console.WriteLine($"DEBUG: modelDirectory is null or empty. Cannot create directory.");
-            }
-
-            _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
-            Console.WriteLine($"=============== Model saved to {_modelPath} ===============");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error saving model: {ex.Message}");
-            throw;
-        }
-
-        _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
+    var userRecommendations = allRecommendations as UserRecommendation[] ?? allRecommendations.ToArray();
+    if (userRecommendations.Length == 0)
+    {
+        _metricsService.IncrementCounter("rec.train_model_empty_data");
+        return;
     }
+
+    Console.WriteLine($"📊 Training model with {userRecommendations.Length:N0} recommendations");
+
+    var trainingData = userRecommendations.Select(r => new ServiceRating
+    {
+        UserId = HashGuid(r.UserId),
+        ServiceId = HashGuid(r.ServiceId),
+        Label = r.Rating
+    }).ToList();
+
+    var dataView = _mlContext.Data.LoadFromEnumerable(trainingData);
+
+    _metricsService.IncrementCounter("rec.prep_model_training_pipeline");
+    var pipeline = _mlContext.Transforms.Conversion
+        .MapValueToKey(inputColumnName: "UserId", outputColumnName: "UserIdEncoded")
+        .Append(_mlContext.Transforms.Conversion.MapValueToKey(inputColumnName: "ServiceId",
+            outputColumnName: "ServiceIdEncoded"))
+        .Append(_mlContext.Recommendation().Trainers.MatrixFactorization(
+            new MatrixFactorizationTrainer.Options
+            {
+                MatrixColumnIndexColumnName = "UserIdEncoded",
+                MatrixRowIndexColumnName = "ServiceIdEncoded",
+                LabelColumnName = "Label",
+                NumberOfIterations = 20,
+                ApproximationRank = 100,
+            }));
+
+    // Train the model
+    Console.WriteLine("🔄 Starting model training...");
+    var trainingStopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+    _model = pipeline.Fit(dataView);
+
+    trainingStopwatch.Stop();
+    Console.WriteLine($"✅ Model training completed in {trainingStopwatch.ElapsedMilliseconds}ms");
+
+    // Save the trained model
+    try
+    {
+        var modelDirectory = Path.GetDirectoryName(_modelPath);
+
+        Console.WriteLine($"DEBUG: Model Path: {_modelPath}");
+        Console.WriteLine($"DEBUG: Model Directory: {modelDirectory}");
+
+        if (!string.IsNullOrEmpty(modelDirectory) && !Directory.Exists(modelDirectory))
+        {
+            Console.WriteLine($"DEBUG: Directory '{modelDirectory}' does not exist. Attempting to create...");
+            Directory.CreateDirectory(modelDirectory);
+            Console.WriteLine(
+                $"DEBUG: Directory exists after creation attempt: {Directory.Exists(modelDirectory)}");
+        }
+        else if (Directory.Exists(modelDirectory))
+        {
+            Console.WriteLine($"DEBUG: Directory '{modelDirectory}' already exists.");
+        }
+        else
+        {
+            Console.WriteLine($"DEBUG: modelDirectory is null or empty. Cannot create directory.");
+        }
+
+        _mlContext.Model.Save(_model, dataView.Schema, _modelPath);
+        Console.WriteLine($"=============== Model saved to {_modelPath} ===============");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error saving model: {ex.Message}");
+        throw;
+    }
+
+    _predictionEngine = _mlContext.Model.CreatePredictionEngine<ServiceRating, ServiceRatingPrediction>(_model);
+}
 
     public async Task<IEnumerable<Guid>> GenerateRecommendationsAsync(Guid userId, int maxResults)
     {
