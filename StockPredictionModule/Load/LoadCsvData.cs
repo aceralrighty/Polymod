@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
 using TBD.Shared.EntityMappers;
@@ -8,16 +9,26 @@ namespace TBD.StockPredictionModule.Load;
 
 public class LoadCsvData
 {
+    private static CsvConfiguration GetCsvConfiguration()
+    {
+        return new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant().Trim(),
+            MissingFieldFound = null,
+            BadDataFound = null,
+            HeaderValidated = null,
+        };
+    }
+
+    private static StreamReader CreateStreamReader(string filePath)
+    {
+        return new StreamReader(filePath, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+    }
+
     public static async Task<List<RawData>> LoadRawDataAsync(string filePath)
     {
-        using var reader = new StreamReader(filePath);
-        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
-            MissingFieldFound = null,
-            BadDataFound = null
-        };
-        using var csv = new CsvReader(reader, csvConfig);
+        using var reader = CreateStreamReader(filePath);
+        using var csv = new CsvReader(reader, GetCsvConfiguration());
         csv.Context.RegisterClassMap<RawDataMap>();
 
         var records = new List<RawData>();
@@ -35,14 +46,8 @@ public class LoadCsvData
     // NEW: Streaming method to avoid large memory allocation
     public static async IAsyncEnumerable<RawData> LoadRawDataStreamingAsync(string filePath, int batchSize = 1000)
     {
-        using var reader = new StreamReader(filePath);
-        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
-            MissingFieldFound = null,
-            BadDataFound = null
-        };
-        using var csv = new CsvReader(reader, csvConfig);
+        using var reader = CreateStreamReader(filePath);
+        using var csv = new CsvReader(reader, GetCsvConfiguration());
         csv.Context.RegisterClassMap<RawDataMap>();
 
         await foreach (var record in csv.GetRecordsAsync<RawData>())
@@ -56,54 +61,54 @@ public class LoadCsvData
 
     public static async IAsyncEnumerable<List<RawData>> LoadRawDataBatchedAsync(string filePath, int batchSize = 1000)
     {
-        using var reader = new StreamReader(filePath);
-        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
-            MissingFieldFound = null,
-            BadDataFound = null
-        };
-        using var csv = new CsvReader(reader, csvConfig);
+        using var reader = CreateStreamReader(filePath);
+        using var csv = new CsvReader(reader, GetCsvConfiguration());
         csv.Context.RegisterClassMap<RawDataMap>();
 
         var batch = new List<RawData>(batchSize);
+        var recordEnumerator = csv.GetRecordsAsync<RawData>().GetAsyncEnumerator();
 
-        await foreach (var record in csv.GetRecordsAsync<RawData>())
+        try
         {
-            if (!IsValidRecord(record))
+            while (await recordEnumerator.MoveNextAsync())
             {
-                continue;
+                var record = recordEnumerator.Current;
+
+                if (!IsValidRecord(record))
+                {
+                    continue;
+                }
+
+                batch.Add(record);
+
+                if (batch.Count < batchSize)
+                {
+                    continue;
+                }
+
+                // Create a copy of the batch to yield (prevents holding references)
+                var batchToYield = new List<RawData>(batch);
+                batch.Clear(); // Reuse the same list to reduce allocations
+                yield return batchToYield;
             }
 
-            batch.Add(record);
-
-            if (batch.Count < batchSize)
+            // Return the final partial batch if any records remain
+            if (batch.Count > 0)
             {
-                continue;
+                yield return [..batch];
             }
-
-            yield return batch;
-            batch = new List<RawData>(batchSize);
         }
-
-        // Return the final partial batch if any records remain
-        if (batch.Count > 0)
+        finally
         {
-            yield return batch;
+            await recordEnumerator.DisposeAsync();
         }
     }
 
     // NEW: Get total record count without loading all data
     public static async Task<int> GetRecordCountAsync(string filePath)
     {
-        using var reader = new StreamReader(filePath);
-        var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
-        {
-            PrepareHeaderForMatch = args => args.Header.ToLowerInvariant(),
-            MissingFieldFound = null,
-            BadDataFound = null
-        };
-        using var csv = new CsvReader(reader, csvConfig);
+        using var reader = CreateStreamReader(filePath);
+        using var csv = new CsvReader(reader, GetCsvConfiguration());
         csv.Context.RegisterClassMap<RawDataMap>();
 
         var count = 0;
@@ -114,6 +119,7 @@ public class LoadCsvData
                 count++;
             }
         }
+
         return count;
     }
 
