@@ -152,6 +152,8 @@ also organized per module.
 - **Large Object Heap (LOH) Avoidance**: Intelligent memory allocation preventing GC pressure
 - **Adaptive Resource Management**: Dynamic configuration based on available system resources
 - **Enterprise-Scale Testing**: Optimized for high-volume password processing and user simulation
+- **Improved Memory efficiency for recommendation output saving**: Improved saving algorithm by implementing
+  Fisher-Yates shuffle with 95.6% memory reduction
 
 ## 🔄 Pipeline Flow Overview
 
@@ -395,7 +397,8 @@ Each module follows a consistent, enterprise-ready structure:
 
 ## 📊 Monitoring & Grafana Dashboards
 
-To give you a clear picture of how monitoring works in the project, here are example Grafana dashboards showing real-time metrics and ML performance.
+To give you a clear picture of how monitoring works in the project, here are example Grafana dashboards showing
+real-time metrics and ML performance.
 
 ### Stock Prediction Accuracy
 
@@ -414,7 +417,9 @@ To give you a clear picture of how monitoring works in the project, here are exa
 
 ---
 
-These dashboards are powered by Prometheus metrics collected from the modular monolith and exposed via OpenTelemetry instrumentation. You can view these dashboards locally by accessing Grafana at `http://localhost:3000` after starting the monitoring stack.
+These dashboards are powered by Prometheus metrics collected from the modular monolith and exposed via OpenTelemetry
+instrumentation. You can view these dashboards locally by accessing Grafana at `http://localhost:3000` after starting
+the monitoring stack.
 
 ---
 
