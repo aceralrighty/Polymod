@@ -19,7 +19,7 @@ public static class StockModule
 {
     public static IServiceCollection AddStockModule(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<StockDbContext>(options =>
+        services.AddDbContextPool<StockDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("TradingDb")));
 
         services.Configure<CacheOptions>("Stock", options =>

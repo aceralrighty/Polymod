@@ -16,7 +16,7 @@ public static class ServiceModule
 {
     public static IServiceCollection AddServiceModule(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ServiceDbContext>(options =>
+        services.AddDbContextPool<ServiceDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("ServiceDb")));
         services.Configure<CacheOptions>("Service", options =>
         {

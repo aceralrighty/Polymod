@@ -12,7 +12,7 @@ public static class AddressModule
 {
     public static IServiceCollection AddAddressService(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AddressDbContext>(options =>
+        services.AddDbContextPool<AddressDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("AddressDb")));
         services.Configure<CacheOptions>("Address", options =>
         {
