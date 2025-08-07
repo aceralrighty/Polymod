@@ -15,7 +15,7 @@ public static class ScheduleModule
 {
     public static IServiceCollection AddScheduleModule(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ScheduleDbContext>(options =>
+        services.AddDbContextPool<ScheduleDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("ScheduleDb")));
         services.Configure<CacheOptions>("Schedule", options =>
         {

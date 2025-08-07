@@ -22,7 +22,7 @@ public static class RecommendationModule
     public static IServiceCollection AddRecommendationModule(this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddDbContext<RecommendationDbContext>(options =>
+        services.AddDbContextPool<RecommendationDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("RecDb")));
 
         services.Configure<CacheOptions>("Recommendation", options =>

@@ -16,7 +16,7 @@ public static class AuthModule
     public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration)
     {
         // Database configuration
-        services.AddDbContext<AuthDbContext>(options => options.UseSqlServer(
+        services.AddDbContextPool<AuthDbContext>(options => options.UseSqlServer(
             configuration.GetConnectionString("AuthDb")));
 
         // Cache configuration

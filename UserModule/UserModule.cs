@@ -18,7 +18,7 @@ public static class UserModule
 {
     public static IServiceCollection AddUserService(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<UserDbContext>(options =>
+        services.AddDbContextPool<UserDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("UserDb")));
 
         // Configure caching specifically for the User module
