@@ -23,6 +23,8 @@
     <PackageReference Include="Grafana.OpenTelemetry" Version="1.2.0" />
     <PackageReference Include="Grafana.OpenTelemetry.Base" Version="1.2.0" />
     <PackageReference Include="FluentAssertions" Version="8.4.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+    <PackageReference Include="Grpc.Core" Version="2.46.6" />
 
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
 
