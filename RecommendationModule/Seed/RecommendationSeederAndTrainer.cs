@@ -365,24 +365,87 @@ public class RecommendationSeederAndTrainer(
     {
         logger.LogInformation("🤖 Generating ML recommendation outputs...");
 
-        var batchId = Guid.NewGuid();
-        var recommendationOutputs = new List<RecommendationOutput>();
+        const int userBatchSize = 100; // Process users in smaller batches
+        const int recommendationBatchSize = 1000; // Save recommendations in batches
+        var totalUsers = users.Count;
+        var totalBatches = (int)Math.Ceiling((double)totalUsers / userBatchSize);
+        var totalRecommendationsGenerated = 0;
 
-        foreach (var user in users)
+        // Pre-create service array for efficient random selection
+        var serviceArray = services.ToArray();
+        var serviceCount = serviceArray.Length;
+
+        for (var batchIndex = 0; batchIndex < totalBatches; batchIndex++)
         {
-            // Generate 5-15 recommendations per user
-            var recommendationCount = _random.Next(5, 16);
-            var selectedServices = services.OrderBy(_ => _random.Next()).Take(recommendationCount).ToList();
+            var userBatch = users.Skip(batchIndex * userBatchSize).Take(userBatchSize).ToList();
+            var batchId = Guid.NewGuid();
+            var recommendationOutputs = new List<RecommendationOutput>();
 
-            recommendationOutputs.AddRange(selectedServices.Select((service, i) =>
-                CreateRecommendationOutput(user.Id, service.Id, batchId, i + 1)));
+            logger.LogInformation("Processing user batch {BatchIndex}/{TotalBatches} ({UserCount} users)",
+                batchIndex + 1, totalBatches, userBatch.Count);
+
+            // Generate recommendations for this batch of users
+            foreach (var user in userBatch)
+            {
+                var recommendationCount = _random.Next(5, 16);
+                var selectedServices = SelectRandomServices(serviceArray, serviceCount, recommendationCount);
+
+                recommendationOutputs.AddRange(selectedServices.Select((t, i) =>
+                    CreateRecommendationOutput(user.Id, t.Id, batchId, i + 1)));
+
+                // Save in smaller batches to prevent memory buildup
+                if (recommendationOutputs.Count < recommendationBatchSize)
+                {
+                    continue;
+                }
+
+                await outputRepository.SaveRecommendationBatchAsync(recommendationOutputs);
+                totalRecommendationsGenerated += recommendationOutputs.Count;
+                recommendationOutputs.Clear(); // Free memory immediately
+            }
+
+            // Save any remaining recommendations from this user batch
+            if (recommendationOutputs.Count > 0)
+            {
+                await outputRepository.SaveRecommendationBatchAsync(recommendationOutputs);
+                totalRecommendationsGenerated += recommendationOutputs.Count;
+            }
+
+            logger.LogInformation("✅ Completed user batch {BatchIndex}/{TotalBatches}",
+                batchIndex + 1, totalBatches);
         }
 
-        // Save using the repository
-        await outputRepository.SaveRecommendationBatchAsync(recommendationOutputs);
-
         logger.LogInformation("✅ Generated and saved {OutputCount} recommendation outputs for {UserCount} users",
-            recommendationOutputs.Count, users.Count);
+            totalRecommendationsGenerated, totalUsers);
+    }
+
+    private Service[] SelectRandomServices(Service[] services, int serviceCount, int count)
+    {
+        // Ensure we don't try to select more services than available
+        var selectCount = Math.Min(count, serviceCount);
+
+        // Create array of indices for shuffling
+        var indices = new int[serviceCount];
+        for (var i = 0; i < serviceCount; i++)
+        {
+            indices[i] = i;
+        }
+
+        // Partial Fisher-Yates shuffle - only shuffle what we need
+        for (var i = 0; i < selectCount; i++)
+        {
+            var j = _random.Next(i, serviceCount);
+            (indices[i], indices[j]) = (indices[j], indices[i]);
+        }
+
+        // Return selected services
+        var result = new Service[selectCount];
+        for (var i = 0; i < selectCount; i++)
+        {
+            result[i] = services[indices[i]];
+        }
+
+        return result;
     }
 
     private RecommendationOutput CreateRecommendationOutput(Guid userId, Guid serviceId, Guid batchId, int rank)
