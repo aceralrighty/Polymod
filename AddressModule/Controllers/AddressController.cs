@@ -1,161 +1,157 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using TBD.AddressModule.Data;
-using TBD.AddressModule.Models;
-using TBD.UserModule.Data;
-using TBD.UserModule.Models;
+using TBD.API.DTOs.Users;
+using TBD.GrpcModule.Interfaces;
 
 namespace TBD.AddressModule.Controllers;
 
-public class AddressController(AddressDbContext context, UserDbContext userContext) : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class UserAddressController(IUserAddressGrpcClient grpcClient, ILogger<UserAddressController> logger) : ControllerBase
 {
-    // GET: Address
-    public async Task<IActionResult> Index()
+    /// <summary>
+    /// Get all addresses for a specific user
+    /// </summary>
+    [HttpGet("user/{userId:guid}")]
+    public async Task<ActionResult<IEnumerable<UserAddressResponse>>> GetUserAddresses(Guid userId)
     {
-        var addressDbContext = context.UserAddress.Include(u => u.User);
-        return View(await addressDbContext.ToListAsync());
-    }
-
-    // GET: Address/Details/5
-    public async Task<IActionResult> Details(Guid? id)
-    {
-        if (id == null)
+        try
         {
-            return NotFound();
-        }
-
-        var userAddress = await context.UserAddress
-            .Include(u => u.User)
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (userAddress == null)
-        {
-            return NotFound();
-        }
-
-        return View(userAddress);
-    }
-
-    // GET: Address/Create
-    public IActionResult Create()
-    {
-        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id");
-        return View();
-    }
-
-    // POST: Address/Create
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(
-        [Bind("UserId,Address1,Address2,City,State,ZipCode,Id,CreatedAt,UpdatedAt,DeletedAt")]
-        UserAddress userAddress)
-    {
-        if (ModelState.IsValid)
-        {
-            userAddress.Id = Guid.NewGuid();
-            context.Add(userAddress);
-            await context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id", userAddress.UserId);
-        return View(userAddress);
-    }
-
-    // GET: Address/Edit/5
-    public async Task<IActionResult> Edit(Guid? id)
-    {
-        if (id == null)
-        {
-            return NotFound();
-        }
-
-        var userAddress = await context.UserAddress.FindAsync(id);
-        if (userAddress == null)
-        {
-            return NotFound();
-        }
-
-        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id", userAddress.UserId);
-        return View(userAddress);
-    }
-
-    // POST: Address/Edit/5
-    // To protect from overposting attacks, enable the specific properties you want to bind to.
-    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Guid id,
-        [Bind("UserId,Address1,Address2,City,State,ZipCode,Id,CreatedAt,UpdatedAt,DeletedAt")]
-        UserAddress userAddress)
-    {
-        if (id != userAddress.Id)
-        {
-            return NotFound();
-        }
-
-        if (ModelState.IsValid)
-        {
-            try
+            // First check if user exists via gRPC
+            var userExists = await grpcClient.UserExistsAsync(userId);
+            if (!userExists)
             {
-                context.Update(userAddress);
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserAddressExists(userAddress.Id))
-                {
-                    return NotFound();
-                }
-
-                throw;
+                return NotFound($"User with ID {userId} not found");
             }
 
-            return RedirectToAction(nameof(Index));
+            var addresses = await grpcClient.GetUserAddressesAsync(userId);
+            return Ok(addresses);
         }
-
-        ViewData["UserId"] = new SelectList(context.Set<User>(), "Id", "Id", userAddress.UserId);
-        return View(userAddress);
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving addresses for user {UserId}", userId);
+            return StatusCode(500, "An error occurred while retrieving addresses");
+        }
     }
 
-    // GET: Address/Delete/5
-    public async Task<IActionResult> Delete(Guid? id)
+    /// <summary>
+    /// Get a specific address by ID
+    /// </summary>
+    [HttpGet("{addressId:guid}")]
+    public async Task<ActionResult<UserAddressResponse>> GetAddress(Guid addressId)
     {
-        if (id == null)
+        try
         {
-            return NotFound();
-        }
+            var address = await grpcClient.GetUserAddressAsync(addressId);
+            if (address == null)
+            {
+                return NotFound($"Address with ID {addressId} not found");
+            }
 
-        var userAddress = await context.UserAddress
-            .Include(u => u.User)
-            .FirstOrDefaultAsync(m => m.Id == id);
-        if (userAddress == null)
+            return Ok(address);
+        }
+        catch (Exception ex)
         {
-            return NotFound();
+            logger.LogError(ex, "Error retrieving address {AddressId}", addressId);
+            return StatusCode(500, "An error occurred while retrieving the address");
         }
-
-        return View(userAddress);
     }
 
-    // POST: Address/Delete/5
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    /// <summary>
+    /// Create a new address for a user
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<UserAddressResponse>> CreateAddress([FromBody] UserAddressRequest request)
     {
-        var userAddress = await context.UserAddress.FindAsync(id);
-        if (userAddress != null)
+        try
         {
-            context.UserAddress.Remove(userAddress);
-        }
+            // Validate user exists
+            var userExists = await grpcClient.UserExistsAsync(request.UserId);
+            if (!userExists)
+            {
+                return BadRequest($"User with ID {request.UserId} not found");
+            }
 
-        await context.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+            var createdAddress = await grpcClient.CreateUserAddressAsync(request);
+            return CreatedAtAction(nameof(GetAddress), new { addressId = createdAddress.Id }, createdAddress);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating address for user {UserId}", request.UserId);
+            return StatusCode(500, "An error occurred while creating the address");
+        }
     }
 
-    private bool UserAddressExists(Guid id)
+    /// <summary>
+    /// Update an existing address
+    /// </summary>
+    [HttpPut("{addressId:guid}")]
+    public async Task<ActionResult<UserAddressResponse>> UpdateAddress(Guid addressId, [FromBody] UserAddressRequest request)
     {
-        return context.UserAddress.Any(e => e.Id == id);
+        try
+        {
+            if (addressId != request.Id)
+            {
+                return BadRequest("Address ID in URL does not match request body");
+            }
+
+            var updatedAddress = await grpcClient.UpdateUserAddressAsync(request);
+            return Ok(updatedAddress);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating address {AddressId}", addressId);
+            return StatusCode(500, "An error occurred while updating the address");
+        }
+    }
+
+    /// <summary>
+    /// Delete an address
+    /// </summary>
+    [HttpDelete("{addressId:guid}")]
+    public async Task<ActionResult> DeleteAddress(Guid addressId)
+    {
+        try
+        {
+            var deleted = await grpcClient.DeleteUserAddressAsync(addressId);
+            if (!deleted)
+            {
+                return NotFound($"Address with ID {addressId} not found");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error deleting address {AddressId}", addressId);
+            return StatusCode(500, "An error occurred while deleting the address");
+        }
+    }
+
+    /// <summary>
+    /// Search users by email (demonstrates user lookup via gRPC)
+    /// </summary>
+    [HttpGet("search/user")]
+    public async Task<ActionResult<UserDto>> SearchUserByEmail([FromQuery] string email)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest("Email parameter is required");
+            }
+
+            var user = await grpcClient.GetUserByEmailAsync(email);
+            if (user == null)
+            {
+                return NotFound($"User with email {email} not found");
+            }
+
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error searching for user with email {Email}", email);
+            return StatusCode(500, "An error occurred while searching for the user");
+        }
     }
 }
