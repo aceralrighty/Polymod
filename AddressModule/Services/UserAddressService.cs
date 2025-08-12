@@ -10,11 +10,14 @@ using TBD.UserModule.Services;
 
 namespace TBD.AddressModule.Services;
 
-public class UserAddressService(AddressDbContext context, IMapper mapper, IUserService userService)
-    : IUserAddressService, IUserAddressRepository
+public class UserAddressService(
+    AddressDbContext context,
+    IMapper mapper,
+    IUserService userService,
+    IUserAddressRepository repository)
+    : IUserAddressService
 {
     private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
-
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync()
     {
@@ -35,7 +38,6 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
         return grouped;
     }
 
-
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync()
     {
         var addresses = await _dbSet.ToListAsync();
@@ -55,13 +57,6 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
         }
     }
 
-    public async Task<UserAddress> GetByUserAddressAsync(UserAddress userAddress)
-    {
-        return await _dbSet.FirstOrDefaultAsync(ua =>
-                   ua.Address1 == userAddress.Address1 || ua.Address2 == userAddress.Address2) ??
-               throw new InvalidOperationException();
-    }
-
     public async Task<IEnumerable<UserAddress>> GetAllAsync(Guid userId)
     {
         return await _dbSet.Where(ua => ua.UserId == userId).ToListAsync();
@@ -72,12 +67,6 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
     {
         return await _dbSet.Where(expression).ToListAsync();
     }
-
-    public async Task<UserAddress?> GetByIdAsync(Guid id)
-    {
-        return await _dbSet.FirstOrDefaultAsync(i => i.Id == id).WaitAsync(TimeSpan.FromSeconds(30));
-    }
-
 
     public async Task AddAsync(UserAddress entity)
     {
@@ -121,8 +110,7 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
             throw new ArgumentException("User not found, cannot update address.");
         }
 
-
-        var existingAddress = await _dbSet.FirstOrDefaultAsync(i => i.Id == userAddressDto.Id);
+        var existingAddress = await repository.GetByIdAsync(userAddressDto.Id);
         if (existingAddress == null)
         {
             throw new ArgumentNullException(nameof(existingAddress), "User Address does not exist");
@@ -130,8 +118,6 @@ public class UserAddressService(AddressDbContext context, IMapper mapper, IUserS
 
         mapper.Map(userAddressDto, existingAddress);
 
-        await context.SaveChangesAsync();
-
-        return existingAddress;
+        return await repository.UpdateAsync(existingAddress);
     }
 }

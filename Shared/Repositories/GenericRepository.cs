@@ -135,7 +135,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         var tasks = new List<Task<List<T>>>();
         var recordsPerPartition = totalCount / partitionCount;
 
-        for (int i = 0; i < partitionCount; i++)
+        for (var i = 0; i < partitionCount; i++)
         {
             var partitionIndex = i;
             var task = Task.Run(async () =>

@@ -9,7 +9,7 @@ public class UserAddressRequest
     }
 
     public UserAddressRequest(Guid id, Guid userId, string? address1, string? address2, string? city, string? state,
-        int zipCode)
+        string zipCode)
     {
         Id = id;
         UserId = userId;
@@ -28,5 +28,5 @@ public class UserAddressRequest
     [MaxLength(int.MaxValue)] public string? Address2 { get; set; }
     [Required] [MaxLength(int.MaxValue)] public string? City { get; set; }
     [Required] [MaxLength(int.MaxValue)] public string? State { get; set; }
-    [Required] public int ZipCode { get; set; }
+    [Required] public string? ZipCode { get; set; }
 }

@@ -2,6 +2,7 @@ using OpenTelemetry.Trace;
 using TBD.AddressModule;
 using TBD.AuthModule;
 using TBD.AuthModule.Seed;
+using TBD.GrpcModule;
 using TBD.MetricsModule.ModuleHealthCheck;
 using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.OpenTelemetry.Services;
@@ -36,7 +37,7 @@ builder.Services.AddServiceModule(builder.Configuration);
 builder.Services.AddAuthModule(builder.Configuration);
 builder.Services.AddRecommendationModule(builder.Configuration);
 builder.Services.AddStockModule(builder.Configuration);
-
+builder.Services.AddGrpcServices(builder.Configuration);
 // Other services
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
@@ -54,7 +55,7 @@ builder.Services.AddOpenTelemetry()
 
 var app = builder.Build();
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
-
+app.UseGrpcServices();
 if (app.Environment.IsDevelopment())
 {
     try
