@@ -17,7 +17,11 @@ public static class ServiceModule
     public static IServiceCollection AddServiceModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContextPool<ServiceDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("ServiceDb")));
+            options.UseSqlServer(configuration.GetConnectionString("ServiceDb"), b => b.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            )));
         services.Configure<CacheOptions>("Service", options =>
         {
             options.DefaultCacheDuration = TimeSpan.FromMinutes(10);

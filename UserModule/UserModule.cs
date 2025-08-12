@@ -47,7 +47,7 @@ public static class UserModule
         });
 
         services.AddLogging();
-        services.AddScoped<IUserService, Services.UserService>();
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserReadService, UserReadService>();
         services.AddScoped<IHasher, Hasher>();
         services.AddAutoMapper(typeof(UserMapping).Assembly);

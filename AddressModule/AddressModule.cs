@@ -13,7 +13,11 @@ public static class AddressModule
     public static IServiceCollection AddAddressService(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContextPool<AddressDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("AddressDb")));
+            options.UseSqlServer(configuration.GetConnectionString("AddressDb"), b => b.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            )));
         services.Configure<CacheOptions>("Address", options =>
         {
             options.DefaultCacheDuration = TimeSpan.FromMinutes(10);

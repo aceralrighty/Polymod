@@ -23,7 +23,11 @@ public static class RecommendationModule
         IConfiguration configuration)
     {
         services.AddDbContextPool<RecommendationDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("RecDb")));
+            options.UseSqlServer(configuration.GetConnectionString("RecDb"), b => b.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            )));
 
         services.Configure<CacheOptions>("Recommendation", options =>
         {
