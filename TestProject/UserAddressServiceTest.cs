@@ -9,6 +9,7 @@ using NUnit.Framework;
 using TBD.AddressModule.Data;
 using TBD.AddressModule.Exceptions;
 using TBD.AddressModule.Models;
+using TBD.AddressModule.Repositories;
 using TBD.AddressModule.Services;
 using TBD.API.DTOs.Users;
 using TBD.UserModule.Models;
@@ -77,7 +78,7 @@ public class UserAddressServiceTests
             .ReturnsAsync(new UserDto { Id = _otherUser.Id });
 
         // Initialize the service with all dependencies
-        _userAddressService = new UserAddressService(_context, _mockMapper.Object, _mockUserService.Object);
+        _userAddressService = new UserAddressService(_context, _mockMapper.Object, _mockUserService.Object, new UserAddressRepository(context: _context));;
     }
 
     [TearDown]
