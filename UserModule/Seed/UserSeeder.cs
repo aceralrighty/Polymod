@@ -23,7 +23,7 @@ public static class UserSeeder
     /// <param name="numberOfFakeUsers">The number of fake users to generate. Defaults to 50 if not specified.</param>
     /// <returns>A list of the seeded users.</returns>
     public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider,
-        int numberOfFakeUsers = 4000)
+        int numberOfFakeUsers = 5000)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.ReseedForTesting");
         activity?.SetTag("operation", "reseed_for_testing");

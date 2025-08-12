@@ -19,7 +19,11 @@ public static class UserModule
     public static IServiceCollection AddUserService(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContextPool<UserDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("UserDb")));
+            options.UseSqlServer(configuration.GetConnectionString("UserDb"), b => b.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null // Default value: null
+            )));
 
         // Configure caching specifically for the User module
         services.Configure<CacheOptions>("User", options =>

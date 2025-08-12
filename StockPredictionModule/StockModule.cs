@@ -20,7 +20,11 @@ public static class StockModule
     public static IServiceCollection AddStockModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContextPool<StockDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("TradingDb")));
+            options.UseSqlServer(configuration.GetConnectionString("TradingDb"), b => b.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null // Default value: null
+            )));
 
         services.Configure<CacheOptions>("Stock", options =>
         {
