@@ -16,86 +16,88 @@ public class StockRepository(StockDbContext context) : GenericRepository<RawData
     }
 
     public async Task SaveStockAsync(List<Stock> stocks)
-{
-    if (stocks.Count == 0)
-        return;
-
-    Console.WriteLine($"Attempting to save {stocks.Count} stocks using bulk operations...");
-
-    // Set timestamps manually
-    var now = DateTime.UtcNow;
-    foreach (var stock in stocks)
     {
-        if (stock.CreatedAt == default)
-            stock.CreatedAt = now;
-        stock.UpdatedAt = now;
-    }
+        if (stocks.Count == 0)
+            return;
 
-    var bulkConfig = new BulkConfig
-    {
-        PreserveInsertOrder = false,
-        SetOutputIdentity = false,
-        BulkCopyTimeout = 0,
-        BatchSize = 100,
-        UseTempDB = true,
-        PropertiesToInclude = [
-            nameof(Stock.Symbol),
-            nameof(Stock.Open),
-            nameof(Stock.High),
-            nameof(Stock.Low),
-            nameof(Stock.Close),
-            nameof(Stock.Volume),
-            nameof(Stock.Date),
-            nameof(Stock.UserId),
-            nameof(Stock.StockId),
-            nameof(Stock.Price),
-            nameof(Stock.CreatedAt),
-            nameof(Stock.UpdatedAt),
-            nameof(Stock.DeletedAt)
-        ]
-    };
+        Console.WriteLine($"Attempting to save {stocks.Count} stocks using bulk operations...");
 
-    // Process in chunks with transaction
-    var chunkSize = 1000;
-    var totalSaved = 0;
-
-    for (var i = 0; i < stocks.Count; i += chunkSize)
-    {
-        var chunk = stocks.Skip(i).Take(chunkSize).ToList();
-
-        // Wrap each chunk in its own transaction
-        await using var transaction = await context.Database.BeginTransactionAsync();
-
-        try
+        var now = DateTime.UtcNow;
+        foreach (var stock in stocks)
         {
-            Console.WriteLine($"Processing chunk {i/chunkSize + 1} ({chunk.Count} records)...");
+            if (stock.CreatedAt == default)
+                stock.CreatedAt = now;
+            stock.UpdatedAt = now;
+        }
 
-            await context.BulkInsertAsync(chunk, bulkConfig);
-            await transaction.CommitAsync();
+        var bulkConfig = new BulkConfig
+        {
+            PreserveInsertOrder = false,
+            SetOutputIdentity = false,
+            BulkCopyTimeout = 0,
+            BatchSize = 100,
+            UseTempDB = true,
+            PropertiesToInclude =
+            [
+                nameof(Stock.Symbol),
+                nameof(Stock.Open),
+                nameof(Stock.High),
+                nameof(Stock.Low),
+                nameof(Stock.Close),
+                nameof(Stock.Volume),
+                nameof(Stock.Date),
+                nameof(Stock.UserId),
+                nameof(Stock.StockId),
+                nameof(Stock.Price),
+                nameof(Stock.CreatedAt),
+                nameof(Stock.UpdatedAt),
+                nameof(Stock.DeletedAt)
+            ]
+        };
 
-            totalSaved += chunk.Count;
-            Console.WriteLine($"✅ Saved chunk {i/chunkSize + 1}: {chunk.Count} records (Total: {totalSaved}/{stocks.Count})");
+        var strategy = context.Database.CreateExecutionStrategy();
 
-            // Force garbage collection between chunks
-            if ((i / chunkSize + 1) % 10 == 0)
+        await strategy.ExecuteAsync(async () =>
+        {
+            const int chunkSize = 1000;
+            var totalSaved = 0;
+
+            for (var i = 0; i < stocks.Count; i += chunkSize)
             {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+                var chunk = stocks.Skip(i).Take(chunkSize).ToList();
+
+                await using var transaction = await context.Database.BeginTransactionAsync();
+
+                try
+                {
+                    Console.WriteLine($"Processing chunk {i / chunkSize + 1} ({chunk.Count} records)...");
+
+                    await context.BulkInsertAsync(chunk, bulkConfig);
+
+                    await transaction.CommitAsync();
+
+                    totalSaved += chunk.Count;
+                    Console.WriteLine(
+                        $"✅ Saved chunk {i / chunkSize + 1}: {chunk.Count} records (Total: {totalSaved}/{stocks.Count})");
+
+                    if ((i / chunkSize + 1) % 10 == 0)
+                    {
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                    }
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync();
-            Console.WriteLine($"❌ Error saving chunk {i/chunkSize + 1}: {ex.Message}");
-            Console.WriteLine($"Inner exception: {ex.InnerException?.Message}");
-            throw;
-        }
+        });
+
+        var actualCount = await context.Stocks.CountAsync();
+        Console.WriteLine($"🎯 Final verification: Database contains {actualCount} total stocks");
     }
 
-    // Verify the actual count
-    var actualCount = await context.Stocks.CountAsync();
-    Console.WriteLine($"🎯 Final verification: Database contains {actualCount} total stocks");
-}
 
     public async Task<IEnumerable<RawData>> GetBySymbolAsync(string symbol)
     {

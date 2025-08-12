@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option csharp_namespace = "Polymod.UserService.Protos";
+
+package userservice;
+
+service UserService {
+  rpc GetUser (GetUserRequest) returns (GetUserResponse);
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserResponse {
+  bool exists = 1;
+  string user_id = 2;
+  string email = 3;
+}
