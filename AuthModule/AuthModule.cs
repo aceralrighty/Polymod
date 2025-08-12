@@ -17,7 +17,11 @@ public static class AuthModule
     {
         // Database configuration
         services.AddDbContextPool<AuthDbContext>(options => options.UseSqlServer(
-            configuration.GetConnectionString("AuthDb")));
+            configuration.GetConnectionString("AuthDb"), b => b.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            )));
 
         // Cache configuration
         services.Configure<CacheOptions>("Auth", options =>

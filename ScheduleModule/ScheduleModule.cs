@@ -16,7 +16,11 @@ public static class ScheduleModule
     public static IServiceCollection AddScheduleModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContextPool<ScheduleDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("ScheduleDb")));
+            options.UseSqlServer(configuration.GetConnectionString("ScheduleDb"), b => b.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null
+            )));
         services.Configure<CacheOptions>("Schedule", options =>
         {
             options.DefaultCacheDuration = TimeSpan.FromMinutes(10);
