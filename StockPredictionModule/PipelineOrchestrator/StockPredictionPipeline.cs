@@ -84,12 +84,13 @@ public class StockPredictionPipeline : IStockPredictionPipeline
                 // Group by symbol as we go, but don't keep the original batch
                 foreach (var record in batch)
                 {
-                    if (!groupedBySymbol.ContainsKey(record.Symbol))
+                    if (!groupedBySymbol.TryGetValue(record.Symbol, out var value))
                     {
-                        groupedBySymbol[record.Symbol] = new List<RawData>();
+                        value = [];
+                        groupedBySymbol[record.Symbol] = value;
                     }
 
-                    groupedBySymbol[record.Symbol].Add(record);
+                    value.Add(record);
                 }
 
                 _openTelemetryMetrics?.RecordHistogram("stock.pipeline_batch_processed", batch.Count);
@@ -125,7 +126,7 @@ public class StockPredictionPipeline : IStockPredictionPipeline
             Console.WriteLine("Step 3: Training model with streaming data...");
             var trainStopwatch = Stopwatch.StartNew();
 
-            // Train model using streaming approach instead of loading all data
+            // Train model using a streaming approach instead of loading all data
             await _mlEngine.TrainModelStreamingAsync(csvFilePath);
             trainStopwatch.Stop();
 
@@ -320,7 +321,7 @@ public class StockPredictionPipeline : IStockPredictionPipeline
                 return null;
             }
         }
-        catch (Exception ex)
+        catch (InvalidDataException ex)
         {
             _metricsService.IncrementCounter("stock.pipeline_accuracy_checks_failed_total");
             Console.WriteLine($"Error during accuracy check: {ex.Message}");

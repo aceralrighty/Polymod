@@ -121,7 +121,7 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
 
             await Task.CompletedTask;
         }
-        catch (Exception)
+        catch (InvalidDataException)
         {
             _metricsService.IncrementCounter("stock.train_model_failures_total");
             throw;
