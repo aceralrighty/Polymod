@@ -35,7 +35,7 @@ public class StockRepository(StockDbContext context) : GenericRepository<RawData
             PreserveInsertOrder = false,
             SetOutputIdentity = false,
             BulkCopyTimeout = 0,
-            BatchSize = 100,
+            BatchSize = 1000,
             UseTempDB = true,
             PropertiesToInclude =
             [

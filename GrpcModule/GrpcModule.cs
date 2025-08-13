@@ -26,7 +26,7 @@ public static class GrpcModule
         return services;
     }
 
-    private static readonly string[] ServiceNames = ["UserAddressService"];
+    private static readonly string[] ServiceNames = ["UserAddressService", "ScheduleService"];
 
     public static WebApplication UseGrpcServices(this WebApplication app)
     {
