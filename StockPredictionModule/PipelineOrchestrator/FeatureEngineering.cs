@@ -3,6 +3,10 @@ using TBD.StockPredictionModule.Models.Stocks;
 
 namespace TBD.StockPredictionModule.PipelineOrchestrator;
 
+/// <summary>
+/// Provides feature engineering utilities for processing and extracting features
+/// from raw stock market data.
+/// </summary>
 public static class FeatureEngineering
 {
     public static List<StockFeatureVector> GenerateFeatures(List<RawData> rawData)

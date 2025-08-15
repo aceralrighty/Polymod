@@ -25,7 +25,7 @@ public static class OpenTelemetryModule
         return services;
     }
 
-    public static IServiceCollection ConfigureOpenTelemetry(this IServiceCollection services)
+    private static IServiceCollection ConfigureOpenTelemetry(this IServiceCollection services)
     {
         Console.WriteLine("[METRICS] Configuring OpenTelemetry with both metrics and tracing");
         Console.WriteLine($"[METRICS] Registered modules: {string.Join(", ", RegisteredModules)}");

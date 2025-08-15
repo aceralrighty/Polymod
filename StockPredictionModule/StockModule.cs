@@ -15,6 +15,17 @@ using TBD.StockPredictionModule.Repository.Interfaces;
 
 namespace TBD.StockPredictionModule;
 
+/// <summary>
+/// Provides stock module-related services, configurations, and dependencies for the application.
+/// </summary>
+/// <remarks>
+/// The StockModule class is designed to encapsulate all service registrations,
+/// database context configurations, caching policies, and other dependencies
+/// that are relevant to the stock prediction module of the application.
+/// This module includes configurations for the database context, caching options, and
+/// registrations of repositories, pipelines, data loaders, mappers, and machine learning components.
+/// It also integrates with telemetry for monitoring purposes.
+/// </remarks>
 public static class StockModule
 {
     public static IServiceCollection AddStockModule(this IServiceCollection services, IConfiguration configuration)

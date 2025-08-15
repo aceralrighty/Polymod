@@ -11,6 +11,13 @@ using TBD.StockPredictionModule.PipelineOrchestrator;
 
 namespace TBD.StockPredictionModule.ML;
 
+/// <summary>
+/// Provides functionality for training machine learning models and generating stock predictions
+/// for financial symbols using raw market data. Implements <see cref="IMlStockPredictionEngine"/>.
+/// This class supports both batch and streaming data training processes, as well as cleaning
+/// and preparing training data for the model. It interacts with a metrics service to track
+/// model training and prediction activities.
+/// </summary>
 public class MlStockPredictionEngine : IMlStockPredictionEngine
 {
     private static readonly MLContext MlContext = new(seed: 0);

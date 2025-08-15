@@ -8,6 +8,7 @@ using TBD.RecommendationModule.Repositories.Interfaces;
 using TBD.ScheduleModule.Models;
 using TBD.ServiceModule.Models;
 using TBD.UserModule.Models;
+using DomainUser = TBD.UserModule.Models.User;
 
 namespace TBD.RecommendationModule.Seed;
 
@@ -22,7 +23,7 @@ public class RecommendationSeederAndTrainer(
     /// Main seeding method - handles the complete seeding process
     /// </summary>
     public async Task SeedRecommendationsAsync(
-        List<User> users,
+        List<DomainUser> users,
         List<Service> services,
         bool recreateDatabase = true,
         bool includeRatings = true,
@@ -76,7 +77,7 @@ public class RecommendationSeederAndTrainer(
     }
 
     private async Task SeedSchedulesIntoRecommendationContext(RecommendationDbContext context,
-        List<User> users)
+        List<DomainUser> users)
     {
         logger.LogInformation("📅 Seeding schedules into recommendation context...");
         var metricsService = GetMetricsService(serviceProvider.CreateScope());
@@ -113,7 +114,7 @@ public class RecommendationSeederAndTrainer(
             schedules.Count, savedCount);
     }
 
-    private List<Schedule> CreateBoundaryTestSchedules(List<User> testUsers)
+    private List<Schedule> CreateBoundaryTestSchedules(List<DomainUser> testUsers)
     {
         var schedules = new List<Schedule>();
         var scheduleTemplates = GetRandomizedSchedules();
@@ -186,12 +187,12 @@ public class RecommendationSeederAndTrainer(
     }
 
 
-    private List<Schedule> CreateRealisticSchedules(List<User> users)
+    private List<Schedule> CreateRealisticSchedules(List<DomainUser> users)
     {
         return users.Select(GenerateRealisticSchedule).ToList();
     }
 
-    private Schedule GenerateRealisticSchedule(User user)
+    private Schedule GenerateRealisticSchedule(DomainUser user)
     {
         var totalHours = GenerateRealisticTotalHours();
         var daysWorked = DistributeHoursAcrossDays(totalHours);
@@ -361,7 +362,7 @@ public class RecommendationSeederAndTrainer(
     /// <summary>
     /// Generate and seed recommendation outputs (ML-generated recommendations)
     /// </summary>
-    private async Task GenerateAndSeedRecommendationOutputs(List<User> users, List<Service> services)
+    private async Task GenerateAndSeedRecommendationOutputs(List<DomainUser> users, List<Service> services)
     {
         logger.LogInformation("🤖 Generating ML recommendation outputs...");
 
@@ -560,7 +561,7 @@ public class RecommendationSeederAndTrainer(
     /// <summary>
     /// Validate input data before seeding
     /// </summary>
-    private void ValidateInputData(List<User> users, List<Service> services)
+    private void ValidateInputData(List<DomainUser> users, List<Service> services)
     {
         if (users == null || users.Count == 0)
         {
@@ -593,7 +594,7 @@ public class RecommendationSeederAndTrainer(
     /// <summary>
     /// Seed base entities (users and services) with proper relationship handling
     /// </summary>
-    private async Task SeedBaseEntities(RecommendationDbContext context, List<User> users, List<Service> services)
+    private async Task SeedBaseEntities(RecommendationDbContext context, List<DomainUser> users, List<Service> services)
     {
         logger.LogInformation("👥 Seeding base entities...");
 
@@ -618,7 +619,7 @@ public class RecommendationSeederAndTrainer(
     /// <summary>
     /// Generate realistic recommendations with proper distribution
     /// </summary>
-    private Task<List<UserRecommendation>> GenerateRecommendations(List<User> users,
+    private Task<List<UserRecommendation>> GenerateRecommendations(List<DomainUser> users,
         List<Service> services,
         bool includeRatings)
     {
@@ -837,19 +838,19 @@ public class RecommendationSeederAndTrainer(
 
         switch (entity)
         {
-            case User user:
+            case DomainUser user:
                 if (user.CreatedAt == default) user.CreatedAt = now.AddDays(-_random.Next(30, 365));
-                if (user.UpdatedAt == default) user.UpdatedAt = now.AddDays(-_random.Next(0, 30));
+                user.UpdatedAt ??= now.AddDays(-_random.Next(0, 30));
                 break;
 
             case Service service:
                 if (service.CreatedAt == default) service.CreatedAt = now.AddDays(-_random.Next(60, 365));
-                if (service.UpdatedAt == default) service.UpdatedAt = now.AddDays(-_random.Next(0, 60));
+                service.UpdatedAt ??= now.AddDays(-_random.Next(0, 60));
                 break;
 
             case Schedule schedule:
                 if (schedule.CreatedAt == default) schedule.CreatedAt = now.AddDays(-_random.Next(30, 365));
-                if (schedule.UpdatedAt == default) schedule.UpdatedAt = now.AddDays(-_random.Next(0, 30));
+                schedule.UpdatedAt ??= now.AddDays(-_random.Next(0, 30));
                 break;
         }
     }

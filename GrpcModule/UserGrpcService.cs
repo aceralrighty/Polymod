@@ -1,20 +1,43 @@
 using Grpc.Core;
-using TBD.AddressModule.Models;
-using TBD.AddressModule.Repositories;
-using TBD.Shared.Events.Interfaces;
+using TBD.Shared.Utils;
 using TBD.UserModule.Repositories;
-using Useraddressservice;
+using Userservice;
+
+// Explicit aliases to avoid any ambiguity
+using DomainUser = TBD.UserModule.Models.User;
+using GrpcUser = Userservice.User;
+using GrpcGetUserResponse = Userservice.GetUserResponse;
+using GrpcGetUserRequest = Userservice.GetUserRequest;
+using GrpcGetUserByEmailRequest = Userservice.GetUserByEmailRequest;
+using GrpcCreateUserResponse = Userservice.CreateUserResponse;
+using GrpcCreateUserRequest = Userservice.CreateUserRequest;
+using GrpcUserExistsRequest = Userservice.UserExistsRequest;
+using GrpcUserExistsResponse = Userservice.UserExistsResponse;
+using GrpcValidateUsersRequest = Userservice.ValidateUsersRequest;
+using GrpcValidateUsersResponse = Userservice.ValidateUsersResponse;
+using GrpcUserValidation = Userservice.UserValidation;
 
 namespace TBD.GrpcModule;
 
-public class UserAddressGrpcService(
-    IUserRepository userRepository,
-    IUserAddressRepository addressRepository,
-    IUserReadService userReadService,
-    ILogger<UserAddressGrpcService> logger)
-    : UserAddressService.UserAddressServiceBase
+/// <summary>
+/// The UserGrpcService class provides gRPC endpoint implementations for user-related operations
+/// such as retrieving user details, validating users, creating new users, and checking user existence.
+/// </summary>
+/// <remarks>
+/// This service is built on top of the UserServiceBase abstract class, which is part of the
+/// gRPC framework provided for user service definitions. The class relies heavily on the IUserRepository
+/// to manage persistence and business logic. Each method in this class handles specific gRPC requests
+/// and invokes corresponding business logic or repository calls.
+/// </remarks>
+/// <example>
+/// This class is typically registered as a gRPC service in the application's DI container.
+/// </example>
+/// <seealso cref="IUserRepository"/>
+/// <seealso cref="UserService.UserServiceBase"/>
+public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcService> logger)
+    : UserService.UserServiceBase
 {
-    public override async Task<GetUserResponse> GetUser(GetUserRequest request, ServerCallContext context)
+    public override async Task<GrpcGetUserResponse> GetUser(GrpcGetUserRequest request, ServerCallContext context)
     {
         try
         {
@@ -23,18 +46,13 @@ public class UserAddressGrpcService(
             if (!Guid.TryParse(request.UserId, out var userId))
             {
                 logger.LogWarning("Invalid GUID format for UserId: {UserId}", request.UserId);
-                return new GetUserResponse { Exists = false };
+                return new GrpcGetUserResponse { Exists = false };
             }
 
-            var user = await userRepository.GetByIdAsync(userId);
-
-            return new GetUserResponse
-            {
-                Exists = true,
-                UserId = user.Id.ToString(), // ✅ Fixed field name to match proto
-                Username = user.Username ?? string.Empty,
-                Email = user.Email ?? string.Empty
-            };
+            var domainUser = await userRepository.GetByIdAsync(userId);
+            return domainUser == null
+                ? new GrpcGetUserResponse { Exists = false }
+                : new GrpcGetUserResponse { Exists = true, User = MapToGrpcUser(domainUser) };
         }
         catch (Exception ex)
         {
@@ -43,28 +61,21 @@ public class UserAddressGrpcService(
         }
     }
 
-    public override async Task<GetUserResponse> GetUserByEmail(GetUserByEmailRequest request, ServerCallContext context)
+    public override async Task<GrpcGetUserResponse> GetUserByEmail(GrpcGetUserByEmailRequest request,
+        ServerCallContext context)
     {
         try
         {
             logger.LogInformation("GetUserByEmail called with Email: {Email}", request.Email);
 
-            var user = await userReadService.GetUserByEmailAsync(request.Email);
-
+            var user = await userRepository.GetByEmailAsync(request.Email);
             if (user != null)
             {
-                return new GetUserResponse
-                {
-                    Exists = true,
-                    UserId = user.Id.ToString(), // ✅ Fixed field name to match proto
-                    Username = user.Username ?? string.Empty,
-                    Email = user.Email
-                };
+                return new GrpcGetUserResponse { Exists = true, User = MapToGrpcUser(user) };
             }
 
             logger.LogInformation("User not found with Email: {Email}", request.Email);
-            return new GetUserResponse { Exists = false };
-
+            return new GrpcGetUserResponse { Exists = false };
         }
         catch (Exception ex)
         {
@@ -73,209 +84,143 @@ public class UserAddressGrpcService(
         }
     }
 
-    public override async Task<GetUserAddressResponse> GetUserAddress(GetUserAddressRequest request, ServerCallContext context)
+    public override async Task<GrpcCreateUserResponse> CreateUser(GrpcCreateUserRequest request,
+        ServerCallContext context)
     {
+        var hashing = new Hasher();
         try
         {
-            logger.LogInformation("GetUserAddress called with AddressId: {AddressId}", request.AddressId);
+            logger.LogInformation("CreateUser called with Email: {Email}", request.Email);
 
-            if (!Guid.TryParse(request.AddressId, out var addressId))
+            // Check if user already exists
+            var existingUser = await userRepository.GetByEmailAsync(request.Email);
+            if (existingUser != null)
             {
-                logger.LogWarning("Invalid GUID format for AddressId: {AddressId}", request.AddressId);
-                return new GetUserAddressResponse { Exists = false };
+                return new GrpcCreateUserResponse { Success = false, Message = "User with this email already exists" };
             }
 
-            var address = await addressRepository.GetByIdAsync(addressId);
-
-            if (address != null)
+            // Create domain user
+            var domainUser = new DomainUser
             {
-                return new GetUserAddressResponse { Exists = true, Address = MapToGrpcResponse(address) };
-            }
+                Username = request.Username ?? string.Empty,
+                Email = request.Email ?? string.Empty,
+                Password = hashing.HashPassword(request.Password)
+            };
 
-            logger.LogInformation("Address not found with Id: {AddressId}", addressId);
-            return new GetUserAddressResponse { Exists = false };
+            var createdUser = await userRepository.CreateAsync(domainUser);
+            logger.LogInformation("User created with Id: {UserId}", createdUser.Id);
 
+            return new GrpcCreateUserResponse
+            {
+                Success = true, Message = "User created successfully", User = MapToGrpcUser(createdUser)
+            };
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in GetUserAddress for AddressId: {AddressId}", request.AddressId);
-            throw new RpcException(new Status(StatusCode.Internal, $"Error retrieving address: {ex.Message}"));
+            logger.LogError(ex, "Error in CreateUser for Email: {Email}", request.Email);
+            // IMPORTANT: Return the gRPC response type (not any DTO)
+            return new GrpcCreateUserResponse { Success = false, Message = $"Error creating user: {ex.Message}" };
         }
     }
 
-    public override async Task<GetUserAddressesResponse> GetUserAddressesByUserId(GetUserAddressesByUserIdRequest request, ServerCallContext context)
+    public override async Task<GrpcUserExistsResponse> UserExists(GrpcUserExistsRequest request,
+        ServerCallContext context)
     {
         try
         {
-            logger.LogInformation("GetUserAddressesByUserId called with UserId: {UserId}", request.UserId);
-
             if (!Guid.TryParse(request.UserId, out var userId))
             {
-                logger.LogWarning("Invalid GUID format for UserId: {UserId}", request.UserId);
-                return new GetUserAddressesResponse();
+                return new GrpcUserExistsResponse { Exists = false };
             }
 
-            var addresses = await addressRepository.GetByUserIdAsync(userId);
-            var response = new GetUserAddressesResponse();
+            var user = await userRepository.GetByIdAsync(userId);
+            var response = new GrpcUserExistsResponse { Exists = user != null };
 
-            var userAddresses = addresses as UserAddress[] ?? addresses.ToArray();
-            if (userAddresses.Any())
+            if (user != null)
             {
-                response.Addresses.AddRange(userAddresses.Select(MapToGrpcResponse));
-                logger.LogInformation("Found {Count} addresses for UserId: {UserId}", userAddresses.Count(), userId);
-            }
-            else
-            {
-                logger.LogInformation("No addresses found for UserId: {UserId}", userId);
+                response.User = MapToGrpcUser(user);
             }
 
             return response;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in GetUserAddressesByUserId for UserId: {UserId}", request.UserId);
-            throw new RpcException(new Status(StatusCode.Internal, $"Error retrieving user addresses: {ex.Message}"));
+            logger.LogError(ex, "Error in UserExists for UserId: {UserId}", request.UserId);
+            return new GrpcUserExistsResponse { Exists = false };
         }
     }
 
-    public override async Task<UserAddressResponse> CreateUserAddress(CreateUserAddressRequest request, ServerCallContext context)
+    public override async Task<GrpcValidateUsersResponse> ValidateUsers(GrpcValidateUsersRequest request,
+        ServerCallContext context)
     {
         try
         {
-            logger.LogInformation("CreateUserAddress called for UserId: {UserId}", request.UserId);
+            var userIds = request.UserIds
+                .Select(id => Guid.TryParse(id, out var guid) ? guid : (Guid?)null)
+                .Where(id => id.HasValue)
+                .Select(id => id!.Value)
+                .ToList();
 
-            if (!Guid.TryParse(request.UserId, out var userId))
+            var existingUsers = await userRepository.GetByIdsAsync(userIds);
+            var validations = new List<GrpcUserValidation>();
+
+            foreach (var requestedId in request.UserIds)
             {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid user ID format"));
-            }
-
-            // Verify user exists
-            var userExists = await userRepository.GetByIdAsync(userId);
-            if (userExists == null)
-            {
-                throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
-            }
-
-            var address = new UserAddress(
-                userId: userId,
-                user: userExists,
-                address1: request.Address1,
-                address2: request.Address2,
-                city: request.City,
-                state: request.State,
-                zipCode: request.ZipCode
-            );
-
-            var createdAddress = await addressRepository.CreateAsync(address);
-            logger.LogInformation("Address created with Id: {AddressId} for UserId: {UserId}", createdAddress.Id, userId);
-
-            return MapToGrpcResponse(createdAddress);
-        }
-        catch (RpcException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error in CreateUserAddress for UserId: {UserId}", request.UserId);
-            throw new RpcException(new Status(StatusCode.Internal, $"Error creating address: {ex.Message}"));
-        }
-    }
-
-    public override async Task<UserAddressResponse> UpdateUserAddress(UpdateUserAddressRequest request, ServerCallContext context)
-    {
-        try
-        {
-            logger.LogInformation("UpdateUserAddress called for AddressId: {AddressId}", request.AddressId);
-
-            if (!Guid.TryParse(request.AddressId, out var addressId))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid address ID format"));
-            }
-
-            if (!Guid.TryParse(request.UserId, out var userId))
-            {
-                throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid user ID format"));
-            }
-
-            var existingAddress = await addressRepository.GetByIdAsync(addressId);
-            if (existingAddress == null)
-            {
-                throw new RpcException(new Status(StatusCode.NotFound, "Address not found"));
-            }
-
-            // Update properties
-            existingAddress.UserId = userId;
-            existingAddress.Address1 = request.Address1;
-            existingAddress.Address2 = request.Address2;
-            existingAddress.City = request.City;
-            existingAddress.State = request.State;
-            existingAddress.ZipCode = request.ZipCode;
-
-            var updatedAddress = await addressRepository.UpdateAsync(existingAddress);
-            logger.LogInformation("Address updated with Id: {AddressId}", addressId);
-
-            return MapToGrpcResponse(updatedAddress);
-        }
-        catch (RpcException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error in UpdateUserAddress for AddressId: {AddressId}", request.AddressId);
-            throw new RpcException(new Status(StatusCode.Internal, $"Error updating address: {ex.Message}"));
-        }
-    }
-
-    public override async Task<DeleteUserAddressResponse> DeleteUserAddress(DeleteUserAddressRequest request, ServerCallContext context)
-    {
-        try
-        {
-            logger.LogInformation("DeleteUserAddress called for AddressId: {AddressId}", request.AddressId);
-
-            if (!Guid.TryParse(request.AddressId, out var addressId))
-            {
-                return new DeleteUserAddressResponse
+                if (!Guid.TryParse(requestedId, out var userId))
                 {
-                    Success = false,
-                    Message = "Invalid address ID format"
-                };
+                    validations.Add(new GrpcUserValidation { UserId = requestedId, Exists = false });
+                    continue;
+                }
+
+                var user = existingUsers.FirstOrDefault(u => u.Id == userId);
+                var validation = new GrpcUserValidation { UserId = requestedId, Exists = user != null };
+
+                if (user != null)
+                {
+                    validation.User = MapToGrpcUser(user);
+                }
+
+                validations.Add(validation);
             }
 
-            var deleted = await addressRepository.DeleteAsync(addressId);
-
-            var response = new DeleteUserAddressResponse
-            {
-                Success = deleted,
-                Message = deleted ? "Address deleted successfully" : "Address not found"
-            };
-
-            logger.LogInformation("Delete operation for AddressId: {AddressId} - Success: {Success}", addressId, deleted);
-            return response;
+            return new GrpcValidateUsersResponse { Validations = { validations } };
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in DeleteUserAddress for AddressId: {AddressId}", request.AddressId);
-            return new DeleteUserAddressResponse
-            {
-                Success = false,
-                Message = $"Error deleting address: {ex.Message}"
-            };
+            logger.LogError(ex, "Error in ValidateUsers");
+            throw new RpcException(new Status(StatusCode.Internal, $"Error validating users: {ex.Message}"));
         }
     }
 
-    private static UserAddressResponse MapToGrpcResponse(UserAddress address)
+    // Domain -> gRPC mapping
+    private static GrpcUser MapToGrpcUser(DomainUser domainUser)
     {
-        return new UserAddressResponse
+        return new GrpcUser
         {
-            Id = address.Id.ToString(),
-            UserId = address.UserId.ToString(),
-            Address1 = address.Address1 ?? string.Empty,
-            Address2 = address.Address2 ?? string.Empty,
-            City = address.City ?? string.Empty,
-            State = address.State ?? string.Empty,
-            ZipCode = address.ZipCode ?? string.Empty
+            Id = domainUser.Id.ToString(),
+            Username = domainUser.Username ?? string.Empty,
+            Email = domainUser.Email ?? string.Empty,
+            CreatedAt = domainUser.CreatedAt.ToString("O"),
+            UpdatedAt = domainUser.UpdatedAt?.ToString("O") ?? string.Empty
+        };
+    }
+
+    // gRPC -> Domain mapping (only use this if you actually need to accept gRPC users into your domain)
+    private static DomainUser MapToDomainUser(GrpcUser grpcUser)
+    {
+        if (grpcUser == null) return null!;
+
+        return new DomainUser
+        {
+            Id = Guid.Parse(grpcUser.Id),
+            Username = grpcUser.Username,
+            Email = grpcUser.Email,
+            CreatedAt = !string.IsNullOrEmpty(grpcUser.CreatedAt)
+                ? DateTime.Parse(grpcUser.CreatedAt)
+                : DateTime.UtcNow,
+            UpdatedAt = !string.IsNullOrEmpty(grpcUser.UpdatedAt)
+                ? DateTime.Parse(grpcUser.UpdatedAt)
+                : null
         };
     }
 }

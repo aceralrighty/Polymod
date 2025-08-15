@@ -9,6 +9,7 @@ using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
+using DomainUser = TBD.UserModule.Models.User;
 
 namespace TBD.UserModule.Seed;
 
@@ -22,7 +23,7 @@ public static class UserSeeder
     /// <param name="serviceProvider">The service provider to resolve dependencies.</param>
     /// <param name="numberOfFakeUsers">The number of fake users to generate. Defaults to 50 if not specified.</param>
     /// <returns>A list of the seeded users.</returns>
-    public static async Task<List<User>> ReseedForTestingAsync(IServiceProvider serviceProvider,
+    public static async Task<List<DomainUser>> ReseedForTestingAsync(IServiceProvider serviceProvider,
         int numberOfFakeUsers = 5000)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.ReseedForTesting");
@@ -154,8 +155,8 @@ public static class UserSeeder
         }
     }
 
-    private static async Task<List<User>> SeedUsersAsync(
-        IGenericRepository<User> userRepository, IMetricsService metricsService, Activity? parentActivity, int count)
+    private static async Task<List<DomainUser>> SeedUsersAsync(
+        IGenericRepository<DomainUser> userRepository, IMetricsService metricsService, Activity? parentActivity, int count)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUsers", ActivityKind.Internal,
             parentActivity?.Context ?? default);
@@ -224,7 +225,7 @@ public static class UserSeeder
     }
 
     private static async Task SeedUserAddressesAsync(
-        IGenericRepository<User> userRepository, IGenericRepository<UserAddress> addressRepository,
+        IGenericRepository<DomainUser> userRepository, IGenericRepository<UserAddress> addressRepository,
         IMetricsService metricsService, Activity? parentActivity, int maxAddressesPerUser = 2)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUserAddressesStreaming",
