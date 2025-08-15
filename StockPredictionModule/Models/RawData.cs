@@ -18,7 +18,7 @@ public class RawData : BaseTableProperties
 
     [NoColumn] public override DateTime CreatedAt { get; set; }
 
-    [NoColumn] public override DateTime UpdatedAt { get; set; }
+    [NoColumn] public override DateTime? UpdatedAt { get; set; }
 
     [NoColumn] public override DateTime? DeletedAt { get; set; }
 }

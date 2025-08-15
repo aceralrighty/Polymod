@@ -4,22 +4,6 @@ namespace TBD.API.DTOs.Users;
 
 public class UserAddressRequest
 {
-    public UserAddressRequest()
-    {
-    }
-
-    public UserAddressRequest(Guid id, Guid userId, string? address1, string? address2, string? city, string? state,
-        string zipCode)
-    {
-        Id = id;
-        UserId = userId;
-        Address1 = address1;
-        Address2 = address2;
-        City = city;
-        State = state;
-        ZipCode = zipCode;
-    }
-
     public Guid Id { get; set; }
 
     [Required] public Guid UserId { get; set; }

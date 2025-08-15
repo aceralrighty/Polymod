@@ -20,7 +20,7 @@ public class StockPrediction : BaseTableProperties
     [DisplayFormat(DataFormatString = "{0:d}")]
     public override DateTime CreatedAt { get; set; }
 
-    [NoColumn] public override DateTime UpdatedAt { get; set; }
+    [NoColumn] public override DateTime? UpdatedAt { get; set; }
 
     [NoColumn] public override DateTime? DeletedAt { get; set; }
 }

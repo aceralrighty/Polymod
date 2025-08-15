@@ -18,14 +18,15 @@ public static class AddressModule
                 maxRetryDelay: TimeSpan.FromSeconds(10),
                 errorNumbersToAdd: null
             )));
-        services.Configure<CacheOptions>("Address", options =>
-        {
-            options.DefaultCacheDuration = TimeSpan.FromMinutes(10);
-            options.GetByIdCacheDuration = TimeSpan.FromMinutes(15);
-            options.GetAllCacheDuration = TimeSpan.FromMinutes(5);
-            options.EnableCaching = true;
-            options.CacheKeyPrefix = "Address";
-        });
+        services.Configure<CacheOptions>("Address",
+            options =>
+            {
+                options.DefaultCacheDuration = TimeSpan.FromMinutes(10);
+                options.GetByIdCacheDuration = TimeSpan.FromMinutes(15);
+                options.GetAllCacheDuration = TimeSpan.FromMinutes(5);
+                options.EnableCaching = true;
+                options.CacheKeyPrefix = "Address";
+            });
         services.AddScoped<IUserAddressRepository, UserAddressRepository>();
         services.AddScoped<IUserAddressService, UserAddressService>();
         services.AddScoped<IGenericRepository<UserAddress>>(serviceProvider =>

@@ -15,6 +15,7 @@ public static class GrpcModule
         });
 
         // Register gRPC service implementations
+        services.AddScoped<UserGrpcService>();
         services.AddScoped<UserAddressGrpcService>();
 
         // Register gRPC client
@@ -26,11 +27,12 @@ public static class GrpcModule
         return services;
     }
 
-    private static readonly string[] ServiceNames = ["UserAddressService", "ScheduleService"];
+    private static readonly string[] ServiceNames = ["UserService", "AddressService"];
 
     public static WebApplication UseGrpcServices(this WebApplication app)
     {
         // Map gRPC services
+        app.MapGrpcService<UserGrpcService>();
         app.MapGrpcService<UserAddressGrpcService>();
 
         // Add gRPC reflection in development

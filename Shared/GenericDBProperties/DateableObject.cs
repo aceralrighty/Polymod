@@ -11,7 +11,7 @@ public abstract class DateableObject
 
     [DisplayName("Update At")]
     [DisplayFormat(DataFormatString = "{0:d}")]
-    public virtual DateTime UpdatedAt { get; set; }
+    public virtual DateTime? UpdatedAt { get; set; }
 
     [DisplayName("Deleted At")]
     [DisplayFormat(DataFormatString = "{0:d}")]

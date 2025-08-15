@@ -21,5 +21,5 @@ public class Stock : BaseTableProperties
 
     [NoColumn] public override Guid Id { get; set; }
     [NoColumn] public override DateTime CreatedAt { get; set; }
-    [NoColumn] public override DateTime UpdatedAt { get; set; }
+    [NoColumn] public override DateTime? UpdatedAt { get; set; }
 }
