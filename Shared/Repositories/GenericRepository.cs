@@ -127,7 +127,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
         // Get total count and ID range
         var countSql = $"SELECT COUNT(*), MIN(Id), MAX(Id) FROM {tableName}";
-        var (totalCount, minId, maxId) = await _dbConnection.QuerySingleAsync<(int, Guid, Guid)>(countSql);
+        var (totalCount, _, _) = await _dbConnection.QuerySingleAsync<(int, Guid, Guid)>(countSql);
 
         Console.WriteLine($"📊 Processing {totalCount:N0} records across {partitionCount} partitions");
 
@@ -271,7 +271,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Existing methods remain unchanged...
-    public virtual async Task<T> GetByIdAsync(Guid id)
+    public virtual async Task<T?> GetByIdAsync(Guid id)
     {
         if (_dbConnection.State != ConnectionState.Open)
             await ((DbConnection)_dbConnection).OpenAsync();
