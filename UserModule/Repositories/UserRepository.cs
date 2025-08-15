@@ -5,11 +5,15 @@ using TBD.UserModule.Models;
 
 namespace TBD.UserModule.Repositories;
 
+/// <summary>
+/// Repository class for handling persistence operations related to the <see cref="User"/> entity.
+/// This repository provides methods for performing CRUD operations and custom queries specific to the User domain.
+/// </summary>
 internal class UserRepository(UserDbContext context) : GenericRepository<User>(context), IUserRepository
 {
-    public override async Task<User> GetByIdAsync(Guid id)
+    public override async Task<User?> GetByIdAsync(Guid id)
     {
-        return await DbSet.FirstOrDefaultAsync(u => u.Id == id);
+        return await DbSet.FirstOrDefaultAsync(u => u.Id == id) ?? throw new KeyNotFoundException("User not found");
     }
 
 

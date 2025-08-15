@@ -17,6 +17,15 @@ using GrpcDeleteAddressResponse = Addressservice.DeleteAddressResponse;
 
 namespace TBD.GrpcModule;
 
+/// <summary>
+/// UserAddressGrpcService provides gRPC endpoints for managing user address data.
+/// This service interacts with the user and address repositories to execute various address-related operations.
+/// </summary>
+/// <remarks>
+/// The service is designed to handle tasks such as retrieving a specific address, retrieving all addresses for a user,
+/// creating a new address, updating an existing address, and deleting an address. It extends the base functionality
+/// of AddressServiceBase provided by the gRPC Address Service.
+/// </remarks>
 public class UserAddressGrpcService(
     IUserRepository userRepository,
     IUserAddressRepository addressRepository,
@@ -67,10 +76,11 @@ public class UserAddressGrpcService(
             }
 
             var addresses = await addressRepository.GetByUserIdAsync(userId);
-            var response = new GrpcGetUserAddressesResponse { TotalCount = addresses.Count() };
+            var userAddresses = addresses as UserAddress[] ?? addresses.ToArray();
+            var response = new GrpcGetUserAddressesResponse { TotalCount = userAddresses.Length };
 
-            response.Addresses.AddRange(addresses.Select(MapToGrpcAddress));
-            logger.LogInformation("Found {Count} addresses for UserId: {UserId}", addresses.Count(), userId);
+            response.Addresses.AddRange(userAddresses.Select(MapToGrpcAddress));
+            logger.LogInformation("Found {Count} addresses for UserId: {UserId}", userAddresses.Length, userId);
 
             return response;
         }

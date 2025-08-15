@@ -2,6 +2,9 @@ using TBD.GrpcModule.Interfaces;
 
 namespace TBD.GrpcModule;
 
+/// <summary>
+/// Provides extensions for registering and configuring gRPC services in an application.
+/// </summary>
 public static class GrpcModule
 {
     public static IServiceCollection AddGrpcServices(this IServiceCollection services, IConfiguration configuration)

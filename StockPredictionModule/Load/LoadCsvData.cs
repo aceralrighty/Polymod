@@ -7,6 +7,9 @@ using TBD.StockPredictionModule.Models;
 
 namespace TBD.StockPredictionModule.Load;
 
+/// <summary>
+/// Provides functionality for loading and processing CSV data for use in stock prediction modules.
+/// </summary>
 public class LoadCsvData
 {
     private static CsvConfiguration GetCsvConfiguration()
@@ -59,6 +62,16 @@ public class LoadCsvData
         }
     }
 
+    /// Loads raw data from a CSV file in batches asynchronously.
+    /// <param name="filePath">
+    /// The path to the CSV file from which raw data will be loaded.
+    /// </param>
+    /// <param name="batchSize">
+    /// The maximum number of records to include in each batch. Defaults to 1000.
+    /// </param>
+    /// <returns>
+    /// An asynchronous enumerable sequence of batches, where each batch is a list of <see cref="RawData"/> objects.
+    /// </returns>
     public static async IAsyncEnumerable<List<RawData>> LoadRawDataBatchedAsync(string filePath, int batchSize = 1000)
     {
         using var reader = CreateStreamReader(filePath);

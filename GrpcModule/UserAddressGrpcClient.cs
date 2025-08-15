@@ -8,6 +8,9 @@ using UserAddressResponse = TBD.API.DTOs.Users.UserAddressResponse;
 
 namespace TBD.GrpcModule;
 
+/// <summary>
+/// Represents a gRPC client implementation for managing user and address-related operations.
+/// </summary>
 public class UserAddressGrpcClient : IUserAddressGrpcClient, IDisposable
 {
     private readonly GrpcChannel _addressChannel;

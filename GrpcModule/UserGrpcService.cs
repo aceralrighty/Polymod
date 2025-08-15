@@ -19,6 +19,21 @@ using GrpcUserValidation = Userservice.UserValidation;
 
 namespace TBD.GrpcModule;
 
+/// <summary>
+/// The UserGrpcService class provides gRPC endpoint implementations for user-related operations
+/// such as retrieving user details, validating users, creating new users, and checking user existence.
+/// </summary>
+/// <remarks>
+/// This service is built on top of the UserServiceBase abstract class, which is part of the
+/// gRPC framework provided for user service definitions. The class relies heavily on the IUserRepository
+/// to manage persistence and business logic. Each method in this class handles specific gRPC requests
+/// and invokes corresponding business logic or repository calls.
+/// </remarks>
+/// <example>
+/// This class is typically registered as a gRPC service in the application's DI container.
+/// </example>
+/// <seealso cref="IUserRepository"/>
+/// <seealso cref="UserService.UserServiceBase"/>
 public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcService> logger)
     : UserService.UserServiceBase
 {
@@ -35,16 +50,9 @@ public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcSer
             }
 
             var domainUser = await userRepository.GetByIdAsync(userId);
-            if (domainUser == null)
-            {
-                return new GrpcGetUserResponse { Exists = false };
-            }
-
-            return new GrpcGetUserResponse
-            {
-                Exists = true,
-                User = MapToGrpcUser(domainUser)
-            };
+            return domainUser == null
+                ? new GrpcGetUserResponse { Exists = false }
+                : new GrpcGetUserResponse { Exists = true, User = MapToGrpcUser(domainUser) };
         }
         catch (Exception ex)
         {
@@ -53,7 +61,8 @@ public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcSer
         }
     }
 
-    public override async Task<GrpcGetUserResponse> GetUserByEmail(GrpcGetUserByEmailRequest request, ServerCallContext context)
+    public override async Task<GrpcGetUserResponse> GetUserByEmail(GrpcGetUserByEmailRequest request,
+        ServerCallContext context)
     {
         try
         {
@@ -75,7 +84,8 @@ public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcSer
         }
     }
 
-    public override async Task<GrpcCreateUserResponse> CreateUser(GrpcCreateUserRequest request, ServerCallContext context)
+    public override async Task<GrpcCreateUserResponse> CreateUser(GrpcCreateUserRequest request,
+        ServerCallContext context)
     {
         var hashing = new Hasher();
         try
@@ -86,11 +96,7 @@ public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcSer
             var existingUser = await userRepository.GetByEmailAsync(request.Email);
             if (existingUser != null)
             {
-                return new GrpcCreateUserResponse
-                {
-                    Success = false,
-                    Message = "User with this email already exists"
-                };
+                return new GrpcCreateUserResponse { Success = false, Message = "User with this email already exists" };
             }
 
             // Create domain user
@@ -106,24 +112,19 @@ public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcSer
 
             return new GrpcCreateUserResponse
             {
-                Success = true,
-                Message = "User created successfully",
-                User = MapToGrpcUser(createdUser)
+                Success = true, Message = "User created successfully", User = MapToGrpcUser(createdUser)
             };
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error in CreateUser for Email: {Email}", request.Email);
             // IMPORTANT: Return the gRPC response type (not any DTO)
-            return new GrpcCreateUserResponse
-            {
-                Success = false,
-                Message = $"Error creating user: {ex.Message}"
-            };
+            return new GrpcCreateUserResponse { Success = false, Message = $"Error creating user: {ex.Message}" };
         }
     }
 
-    public override async Task<GrpcUserExistsResponse> UserExists(GrpcUserExistsRequest request, ServerCallContext context)
+    public override async Task<GrpcUserExistsResponse> UserExists(GrpcUserExistsRequest request,
+        ServerCallContext context)
     {
         try
         {
@@ -149,7 +150,8 @@ public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcSer
         }
     }
 
-    public override async Task<GrpcValidateUsersResponse> ValidateUsers(GrpcValidateUsersRequest request, ServerCallContext context)
+    public override async Task<GrpcValidateUsersResponse> ValidateUsers(GrpcValidateUsersRequest request,
+        ServerCallContext context)
     {
         try
         {
