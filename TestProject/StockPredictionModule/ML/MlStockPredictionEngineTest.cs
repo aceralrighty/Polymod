@@ -245,8 +245,7 @@ public class MlStockPredictionEngineTest
 
         // Assert
         cleanedData.Should().HaveCount(2);
-        cleanedData.All(d => !string.IsNullOrEmpty(d.Symbol) &&
-                             d is { Close: > 0, High: > 0, Low: > 0 } &&
-                             d.Volume > 0).Should().BeTrue();
+        cleanedData.All(r => !string.IsNullOrEmpty(r.Symbol) && r is { Close: > 0, High: > 0, Low: > 0, Volume: > 0 })
+            .Should().BeTrue();
     }
 }
