@@ -172,6 +172,8 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Memory-mapped approach for extremely large datasets
     public virtual async Task<List<T>> GetAllMemoryMappedAsync()
     {
+        const int gcCleaner = 50_000;
+        const int progressCheck = 10_000;
         if (_dbConnection.State != ConnectionState.Open)
             await ((DbConnection)_dbConnection).OpenAsync();
 
@@ -184,7 +186,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         var processed = 0;
 
         await using var command = new SqlCommand(sql, (SqlConnection)_dbConnection);
-        command.CommandTimeout = 300; // 5 minutes timeout
+        command.CommandTimeout = 300; // 5-minute timeout
 
         await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
         var properties = GetMappedProperties();
@@ -195,18 +197,14 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             results.Add(entity);
             processed++;
 
-            if (processed % 10000 != 0)
-            {
-                continue;
-            }
+            if (!IsMultipleOf(processed, progressCheck)) continue;
+
 
             Console.WriteLine($"📈 Processed {processed:N0} records");
 
+
             // Force garbage collection periodically to manage memory
-            if (processed % 50000 != 0)
-            {
-                continue;
-            }
+            if (!IsMultipleOf(processed, gcCleaner)) continue;
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -215,6 +213,9 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         Console.WriteLine($"✅ Total processed: {processed:N0} records");
         return results;
     }
+
+    // Helper method to check if a number is a multiple of another number
+    private static bool IsMultipleOf(int processed, int factor) => factor != 0 && processed % factor == 0;
 
 
     // Helper method to get mapped properties
@@ -258,7 +259,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Enhanced method with configurable options
-    public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions options = null)
+    public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions? options = null)
     {
         return options.Strategy switch
         {
@@ -342,7 +343,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         await sqlBulk.WriteToServerAsync(table);
     }
 
-    private DataTable ToDataTable(IEnumerable<T> data)
+    private static DataTable ToDataTable(IEnumerable<T> data)
     {
         var table = new DataTable();
         var props = typeof(T).GetProperties()
