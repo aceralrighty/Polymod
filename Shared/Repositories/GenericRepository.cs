@@ -47,7 +47,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             return await DbSet.ToListAsync();
 
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} WITH (NOLOCK)";
@@ -63,7 +63,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             return await DbSet.ToListAsync();
 
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
         var allResults = new List<T>();
@@ -116,7 +116,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         }
 
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} ORDER BY Id";
@@ -155,7 +155,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             return await DbSet.ToListAsync();
 
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
 
@@ -212,7 +212,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         const int gcCleaner = 50_000;
         const int progressCheck = 10_000;
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
 
@@ -327,7 +327,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         if (EnsureRelational() && _dbConnection is not null)
         {
             if (_dbConnection.State != ConnectionState.Open)
-                await ((DbConnection)_dbConnection).OpenAsync();
+                await _dbConnection.OpenAsync();
 
             var tableName = GetTableName();
             var sql = $"SELECT * FROM {tableName} WHERE Id = @Id";
@@ -391,7 +391,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         }
 
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         using var sqlBulk = new SqlBulkCopy((SqlConnection)_dbConnection, SqlBulkCopyOptions.Default, null);
         sqlBulk.DestinationTableName = tableName;
