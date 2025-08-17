@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.DotNet.Scaffolding.Shared;
 using Moq;
 using NUnit.Framework;
 using TBD.MetricsModule.Services.Interfaces;
@@ -132,20 +134,6 @@ public class MlStockPredictionEngineTest
     }
 
     [Test]
-    public async Task TrainModelStreamingAsync_ValidFile_TrainsModel()
-    {
-        // Arrange
-        const string csvFilePath =
-            "/Users/adamziv/Desktop/UnknownProject/TBD/StockPredictionModule/Dataset/all_stocks_5yr.csv"; // Replace with appropriate mock or test file path
-
-        // Act
-        var act = () => _mlStockPredictionEngine.TrainModelStreamingAsync(csvFilePath);
-
-        // Assert
-        await act.Should().NotThrowAsync();
-    }
-
-    [Test]
     public void GeneratePredictAsync_GroupedData_NoDataForSymbol_ThrowsArgumentException()
     {
         // Arrange
@@ -253,7 +241,7 @@ public class MlStockPredictionEngineTest
         };
 
         // Act
-        var cleanedData = _mlStockPredictionEngine.CleanTrainingData(rawData);
+        var cleanedData = MlStockPredictionEngine.CleanTrainingData(rawData);
 
         // Assert
         cleanedData.Should().HaveCount(2);

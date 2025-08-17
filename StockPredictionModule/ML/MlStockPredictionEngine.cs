@@ -229,6 +229,7 @@ internal class MlStockPredictionEngine : IMlStockPredictionEngine
 
 
     // NEW: Streaming training method
+    // NEW: Streaming training method
     public async Task TrainModelStreamingAsync(string csvFilePath)
     {
         Console.WriteLine("🧠 Training model with streaming data...");
@@ -253,6 +254,12 @@ internal class MlStockPredictionEngine : IMlStockPredictionEngine
             Console.WriteLine($"Reached training limit of {maxTrainingRecords:N0} records");
             trainingData = trainingData.Take(maxTrainingRecords).ToList();
             break;
+        }
+
+        // Ensure we have some data to train with
+        if (trainingData.Count == 0)
+        {
+            throw new InvalidOperationException("No training data loaded from CSV file");
         }
 
         Console.WriteLine($"Training model with {trainingData.Count:N0} records...");
@@ -378,7 +385,7 @@ internal class MlStockPredictionEngine : IMlStockPredictionEngine
     }
 
 
-    public List<RawData> CleanTrainingData(List<RawData> rawData)
+    public static List<RawData> CleanTrainingData(List<RawData> rawData)
     {
         var initialCount = rawData.Count;
 
