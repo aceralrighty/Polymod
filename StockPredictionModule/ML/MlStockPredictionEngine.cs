@@ -263,54 +263,6 @@ internal class MlStockPredictionEngine : IMlStockPredictionEngine
         GC.Collect();
     }
 
-    // Original GeneratePredictAsync method
-    // public Task<StockPrediction> GeneratePredictAsync(List<RawData> rawData, string symbol)
-    // {
-    //     var stopwatch = Stopwatch.StartNew();
-    //
-    //     // Use static counter for high-frequency metric
-    //     PredictionAttempts.Add(1);
-    //
-    //     try
-    //     {
-    //         if (string.IsNullOrWhiteSpace(symbol))
-    //         {
-    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //             throw new ArgumentException("Symbol is required", nameof(symbol));
-    //         }
-    //
-    //         if (_predictionEngine == null)
-    //         {
-    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //             throw new InvalidOperationException("Model must be trained before predictions");
-    //         }
-    //
-    //         var ordered = rawData
-    //             .Where(r => r.Symbol == symbol && r.Close > 0)
-    //             .OrderBy(r => DateTime.Parse(r.Date))
-    //             .ToList();
-    //
-    //         if (ordered.Count < 11)
-    //         {
-    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //             throw new InvalidOperationException("Not enough data for feature generation");
-    //         }
-    //
-    //         return Task.FromResult(GeneratePredictionFromData(ordered, symbol));
-    //     }
-    //     catch (Exception)
-    //     {
-    //         _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //         throw;
-    //     }
-    //     finally
-    //     {
-    //         stopwatch.Stop();
-    //         // Use static histogram for high-frequency metric
-    //         PredictionDuration.Record(stopwatch.Elapsed.TotalSeconds,
-    //             new KeyValuePair<string, object?>("symbol", symbol));
-    //     }
-    // }
 
     // NEW: Generate prediction from grouped data
     public async Task<StockPrediction> GeneratePredictAsync(Dictionary<string, List<RawData>> groupedData,
