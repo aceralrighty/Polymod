@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.ML;
+using Microsoft.ML.Transforms;
 using TBD.MetricsModule.OpenTelemetry.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.StockPredictionModule.Load;
@@ -18,7 +19,7 @@ namespace TBD.StockPredictionModule.ML;
 /// and preparing training data for the model. It interacts with a metrics service to track
 /// model training and prediction activities.
 /// </summary>
-public class MlStockPredictionEngine : IMlStockPredictionEngine
+internal class MlStockPredictionEngine : IMlStockPredictionEngine
 {
     private static readonly MLContext MlContext = new(seed: 0);
     private ITransformer? _model;
@@ -60,7 +61,7 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
 
         try
         {
-            if (rawData == null || rawData.Count == 0)
+            if (rawData.Count == 0)
             {
                 _metricsService.IncrementCounter("stock.train_model_failures_total");
                 _metricsService.RecordHistogram("model is trained", stopwatch.ElapsedMilliseconds);
@@ -89,8 +90,20 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
 
             Console.WriteLine($"Generated {features.Count} training feature rows");
 
+            // NEW: Validate and clean features before training
+            var validFeatures = ValidateAndCleanFeatures(features);
+
+            if (validFeatures.Count == 0)
+            {
+                _metricsService.IncrementCounter("stock.train_model_failures_total");
+                throw new InvalidOperationException(
+                    "All instances skipped due to missing features. No valid feature vectors after feature engineering.");
+            }
+
+            Console.WriteLine($"Valid features after cleaning: {validFeatures.Count}");
+
             var trainTestSplit =
-                MlContext.Data.TrainTestSplit(MlContext.Data.LoadFromEnumerable(features), testFraction: 0.2);
+                MlContext.Data.TrainTestSplit(MlContext.Data.LoadFromEnumerable(validFeatures), testFraction: 0.2);
 
             var pipeline = MlContext.Transforms.Concatenate("Features",
                     nameof(StockFeatureVector.Open),
@@ -103,6 +116,9 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
                     nameof(StockFeatureVector.Volatility5),
                     nameof(StockFeatureVector.Return1D))
                 .Append(MlContext.Transforms.NormalizeMinMax("Features"))
+                // NEW: Add missing value replacement transform
+                .Append(MlContext.Transforms.ReplaceMissingValues("Features",
+                    replacementMode: MissingValueReplacingEstimator.ReplacementMode.Mean))
                 .Append(MlContext.Regression.Trainers.FastTree(
                     labelColumnName: nameof(StockFeatureVector.NextClose),
                     featureColumnName: "Features"));
@@ -141,7 +157,76 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
         }
     }
 
-    // NEW: Streaming training method
+    // NEW: Add feature validation method
+    private static List<StockFeatureVector> ValidateAndCleanFeatures(List<StockFeatureVector> features)
+    {
+        var validFeatures = new List<StockFeatureVector>();
+        var invalidCount = 0;
+
+        foreach (var feature in features)
+        {
+            // More lenient validation - clean invalid values instead of removing entire records
+            if (CleanAndValidateFeature(feature, out var cleanedFeature))
+            {
+                validFeatures.Add(cleanedFeature);
+            }
+            else
+            {
+                invalidCount++;
+            }
+        }
+
+        Console.WriteLine($"Feature validation: {validFeatures.Count} valid, {invalidCount} invalid features");
+        return validFeatures;
+    }
+
+    // NEW: More lenient feature cleaning that fixes invalid values instead of discarding records
+    private static bool CleanAndValidateFeature(StockFeatureVector feature, out StockFeatureVector cleanedFeature)
+    {
+        cleanedFeature = new StockFeatureVector
+        {
+            Open = CleanFloatValue(feature.Open, feature.Close),
+            High = CleanFloatValue(feature.High, feature.Close),
+            Low = CleanFloatValue(feature.Low, feature.Close),
+            Close = CleanFloatValue(feature.Close, 100.0f), // fallback to reasonable default
+            Volume = CleanFloatValue(feature.Volume, 1000.0f),
+            MA5 = CleanFloatValue(feature.MA5, feature.Close),
+            MA10 = CleanFloatValue(feature.MA10, feature.Close),
+            Volatility5 = CleanFloatValue(feature.Volatility5, 0.01f), // small default volatility
+            Return1D = CleanFloatValue(feature.Return1D, 0.0f), // zero return as default
+            NextClose = CleanFloatValue(feature.NextClose, feature.Close)
+        };
+
+        // Only reject if core price data is completely invalid
+        if (cleanedFeature.Close <= 0 || cleanedFeature.NextClose <= 0)
+        {
+            return false;
+        }
+
+        // Ensure High >= Low with reasonable bounds
+        if (cleanedFeature.High < cleanedFeature.Low)
+        {
+            (cleanedFeature.High, cleanedFeature.Low) = (cleanedFeature.Low, cleanedFeature.High);
+        }
+
+        // Ensure High and Low are reasonable relative to Close
+        cleanedFeature.High = Math.Max(cleanedFeature.High, cleanedFeature.Close);
+        cleanedFeature.Low = Math.Min(cleanedFeature.Low, cleanedFeature.Close);
+
+        return true;
+    }
+
+    // Helper method to clean individual float values
+    private static float CleanFloatValue(float value, float fallback)
+    {
+        if (float.IsNaN(value) || float.IsInfinity(value) || value <= 0)
+        {
+            return fallback;
+        }
+
+        return value;
+    }
+
     public async Task TrainModelStreamingAsync(string csvFilePath)
     {
         Console.WriteLine("🧠 Training model with streaming data...");
@@ -168,6 +253,12 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
             break;
         }
 
+        // Ensure we have some data to train with
+        if (trainingData.Count == 0)
+        {
+            throw new InvalidOperationException("No training data loaded from CSV file");
+        }
+
         Console.WriteLine($"Training model with {trainingData.Count:N0} records...");
         await TrainModelAsync(trainingData);
 
@@ -176,54 +267,6 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
         GC.Collect();
     }
 
-    // Original GeneratePredictAsync method
-    // public Task<StockPrediction> GeneratePredictAsync(List<RawData> rawData, string symbol)
-    // {
-    //     var stopwatch = Stopwatch.StartNew();
-    //
-    //     // Use static counter for high-frequency metric
-    //     PredictionAttempts.Add(1);
-    //
-    //     try
-    //     {
-    //         if (string.IsNullOrWhiteSpace(symbol))
-    //         {
-    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //             throw new ArgumentException("Symbol is required", nameof(symbol));
-    //         }
-    //
-    //         if (_predictionEngine == null)
-    //         {
-    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //             throw new InvalidOperationException("Model must be trained before predictions");
-    //         }
-    //
-    //         var ordered = rawData
-    //             .Where(r => r.Symbol == symbol && r.Close > 0)
-    //             .OrderBy(r => DateTime.Parse(r.Date))
-    //             .ToList();
-    //
-    //         if (ordered.Count < 11)
-    //         {
-    //             _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //             throw new InvalidOperationException("Not enough data for feature generation");
-    //         }
-    //
-    //         return Task.FromResult(GeneratePredictionFromData(ordered, symbol));
-    //     }
-    //     catch (Exception)
-    //     {
-    //         _metricsService.IncrementCounter("stock.prediction_failures_total");
-    //         throw;
-    //     }
-    //     finally
-    //     {
-    //         stopwatch.Stop();
-    //         // Use static histogram for high-frequency metric
-    //         PredictionDuration.Record(stopwatch.Elapsed.TotalSeconds,
-    //             new KeyValuePair<string, object?>("symbol", symbol));
-    //     }
-    // }
 
     // NEW: Generate prediction from grouped data
     public async Task<StockPrediction> GeneratePredictAsync(Dictionary<string, List<RawData>> groupedData,
@@ -338,17 +381,57 @@ public class MlStockPredictionEngine : IMlStockPredictionEngine
         return result;
     }
 
-    public List<RawData> CleanTrainingData(List<RawData> rawData)
+
+    public static List<RawData> CleanTrainingData(List<RawData> rawData)
     {
-        return rawData.Where(r =>
+        var initialCount = rawData.Count;
+
+        // Normalize first: impute missing Open and ensure High/Low are consistent with Open/Close
+        var normalized = rawData
+            .Where(r => !string.IsNullOrEmpty(r.Symbol) && DateTime.TryParse(r.Date, out _))
+            .Select(r =>
+            {
+                var open = r.Open > 0 ? r.Open : (r.Close > 0 ? r.Close : 1.0f); // fallback to 1.0 if both invalid
+                var close = r.Close > 0 ? r.Close : open;
+                var high = r.High;
+                var low = r.Low;
+                var volume = r.Volume > 0 ? r.Volume : 1000; // fallback volume
+
+                // Ensure High/ Low-bound Open/Close if we have reasonable prices
+                var maxOc = Math.Max(open, close);
+                var minOc = Math.Min(open, close);
+
+                if (high <= 0 || high < maxOc) high = maxOc;
+                if (low <= 0 || low > minOc) low = minOc;
+
+                return new RawData
+                {
+                    Symbol = r.Symbol,
+                    Open = open,
+                    High = high,
+                    Low = low,
+                    Close = close,
+                    Volume = volume,
+                    Date = r.Date
+                };
+            })
+            .ToList();
+
+        // Apply less strict validation - keep more data for training
+        var cleaned = normalized.Where(r =>
             r is { Open: > 0, High: > 0, Low: > 0, Close: > 0, Volume: > 0 } &&
             r.High >= r.Low &&
-            r.High >= r.Open &&
-            r.High >= r.Close &&
-            r.Low <= r.Open &&
-            r.Low <= r.Close &&
+            r.High >= Math.Min(r.Open, r.Close) &&
+            r.Low <= Math.Max(r.Open, r.Close) &&
             !string.IsNullOrEmpty(r.Symbol) &&
             DateTime.TryParse(r.Date, out _)
         ).ToList();
+
+        var finalCount = cleaned.Count;
+        var retentionRate = initialCount > 0 ? (double)finalCount / initialCount * 100 : 0;
+
+        Console.WriteLine($"Data cleaning: {initialCount} → {finalCount} records ({retentionRate:F1}% retained)");
+
+        return cleaned;
     }
 }

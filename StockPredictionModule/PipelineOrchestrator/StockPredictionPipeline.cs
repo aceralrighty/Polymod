@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using TBD.MetricsModule.Services.Interfaces;
 using TBD.MetricsModule.OpenTelemetry.Services;
+using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.EntityMappers;
 using TBD.StockPredictionModule.Load;
-using TBD.StockPredictionModule.ML;
+using TBD.StockPredictionModule.ML.Interface;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.PipelineOrchestrator.Interface;
@@ -15,7 +15,7 @@ namespace TBD.StockPredictionModule.PipelineOrchestrator;
 public class StockPredictionPipeline : IStockPredictionPipeline
 {
     private readonly StockEntityMapper _entityMapper;
-    private readonly MlStockPredictionEngine _mlEngine;
+    private readonly IMlStockPredictionEngine _mlEngine;
     private readonly IStockPredictionRepository _stockPredictionRepository;
     private readonly IStockRepository _stockRepository;
     private readonly IMetricsService _metricsService;
@@ -38,7 +38,7 @@ public class StockPredictionPipeline : IStockPredictionPipeline
 
     public StockPredictionPipeline(
         StockEntityMapper entityMapper,
-        MlStockPredictionEngine mlEngine,
+        IMlStockPredictionEngine mlEngine,
         IStockPredictionRepository stockPredictionRepository,
         IStockRepository stockRepository,
         IMetricsServiceFactory metricsServiceFactory)
@@ -129,7 +129,6 @@ public class StockPredictionPipeline : IStockPredictionPipeline
             // Train model using a streaming approach instead of loading all data
             await _mlEngine.TrainModelStreamingAsync(csvFilePath);
             trainStopwatch.Stop();
-
             _openTelemetryMetrics?.RecordHistogram("stock.pipeline_model_training_duration_seconds",
                 trainStopwatch.Elapsed.TotalSeconds);
             _metricsService.IncrementCounter("stock.pipeline_model_training_completed_total");

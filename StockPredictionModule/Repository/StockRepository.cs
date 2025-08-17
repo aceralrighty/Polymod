@@ -35,7 +35,7 @@ public class StockRepository(StockDbContext context) : GenericRepository<RawData
             PreserveInsertOrder = false,
             SetOutputIdentity = false,
             BulkCopyTimeout = 0,
-            BatchSize = 1000,
+            BatchSize = 10000,
             UseTempDB = true,
             PropertiesToInclude =
             [
@@ -59,7 +59,7 @@ public class StockRepository(StockDbContext context) : GenericRepository<RawData
 
         await strategy.ExecuteAsync(async () =>
         {
-            const int chunkSize = 1000;
+            const int chunkSize = 10000;
             var totalSaved = 0;
 
             for (var i = 0; i < stocks.Count; i += chunkSize)

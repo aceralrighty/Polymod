@@ -15,7 +15,24 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 {
     protected readonly DbContext Context = context;
     protected readonly DbSet<T> DbSet = context.Set<T>();
-    private readonly IDbConnection _dbConnection = context.Database.GetDbConnection();
+
+    // Avoid accessing relational APIs unless the provider is relational
+    private bool? _isRelational;
+    private DbConnection? _dbConnection;
+
+    private bool EnsureRelational()
+    {
+        if (_isRelational.HasValue)
+            return _isRelational.Value;
+
+        var rel = Context.Database.IsRelational();
+        _isRelational = rel;
+        if (rel)
+        {
+            _dbConnection = Context.Database.GetDbConnection();
+        }
+        return rel;
+    }
 
     // Original method (kept for compatibility)
     public virtual async Task<IEnumerable<T>> GetAllAsync()
@@ -26,8 +43,11 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // High-performance method using raw SQL with Dapper
     public virtual async Task<List<T>> GetAllOptimizedAsync()
     {
+        if (!EnsureRelational() || _dbConnection is null)
+            return await DbSet.ToListAsync();
+
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} WITH (NOLOCK)";
@@ -39,8 +59,11 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Chunked/Batched approach for very large datasets
     public virtual async Task<List<T>> GetAllChunkedAsync(int chunkSize = 10000)
     {
+        if (!EnsureRelational() || _dbConnection is null)
+            return await DbSet.ToListAsync();
+
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
         var allResults = new List<T>();
@@ -84,8 +107,16 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Streaming approach for memory-efficient processing
     public virtual async IAsyncEnumerable<T> GetAllStreamingAsync(int bufferSize = 5000)
     {
+        if (!EnsureRelational() || _dbConnection is null)
+        {
+            var list = await DbSet.ToListAsync();
+            foreach (var item in list)
+                yield return item;
+            yield break;
+        }
+
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} ORDER BY Id";
@@ -120,8 +151,11 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Parallel processing approach for very large datasets
     public virtual async Task<List<T>> GetAllParallelAsync(int partitionCount = 4)
     {
+        if (!EnsureRelational() || _dbConnection is null)
+            return await DbSet.ToListAsync();
+
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
 
@@ -172,8 +206,13 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Memory-mapped approach for extremely large datasets
     public virtual async Task<List<T>> GetAllMemoryMappedAsync()
     {
+        if (!EnsureRelational() || _dbConnection is null)
+            return await DbSet.ToListAsync();
+
+        const int gcCleaner = 50_000;
+        const int progressCheck = 10_000;
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         var tableName = GetTableName();
 
@@ -184,7 +223,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         var processed = 0;
 
         await using var command = new SqlCommand(sql, (SqlConnection)_dbConnection);
-        command.CommandTimeout = 300; // 5 minutes timeout
+        command.CommandTimeout = 300; // 5-minute timeout
 
         await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
         var properties = GetMappedProperties();
@@ -195,18 +234,12 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             results.Add(entity);
             processed++;
 
-            if (processed % 10000 != 0)
-            {
-                continue;
-            }
+            if (!IsMultipleOf(processed, progressCheck)) continue;
 
             Console.WriteLine($"📈 Processed {processed:N0} records");
 
             // Force garbage collection periodically to manage memory
-            if (processed % 50000 != 0)
-            {
-                continue;
-            }
+            if (!IsMultipleOf(processed, gcCleaner)) continue;
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -216,9 +249,11 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         return results;
     }
 
+    // Helper method to check if a number is a multiple of another number
+    private static bool IsMultipleOf(int processed, int factor) => factor != 0 && processed % factor == 0;
 
     // Helper method to get mapped properties
-    private PropertyInfo[] GetMappedProperties()
+    private static PropertyInfo[] GetMappedProperties()
     {
         return typeof(T).GetProperties()
             .Where(p => p.CanWrite &&
@@ -258,28 +293,51 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Enhanced method with configurable options
-    public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions options = null)
+    public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions? options = null)
     {
-        return options.Strategy switch
+        if (!EnsureRelational() || _dbConnection is null)
         {
-            QueryStrategy.Standard => await GetAllOptimizedAsync(),
-            QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize),
-            QueryStrategy.Parallel => await GetAllParallelAsync(options.ParallelPartitions),
-            QueryStrategy.MemoryMapped => await GetAllMemoryMappedAsync(),
-            _ => await GetAllOptimizedAsync()
-        };
+            // Provider-agnostic fallbacks by strategy
+            if (options is null) return await DbSet.ToListAsync();
+            return options.Strategy switch
+            {
+                QueryStrategy.Standard => await DbSet.ToListAsync(),
+                QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
+                QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
+                QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
+                _ => await DbSet.ToListAsync()
+            };
+        }
+
+        return options is null
+            ? await GetAllOptimizedAsync()
+            : options.Strategy switch
+            {
+                QueryStrategy.Standard => await GetAllOptimizedAsync(),
+                QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize),
+                QueryStrategy.Parallel => await GetAllParallelAsync(options.ParallelPartitions),
+                QueryStrategy.MemoryMapped => await GetAllMemoryMappedAsync(),
+                _ => await GetAllOptimizedAsync()
+            };
     }
 
     // Existing methods remain unchanged...
     public virtual async Task<T?> GetByIdAsync(Guid id)
     {
-        if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+        if (EnsureRelational() && _dbConnection is not null)
+        {
+            if (_dbConnection.State != ConnectionState.Open)
+                await _dbConnection.OpenAsync();
 
-        var tableName = GetTableName();
-        var sql = $"SELECT * FROM {tableName} WHERE Id = @Id";
-        return await _dbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ??
-               throw new NullReferenceException();
+            var tableName = GetTableName();
+            var sql = $"SELECT * FROM {tableName} WHERE Id = @Id";
+            return await _dbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ??
+                   throw new NullReferenceException();
+        }
+
+        // Provider-agnostic fallback
+        var entity = await DbSet.FindAsync(id);
+        return entity ?? throw new NullReferenceException();
     }
 
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
@@ -325,8 +383,15 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
         var tableName = GetTableName();
 
+        if (!EnsureRelational() || _dbConnection is null)
+        {
+            await DbSet.AddRangeAsync(enumerable);
+            await Context.SaveChangesAsync();
+            return;
+        }
+
         if (_dbConnection.State != ConnectionState.Open)
-            await ((DbConnection)_dbConnection).OpenAsync();
+            await _dbConnection.OpenAsync();
 
         using var sqlBulk = new SqlBulkCopy((SqlConnection)_dbConnection, SqlBulkCopyOptions.Default, null);
         sqlBulk.DestinationTableName = tableName;
@@ -342,7 +407,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         await sqlBulk.WriteToServerAsync(table);
     }
 
-    private DataTable ToDataTable(IEnumerable<T> data)
+    private static DataTable ToDataTable(IEnumerable<T> data)
     {
         var table = new DataTable();
         var props = typeof(T).GetProperties()
