@@ -6,6 +6,7 @@ using TBD.Shared.Repositories;
 using TBD.StockPredictionModule.Context;
 using TBD.StockPredictionModule.Load;
 using TBD.StockPredictionModule.ML;
+using TBD.StockPredictionModule.ML.Interface;
 using TBD.StockPredictionModule.Models;
 using TBD.StockPredictionModule.Models.Stocks;
 using TBD.StockPredictionModule.PipelineOrchestrator;
@@ -54,7 +55,7 @@ public static class StockModule
         services.AddScoped<StockPredictionPipeline>();
         services.RegisterModuleForMetrics("StockModule");
 
-        services.AddScoped<MlStockPredictionEngine>();
+        services.AddScoped<IMlStockPredictionEngine, MlStockPredictionEngine>();
 
         services.AddScoped<IGenericRepository<RawData>>(sp =>
             new GenericRepository<RawData>(sp.GetRequiredService<StockDbContext>()));
