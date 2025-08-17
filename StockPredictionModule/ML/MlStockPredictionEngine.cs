@@ -158,7 +158,7 @@ internal class MlStockPredictionEngine : IMlStockPredictionEngine
     }
 
     // NEW: Add feature validation method
-    private List<StockFeatureVector> ValidateAndCleanFeatures(List<StockFeatureVector> features)
+    private static List<StockFeatureVector> ValidateAndCleanFeatures(List<StockFeatureVector> features)
     {
         var validFeatures = new List<StockFeatureVector>();
         var invalidCount = 0;
@@ -227,9 +227,6 @@ internal class MlStockPredictionEngine : IMlStockPredictionEngine
         return value;
     }
 
-
-    // NEW: Streaming training method
-    // NEW: Streaming training method
     public async Task TrainModelStreamingAsync(string csvFilePath)
     {
         Console.WriteLine("🧠 Training model with streaming data...");
