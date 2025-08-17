@@ -219,7 +219,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
 
     // Helper method to get mapped properties
-    private PropertyInfo[] GetMappedProperties()
+    private static PropertyInfo[] GetMappedProperties()
     {
         return typeof(T).GetProperties()
             .Where(p => p.CanWrite &&
@@ -261,7 +261,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Enhanced method with configurable options
     public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions? options = null)
     {
-        return options.Strategy switch
+        return options!.Strategy switch
         {
             QueryStrategy.Standard => await GetAllOptimizedAsync(),
             QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize),

@@ -145,7 +145,7 @@ public class UserService(
             ArgumentNullException.ThrowIfNull(userDto);
 
             var user = mapper.Map<User>(userDto);
-            if (string.IsNullOrWhiteSpace(user.Password) || string.IsNullOrWhiteSpace(userDto.Password))
+            if (string.IsNullOrWhiteSpace(userDto.Password))
             {
                 _metricsService.IncrementCounter("user.create.password_validation_failed");
                 throw new ArgumentException("Password cannot be empty");
