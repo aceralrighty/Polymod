@@ -8,7 +8,6 @@ public static class HealthCheckModule
     public static IServiceCollection AddHealthModuleChecks(this IServiceCollection services)
     {
         services.AddScoped<IModuleHealthCheck, AuthModuleHealthCheck>();
-        services.AddScoped<IModuleHealthCheck, StockPredictionModuleHealthCheck>();
         services.AddScoped<IModuleHealthCheck, UserModuleHealthCheck>();
         services.AddScoped<IModuleHealthCheck, RecommendationsModuleHealthCheck>();
         services.AddScoped<IModuleHealthCheck, AddressModuleHealthCheck>();
