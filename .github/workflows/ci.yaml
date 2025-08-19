@@ -224,40 +224,120 @@ jobs:
 
       - name: Clean test files from production code
         run: |
+          # Find the actual StockPredictionService directory
+          SERVICE_DIR=""
           if [ -d "PolyModSolution/StockPredictionService" ]; then
-            find PolyModSolution/StockPredictionService -name "*Test*.cs" -type f -delete 2>/dev/null || true
-            find PolyModSolution/StockPredictionService -name "*Tests*.cs" -type f -delete 2>/dev/null || true
+            SERVICE_DIR="PolyModSolution/StockPredictionService"
+          elif [ -d "StockPredictionService" ]; then
+            SERVICE_DIR="StockPredictionService"
+          elif [ -d "PolyMod/StockPredictionService" ]; then
+            SERVICE_DIR="PolyMod/StockPredictionService"
+          fi
+
+          if [ -n "$SERVICE_DIR" ]; then
+            echo "Found StockPredictionService at: $SERVICE_DIR"
+            find "$SERVICE_DIR" -name "*Test*.cs" -type f -delete 2>/dev/null || true
+            find "$SERVICE_DIR" -name "*Tests*.cs" -type f -delete 2>/dev/null || true
           else
-            echo "⚠️ PolyModSolution/StockPredictionService directory not found - skipping test file cleanup"
+            echo "⚠️ StockPredictionService directory not found - skipping test file cleanup"
           fi
 
       - name: Restore dependencies
         run: |
           # Restore individual projects since there's no solution file
-          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
-            dotnet restore PolyModSolution/PolyMod/PolyMod.csproj
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
+            POLYMOD_PROJECT=""
+            if [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
+              POLYMOD_PROJECT="PolyModSolution/PolyMod/PolyMod.csproj"
+            elif [ -f "PolyMod/PolyMod.csproj" ]; then
+              POLYMOD_PROJECT="PolyMod/PolyMod.csproj"
+            fi
+
+            if [ -n "$POLYMOD_PROJECT" ]; then
+              echo "Restoring PolyMod: $POLYMOD_PROJECT"
+              dotnet restore "$POLYMOD_PROJECT"
+            fi
           fi
-          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-            dotnet restore PolyModSolution/StockPredictionService/StockPredictionService.csproj
+
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
+            SERVICE_PROJECT=""
+            if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
+            elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="StockPredictionService/StockPredictionService.csproj"
+            elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="PolyMod/StockPredictionService/StockPredictionService.csproj"
+            fi
+
+            if [ -n "$SERVICE_PROJECT" ]; then
+              echo "Restoring StockPredictionService: $SERVICE_PROJECT"
+              dotnet restore "$SERVICE_PROJECT"
+            fi
           fi
 
       - name: Format code
         run: |
           # Format individual projects
-          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
-            dotnet format PolyModSolution/PolyMod/PolyMod.csproj --verbosity diagnostic
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
+            POLYMOD_PROJECT=""
+            if [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
+              POLYMOD_PROJECT="PolyModSolution/PolyMod/PolyMod.csproj"
+            elif [ -f "PolyMod/PolyMod.csproj" ]; then
+              POLYMOD_PROJECT="PolyMod/PolyMod.csproj"
+            fi
+
+            if [ -n "$POLYMOD_PROJECT" ]; then
+              echo "Formatting PolyMod: $POLYMOD_PROJECT"
+              dotnet format "$POLYMOD_PROJECT" --verbosity diagnostic
+            fi
           fi
-          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-            dotnet format PolyModSolution/StockPredictionService/StockPredictionService.csproj --verbosity diagnostic
+
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
+            SERVICE_PROJECT=""
+            if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
+            elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="StockPredictionService/StockPredictionService.csproj"
+            elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="PolyMod/StockPredictionService/StockPredictionService.csproj"
+            fi
+
+            if [ -n "$SERVICE_PROJECT" ]; then
+              echo "Formatting StockPredictionService: $SERVICE_PROJECT"
+              dotnet format "$SERVICE_PROJECT" --verbosity diagnostic
+            fi
           fi
 
       - name: Build for analysis
         run: |
-          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
-            dotnet build PolyModSolution/PolyMod/PolyMod.csproj --no-restore
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
+            POLYMOD_PROJECT=""
+            if [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
+              POLYMOD_PROJECT="PolyModSolution/PolyMod/PolyMod.csproj"
+            elif [ -f "PolyMod/PolyMod.csproj" ]; then
+              POLYMOD_PROJECT="PolyMod/PolyMod.csproj"
+            fi
+
+            if [ -n "$POLYMOD_PROJECT" ]; then
+              echo "Building PolyMod for analysis: $POLYMOD_PROJECT"
+              dotnet build "$POLYMOD_PROJECT" --no-restore
+            fi
           fi
-          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-            dotnet build PolyModSolution/StockPredictionService/StockPredictionService.csproj --no-restore
+
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
+            SERVICE_PROJECT=""
+            if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
+            elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="StockPredictionService/StockPredictionService.csproj"
+            elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
+              SERVICE_PROJECT="PolyMod/StockPredictionService/StockPredictionService.csproj"
+            fi
+
+            if [ -n "$SERVICE_PROJECT" ]; then
+              echo "Building StockPredictionService for analysis: $SERVICE_PROJECT"
+              dotnet build "$SERVICE_PROJECT" --no-restore
+            fi
           fi
 
   security-scan:
