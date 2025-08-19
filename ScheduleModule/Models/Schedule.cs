@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using TBD.Shared.GenericDBProperties;
+using PolyMod.Shared.GenericDBProperties;
 
 namespace TBD.ScheduleModule.Models;
 

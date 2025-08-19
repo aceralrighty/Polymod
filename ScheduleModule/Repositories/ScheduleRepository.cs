@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.Repositories;
 using TBD.ScheduleModule.Data;
 using TBD.ScheduleModule.Models;
-using TBD.Shared.Repositories;
 
 namespace TBD.ScheduleModule.Repositories;
 

@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace TBD.Shared.GenericDBProperties;
+namespace PolyMod.Shared.GenericDBProperties;
 
 public abstract class DateableObject
 {

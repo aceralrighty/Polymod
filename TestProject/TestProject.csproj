@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PolyMod.csproj" />
     <ProjectReference Include="..\TBD.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.GenericDBProperties;
 using TBD.RecommendationModule.Data.Configuration.Recommendation;
 using TBD.RecommendationModule.Data.Configuration.Schedule;
 using TBD.RecommendationModule.Data.Configuration.Service;
@@ -6,7 +7,6 @@ using TBD.RecommendationModule.Data.Configuration.User;
 using TBD.RecommendationModule.Models.Recommendations;
 using TBD.ScheduleModule.Models;
 using TBD.ServiceModule.Models;
-using TBD.Shared.GenericDBProperties;
 using TBD.UserModule.Models;
 
 namespace TBD.RecommendationModule.Data;

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.Repositories;
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
 using TBD.AuthModule.Repositories;
@@ -6,7 +7,6 @@ using TBD.AuthModule.Services;
 using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.CachingConfiguration;
-using TBD.Shared.Repositories;
 using TBD.Shared.Utils;
 
 namespace TBD.AuthModule;

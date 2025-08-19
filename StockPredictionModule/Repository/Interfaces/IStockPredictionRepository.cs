@@ -1,6 +1,6 @@
-using TBD.StockPredictionModule.Models.Stocks;
+using PolyMod.StockPredictionModule.Models.Stocks;
 
-namespace TBD.StockPredictionModule.Repository.Interfaces;
+namespace PolyMod.StockPredictionModule.Repository.Interfaces;
 
 public interface IStockPredictionRepository
 {

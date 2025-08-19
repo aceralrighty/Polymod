@@ -2,13 +2,13 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PolyMod.StockPredictionModule.Context;
+using PolyMod.StockPredictionModule.ML.Interface;
+using PolyMod.StockPredictionModule.Models;
+using PolyMod.StockPredictionModule.Models.Stocks;
 using TBD.MetricsModule.Services.Interfaces;
-using TBD.StockPredictionModule.Context;
-using TBD.StockPredictionModule.ML.Interface;
-using TBD.StockPredictionModule.Models;
-using TBD.StockPredictionModule.Models.Stocks;
 
-namespace TBD.StockPredictionModule.Controllers
+namespace PolyMod.StockPredictionModule.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

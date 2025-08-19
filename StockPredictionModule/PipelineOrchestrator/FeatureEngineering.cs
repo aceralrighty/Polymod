@@ -1,7 +1,7 @@
-using TBD.StockPredictionModule.Models;
-using TBD.StockPredictionModule.Models.Stocks;
+using PolyMod.StockPredictionModule.Models;
+using PolyMod.StockPredictionModule.Models.Stocks;
 
-namespace TBD.StockPredictionModule.PipelineOrchestrator;
+namespace PolyMod.StockPredictionModule.PipelineOrchestrator;
 
 /// <summary>
 /// Provides feature engineering utilities for processing and extracting features

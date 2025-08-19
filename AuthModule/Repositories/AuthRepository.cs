@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.Repositories;
 using TBD.AuthModule.Data;
 using TBD.AuthModule.Models;
-using TBD.Shared.Repositories;
 
 namespace TBD.AuthModule.Repositories;
 

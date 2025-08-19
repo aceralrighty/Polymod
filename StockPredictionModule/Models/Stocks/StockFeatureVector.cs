@@ -1,6 +1,6 @@
 using Microsoft.ML.Data;
 
-namespace TBD.StockPredictionModule.Models.Stocks;
+namespace PolyMod.StockPredictionModule.Models.Stocks;
 
 public class StockFeatureVector
 {

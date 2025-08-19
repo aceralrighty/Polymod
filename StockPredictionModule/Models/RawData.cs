@@ -1,7 +1,7 @@
 using Microsoft.ML.Data;
-using TBD.Shared.GenericDBProperties;
+using PolyMod.Shared.GenericDBProperties;
 
-namespace TBD.StockPredictionModule.Models;
+namespace PolyMod.StockPredictionModule.Models;
 
 public class RawData : BaseTableProperties
 {

@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using TBD.Shared.Repositories.Configuration;
+using PolyMod.Shared.Repositories.Configuration;
 
-namespace TBD.Shared.Repositories;
+namespace PolyMod.Shared.Repositories;
 
 public interface IGenericRepository<T> where T : class
 {

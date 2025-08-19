@@ -1,7 +1,7 @@
-using TBD.StockPredictionModule.Models;
-using TBD.StockPredictionModule.Models.Stocks;
+using PolyMod.StockPredictionModule.Models;
+using PolyMod.StockPredictionModule.Models.Stocks;
 
-namespace TBD.StockPredictionModule.ML.Interface;
+namespace PolyMod.StockPredictionModule.ML.Interface;
 
 public interface IMlStockPredictionEngine
 {

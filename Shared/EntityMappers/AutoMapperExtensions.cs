@@ -1,4 +1,6 @@
-namespace TBD.Shared.EntityMappers;
+using TBD.Shared.EntityMappers;
+
+namespace PolyMod.Shared.EntityMappers;
 
 public static class AutoMapperExtensions
 {
