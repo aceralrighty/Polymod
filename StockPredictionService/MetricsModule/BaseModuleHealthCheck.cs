@@ -1,8 +1,6 @@
 using System.Diagnostics;
-using PolyMod.MetricsModule.ModuleHealthCheck.Interfaces;
-using StockPredictionService.MetricsModule;
 
-namespace PolyMod.MetricsModule.ModuleHealthCheck.BaseHealthCheck.ModuleLevel;
+namespace StockPredictionService.MetricsModule;
 
 public abstract class BaseModuleHealthCheck(IServiceProvider serviceProvider, ILogger<BaseModuleHealthCheck> logger)
     : IModuleHealthCheck

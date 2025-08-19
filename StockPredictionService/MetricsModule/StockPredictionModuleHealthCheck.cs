@@ -1,13 +1,12 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using PolyMod.MetricsModule.ModuleHealthCheck.BaseHealthCheck.ModuleLevel;
 using PolyMod.StockPredictionService.Context;
 using PolyMod.StockPredictionService.Models;
 using PolyMod.StockPredictionService.PipelineOrchestrator.Interface;
 
 namespace StockPredictionService.MetricsModule;
 
-public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, ILogger<BaseModuleHealthCheck> logger)
+internal class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, ILogger<BaseModuleHealthCheck> logger)
     : DatabaseModuleHealthCheck<StockDbContext>(serviceProvider, logger)
 {
     private readonly ILogger<BaseModuleHealthCheck> _logger1 = logger;
@@ -21,27 +20,27 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
         try
         {
             // Database health metrics
-            var recordCount = await dbContext.StockPredictions.CountAsync(cancellationToken);
+            var recordCount = await dbContext.StockPredictions.CountAsync(cancellationToken).ConfigureAwait(false);
             healthData["recordCount"] = recordCount;
 
             // Check for recent data (last 30 days)
             var recentDataCount = await dbContext.StockPredictions
                 .Where(sp => sp.CreatedAt >= DateTime.UtcNow.AddDays(-30))
-                .CountAsync(cancellationToken);
+                .CountAsync(cancellationToken).ConfigureAwait(false);
             healthData["recentDataCount"] = recentDataCount;
 
             // Check data quality - count unique symbols
             var uniqueSymbols = await dbContext.StockPredictions
                 .Select(sp => sp.Symbol)
                 .Distinct()
-                .CountAsync(cancellationToken);
+                .CountAsync(cancellationToken).ConfigureAwait(false);
             healthData["uniqueSymbols"] = uniqueSymbols;
 
             // Get last updated timestamp
             var lastUpdated = await dbContext.StockPredictions
                 .OrderByDescending(sp => sp.CreatedAt)
                 .Select(sp => sp.CreatedAt)
-                .FirstOrDefaultAsync(cancellationToken);
+                .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
             healthData["lastDataUpdate"] = lastUpdated;
 
             // Service availability check
@@ -54,12 +53,12 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
                 try
                 {
                     // Get sample data for an accuracy check
-                    var sampleData = await GetSampleDataForAccuracyCheck(dbContext, cancellationToken);
+                    var sampleData = await GetSampleDataForAccuracyCheck(dbContext, cancellationToken).ConfigureAwait(false);
 
                     if (sampleData.Count != 0)
                     {
                         // Test model prediction capability
-                        var accuracy = await stockService?.PerformQuickAccuracyCheck(sampleData)!;
+                        var accuracy = await (stockService?.PerformQuickAccuracyCheck(sampleData)!).ConfigureAwait(false)!;
                         healthData["accuracy"] = accuracy ?? 0.0;
                         healthData["modelLoaded"] = accuracy.HasValue;
                     }
@@ -75,7 +74,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
                     healthData["memoryUsageMB"] = memoryUsage;
 
                     // Performance benchmark
-                    var avgPredictionTime = await MeasureAveragePredictionTime(stockService ?? throw new InvalidOperationException(), sampleData);
+                    var avgPredictionTime = await MeasureAveragePredictionTime(stockService ?? throw new InvalidOperationException(), sampleData).ConfigureAwait(false);
                     healthData["avgPredictionTimeMs"] = avgPredictionTime;
                 }
                 catch (Exception ex)
@@ -183,7 +182,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
                     Symbol = sp.Symbol,
                     Date = sp.CreatedAt.ToString("yyyy-MM-dd"),
                 })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken).ConfigureAwait(false);
 
             return sampleData.GroupBy(d => d.Symbol)
                            .ToDictionary(g => g.Key, g => g.ToList());
@@ -195,7 +194,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
         }
     }
 
-    private double GetModelMemoryUsage()
+    private static double GetModelMemoryUsage()
     {
         var beforeGc = GC.GetTotalMemory(false);
         var afterGc = GC.GetTotalMemory(true);
@@ -217,7 +216,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
                 var stopwatch = Stopwatch.StartNew();
 
                 // Perform accuracy check as a way to test prediction performance
-                await stockService.PerformQuickAccuracyCheck(testData);
+                await stockService.PerformQuickAccuracyCheck(testData).ConfigureAwait(false);
 
                 stopwatch.Stop();
                 times.Add(stopwatch.ElapsedMilliseconds);
@@ -232,7 +231,7 @@ public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, 
         }
     }
 
-    private double CalculateDataQualityScore(int recordCount, int recentDataCount, int uniqueSymbols, DateTime? lastUpdated)
+    private static double CalculateDataQualityScore(int recordCount, int recentDataCount, int uniqueSymbols, DateTime? lastUpdated)
     {
         var score = 0.0;
 

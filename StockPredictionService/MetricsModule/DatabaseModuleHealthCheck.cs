@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using PolyMod.MetricsModule.ModuleHealthCheck.BaseHealthCheck.ModuleLevel;
 
 namespace StockPredictionService.MetricsModule;
 
@@ -25,10 +24,10 @@ public abstract class DatabaseModuleHealthCheck<TDbContext>(
         }
 
         // Test database connectivity
-        await dbContext.Database.CanConnectAsync(cancellationToken);
+        await dbContext.Database.CanConnectAsync(cancellationToken).ConfigureAwait(false);
 
         // Get additional health data
-        var additionalData = await GetAdditionalHealthDataAsync(dbContext, cancellationToken);
+        var additionalData = await GetAdditionalHealthDataAsync(dbContext, cancellationToken).ConfigureAwait(false);
 
         return new ModuleHealthResult
         {
