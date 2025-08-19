@@ -110,6 +110,17 @@ jobs:
         with:
           dotnet-version: '9.0'
 
+      - name: Debug repository structure
+        run: |
+          echo "Repository root contents:"
+          ls -la
+          echo ""
+          echo "Looking for any StockPrediction directories:"
+          find . -name "*StockPrediction*" -type d 2>/dev/null || echo "No StockPredictionService directories found"
+          echo ""
+          echo "Looking for any .csproj files:"
+          find . -name "*.csproj" 2>/dev/null || echo "No .csproj files found"
+
       - name: Clean test files from production code
         run: |
           # Find the actual StockPredictionService directory
