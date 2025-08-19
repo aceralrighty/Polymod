@@ -15,6 +15,7 @@ using GrpcUserExistsResponse = Userservice.UserExistsResponse;
 using GrpcValidateUsersRequest = Userservice.ValidateUsersRequest;
 using GrpcValidateUsersResponse = Userservice.ValidateUsersResponse;
 using GrpcUserValidation = Userservice.UserValidation;
+using UserService = Userservice.UserService;
 
 namespace PolyMod.GrpcModule;
 
@@ -32,7 +33,7 @@ namespace PolyMod.GrpcModule;
 /// This class is typically registered as a gRPC service in the application's DI container.
 /// </example>
 /// <seealso cref="IUserRepository"/>
-/// <seealso cref="UserService.UserServiceBase"/>
+/// <seealso cref="Userservice.UserService.UserServiceBase"/>
 public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcService> logger)
     : UserService.UserServiceBase
 {
@@ -207,8 +208,6 @@ public class UserGrpcService(IUserRepository userRepository, ILogger<UserGrpcSer
     // gRPC -> Domain mapping (only use this if you actually need to accept gRPC users into your domain)
     private static DomainUser MapToDomainUser(GrpcUser grpcUser)
     {
-        if (grpcUser == null) return null!;
-
         return new DomainUser
         {
             Id = Guid.Parse(grpcUser.Id),

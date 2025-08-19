@@ -1,8 +1,8 @@
-using Bogus.DataSets;
+using Addressservice;
 using Grpc.Net.Client;
 using PolyMod.API.DTOs.Users;
 using PolyMod.GrpcModule.Interfaces;
-using PolyMod.UserModule.Services;
+using Userservice;
 using CreateAddressRequest = Addressservice.CreateAddressRequest;
 using UserAddressResponse = PolyMod.API.DTOs.Users.UserAddressResponse;
 
@@ -196,17 +196,14 @@ public class UserAddressGrpcClient : IUserAddressGrpcClient, IDisposable
 
     private static UserDto MapUserToDto(User grpcUser)
     {
-        return new UserDto(Guid.Parse(grpcUser.Id), grpcUser.Email)
-        {
-            Username = grpcUser.Username
-        };
+        return new UserDto(Guid.Parse(grpcUser.Id), grpcUser.Email) { Username = grpcUser.Username };
     }
 
     private static UserAddressResponse MapAddressToDto(Address grpcAddress)
     {
         return new UserAddressResponse
         {
-            Id = Guid.Parse(grpcAddress.Id),
+            Id = Guid.Parse(grpcAddress.UserId),
             UserId = Guid.Parse(grpcAddress.UserId),
             Address1 = grpcAddress.Address1,
             Address2 = grpcAddress.Address2,

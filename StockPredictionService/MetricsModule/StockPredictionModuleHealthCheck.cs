@@ -1,12 +1,11 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using PolyMod.MetricsModule.ModuleHealthCheck.BaseHealthCheck.DBLevel;
 using PolyMod.MetricsModule.ModuleHealthCheck.BaseHealthCheck.ModuleLevel;
 using PolyMod.StockPredictionService.Context;
 using PolyMod.StockPredictionService.Models;
 using PolyMod.StockPredictionService.PipelineOrchestrator.Interface;
 
-namespace PolyMod.MetricsModule.ModuleHealthCheck.ModuleChecks;
+namespace StockPredictionService.MetricsModule;
 
 public class StockPredictionModuleHealthCheck(IServiceProvider serviceProvider, ILogger<BaseModuleHealthCheck> logger)
     : DatabaseModuleHealthCheck<StockDbContext>(serviceProvider, logger)
