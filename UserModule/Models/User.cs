@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using PolyMod.Shared.GenericDBProperties;
+using BaseTableProperties = StockPredictionService.Shared.GenericDBProperties.BaseTableProperties;
 
 namespace TBD.UserModule.Models;
 

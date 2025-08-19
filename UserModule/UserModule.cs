@@ -1,18 +1,7 @@
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
-using PolyMod.Shared.Repositories;
-using TBD.MetricsModule.OpenTelemetry;
-using TBD.Shared.CachingConfiguration;
-using TBD.Shared.EntityMappers;
-using TBD.Shared.Events.Interfaces;
-using TBD.Shared.Utils;
-using TBD.UserModule.Data;
-using TBD.UserModule.Models;
-using TBD.UserModule.PubEvents;
-using TBD.UserModule.Repositories;
-using TBD.UserModule.Services;
 
-namespace TBD.UserModule;
+namespace PolyMod.UserModule;
 
 public static class UserModule
 {

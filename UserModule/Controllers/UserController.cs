@@ -4,6 +4,9 @@ using TBD.API.DTOs.Users;
 using TBD.MetricsModule.OpenTelemetry.Services;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.UserModule.Services;
+using IMetricsService = StockPredictionService.Services.Interfaces.IMetricsService;
+using IMetricsServiceFactory = StockPredictionService.Services.Interfaces.IMetricsServiceFactory;
+using OpenTelemetryMetricsService = StockPredictionService.OpenTelemetry.Services.OpenTelemetryMetricsService;
 
 namespace TBD.UserModule.Controllers;
 

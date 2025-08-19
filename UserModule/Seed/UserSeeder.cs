@@ -10,6 +10,9 @@ using TBD.Shared.Utils;
 using TBD.UserModule.Data;
 using TBD.UserModule.Models;
 using DomainUser = TBD.UserModule.Models.User;
+using Hasher = Isopoh.Cryptography.Blake2b.Hasher;
+using IMetricsService = StockPredictionService.Services.Interfaces.IMetricsService;
+using IMetricsServiceFactory = StockPredictionService.Services.Interfaces.IMetricsServiceFactory;
 
 namespace TBD.UserModule.Seed;
 
@@ -35,8 +38,8 @@ public static class UserSeeder
         // Resolve DbContexts for schema management and repositories for data operations
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
-        var userRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<User>>();
-        var addressRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<UserAddress>>();
+        var userRepository = scope.ServiceProvider.GetRequiredService<StockPredictionService.Shared.Repositories.IGenericRepository<User>>();
+        var addressRepository = scope.ServiceProvider.GetRequiredService<StockPredictionService.Shared.Repositories.IGenericRepository<UserAddress>>();
 
         var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
         var metricsService = factory.CreateMetricsService("UserModule");
@@ -155,8 +158,7 @@ public static class UserSeeder
         }
     }
 
-    private static async Task<List<DomainUser>> SeedUsersAsync(
-        IGenericRepository<DomainUser> userRepository, IMetricsService metricsService, Activity? parentActivity, int count)
+    private static async Task<List<DomainUser>> SeedUsersAsync(StockPredictionService.Shared.Repositories.IGenericRepository<DomainUser> userRepository, IMetricsService metricsService, Activity? parentActivity, int count)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUsers", ActivityKind.Internal,
             parentActivity?.Context ?? default);
@@ -224,8 +226,7 @@ public static class UserSeeder
         }
     }
 
-    private static async Task SeedUserAddressesAsync(
-        IGenericRepository<DomainUser> userRepository, IGenericRepository<UserAddress> addressRepository,
+    private static async Task SeedUserAddressesAsync(StockPredictionService.Shared.Repositories.IGenericRepository<DomainUser> userRepository, StockPredictionService.Shared.Repositories.IGenericRepository<UserAddress> addressRepository,
         IMetricsService metricsService, Activity? parentActivity, int maxAddressesPerUser = 2)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUserAddressesStreaming",

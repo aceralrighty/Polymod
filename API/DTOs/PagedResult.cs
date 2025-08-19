@@ -1,4 +1,4 @@
-namespace TBD.API.DTOs;
+namespace PolyMod.API.DTOs;
 
 public class PagedResult<T>
 {

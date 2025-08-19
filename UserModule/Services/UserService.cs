@@ -5,6 +5,8 @@ using TBD.MetricsModule.Services.Interfaces;
 using TBD.Shared.Utils;
 using TBD.UserModule.Models;
 using TBD.UserModule.Repositories;
+using IMetricsService = StockPredictionService.Services.Interfaces.IMetricsService;
+using IMetricsServiceFactory = StockPredictionService.Services.Interfaces.IMetricsServiceFactory;
 
 namespace TBD.UserModule.Services;
 
