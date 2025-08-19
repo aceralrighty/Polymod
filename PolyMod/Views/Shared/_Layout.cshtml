@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TBD Application</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+
+        .main-content {
+            min-height: calc(100vh - 120px);
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+        .table {
+            background-color: white;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+
+        .navbar-nav .nav-link {
+            font-weight: 500;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #0d6efd !important;
+        }
+
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 1rem 0;
+            margin-top: auto;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+
+        .breadcrumb {
+            background-color: transparent;
+            padding: 0;
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .breadcrumb-item a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item a:hover {
+            color: white;
+        }
+
+        .breadcrumb-item.active {
+            color: white;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-building"></i>
+                TBD Application
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house"></i>
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-grid"></i>
+                            Services
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/Address">
+                                <i class="bi bi-geo-alt"></i>
+                                Address Management
+                            </a></li>
+                            <li><a class="dropdown-item" href="/Schedule">
+                                <i class="bi bi-calendar"></i>
+                                Schedule Management
+                            </a></li>
+                            <li><a class="dropdown-item" href="/Service">
+                                <i class="bi bi-tools"></i>
+                                Service Management
+                            </a></li>
+                            <li><a class="dropdown-item" href="/User">
+                                <i class="bi bi-people"></i>
+                                User Management
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                            Account
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/Auth/Login">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                                Login
+                            </a></li>
+                            <li><a class="dropdown-item" href="/Auth/Register">
+                                <i class="bi bi-person-plus"></i>
+                                Register
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/Auth/Profile">
+                                <i class="bi bi-person"></i>
+                                Profile
+                            </a></li>
+                            <li>
+                                <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow-1">
+        <div class="container main-content">
+            <!-- Page Header -->
+            @{
+                var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+                var action = ViewContext.RouteData.Values["action"]?.ToString();
+                var pageTitle = ViewData["Title"]?.ToString();
+
+                // Set dynamic page titles and icons based on controller/action
+                var pageIcon = "bi-grid";
+                var pageSubtitle = "";
+
+                switch (controller?.ToLower())
+                {
+                    case "address":
+                        pageIcon = "bi-geo-alt";
+                        pageSubtitle = "Manage user addresses and locations";
+                        break;
+                    case "schedule":
+                        pageIcon = "bi-calendar";
+                        pageSubtitle = "Manage schedules and appointments";
+                        break;
+                    case "service":
+                        pageIcon = "bi-tools";
+                        pageSubtitle = "Manage available services";
+                        break;
+                    case "user":
+                        pageIcon = "bi-people";
+                        pageSubtitle = "Manage system users";
+                        break;
+                    case "auth":
+                        pageIcon = "bi-shield-check";
+                        pageSubtitle = "Authentication and security";
+                        break;
+                    case "home":
+                        pageIcon = "bi-house";
+                        pageSubtitle = "Dashboard and overview";
+                        break;
+                    default:
+                        pageIcon = "bi-grid";
+                        pageSubtitle = "Application management";
+                        break;
+                }
+            }
+
+            @if (ViewData["Title"] != null)
+            {
+                <div class="page-header">
+                    <div class="container">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                                @if (controller != "Home")
+                                {
+                                    <li class="breadcrumb-item">
+                                        <a href="/@controller">
+                                            @controller
+                                        </a>
+                                    </li>
+                                }
+                                @if (action != "Index")
+                                {
+                                    <li class="breadcrumb-item active">@pageTitle</li>
+                                }
+                            </ol>
+                        </nav>
+                        <div class="d-flex align-items-center">
+                            <i class="@pageIcon display-6 me-3"></i>
+                            <div>
+                                <h1 class="display-6 mb-0">@pageTitle</h1>
+                                @if (!string.IsNullOrEmpty(pageSubtitle))
+                                {
+                                    <p class="lead mb-0 opacity-75">@pageSubtitle</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Alert Messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle"></i>
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    @TempData["InfoMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Page Content -->
+            <div class="row">
+                <div class="col-12">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; @DateTime.Now.Year TBD Application. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <small class="text-muted">Built with ASP.NET Core</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
