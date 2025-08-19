@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: PolyMod CI Pipeline
 
 on:
   push:
@@ -19,26 +19,29 @@ jobs:
         with:
           dotnet-version: '9.0'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      # Build Monolith
+      - name: Restore PolyMod (Monolith)
+        run: dotnet restore PolyMod/PolyMod.csproj
 
-      # Build existing services
+      - name: Build PolyMod (Monolith)
+        run: dotnet build PolyMod/PolyMod.csproj --no-restore --configuration Release
+
+      # Build Stock Prediction Service
+      - name: Restore Stock Prediction Service
+        run: dotnet restore StockPredictionService/StockPredictionService.csproj
+
       - name: Build Stock Prediction Service
         run: dotnet build StockPredictionService/StockPredictionService.csproj --no-restore --configuration Release
 
       # Run tests if they exist
-      - name: Check if tests exist
-        id: check-tests
+      - name: Run integration tests
         run: |
-          if [ -d "TestProject" ]; then
-            echo "tests-exist=true" >> $GITHUB_OUTPUT
+          if [ -f "TestProject/TestProject.csproj" ]; then
+            dotnet restore TestProject/TestProject.csproj
+            dotnet test TestProject/TestProject.csproj --configuration Release --verbosity normal
           else
-            echo "tests-exist=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No TestProject found, skipping tests"
           fi
-
-      - name: Run tests
-        if: steps.check-tests.outputs.tests-exist == 'true'
-        run: dotnet test TestProject/TestProject.csproj --no-build --configuration Release --verbosity normal
 
   code-quality:
     runs-on: ubuntu-latest
@@ -52,14 +55,15 @@ jobs:
         with:
           dotnet-version: '9.0'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Format PolyMod
+        run: |
+          dotnet restore PolyMod/PolyMod.csproj
+          dotnet format PolyMod/PolyMod.csproj --verbosity diagnostic
 
-      - name: Fix code formatting
-        run: dotnet format StockPredictionService/ --verbosity diagnostic
-
-      - name: Build for analysis
-        run: dotnet build StockPredictionService/StockPredictionService.csproj --no-restore
+      - name: Format Stock Prediction Service
+        run: |
+          dotnet restore StockPredictionService/StockPredictionService.csproj
+          dotnet format StockPredictionService/StockPredictionService.csproj --verbosity diagnostic
 
   security-scan:
     runs-on: ubuntu-latest
@@ -73,37 +77,22 @@ jobs:
         with:
           dotnet-version: '9.0'
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Vulnerability scan
-        run: dotnet list package --vulnerable --include-transitive
-
       - name: Install dotnet-outdated
         run: dotnet tool install --global dotnet-outdated-tool
 
-      - name: Check for outdated packages
+      - name: Security scan - All projects
         run: |
+          # Scan PolyMod
+          dotnet restore PolyMod/PolyMod.csproj
+          dotnet list PolyMod/PolyMod.csproj package --vulnerable --include-transitive
+
+          # Scan Stock Prediction Service
+          dotnet restore StockPredictionService/StockPredictionService.csproj
+          dotnet list StockPredictionService/StockPredictionService.csproj package --vulnerable --include-transitive
+
+          # Check for outdated packages
           export PATH="$PATH:$HOME/.dotnet/tools"
-          dotnet list package --outdated
-
-  # Simple success check
-  ci-success:
-    runs-on: ubuntu-latest
-    needs: [build-and-test, code-quality, security-scan]
-    if: always()
-
-    steps:
-      - name: Check CI Results
-        run: |
-          if [[ "${{ needs.build-and-test.result }}" == "success" &&
-                "${{ needs.code-quality.result }}" == "success" &&
-                "${{ needs.security-scan.result }}" == "success" ]]; then
-            echo "✅ All CI checks passed!"
-          else
-            echo "❌ Some CI checks failed"
-            echo "Build and Test: ${{ needs.build-and-test.result }}"
-            echo "Code Quality: ${{ needs.code-quality.result }}"
-            echo "Security Scan: ${{ needs.security-scan.result }}"
-            exit 1
-          fi
+          echo "Checking outdated packages in PolyMod..."
+          dotnet outdated PolyMod/PolyMod.csproj
+          echo "Checking outdated packages in StockPredictionService..."
+          dotnet outdated StockPredictionService/StockPredictionService.csproj
