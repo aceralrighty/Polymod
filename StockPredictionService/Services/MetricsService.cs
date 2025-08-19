@@ -1,8 +1,8 @@
+using PolyMod.StockPredictionService.Services.Interfaces;
 using Serilog;
-using StockPredictionService.Services.Interfaces;
 using ILogger = Serilog.ILogger;
 
-namespace StockPredictionService.Services;
+namespace PolyMod.StockPredictionService.Services;
 
 internal class MetricsService(string moduleName) : IMetricsService
 {

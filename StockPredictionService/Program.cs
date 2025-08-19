@@ -1,8 +1,8 @@
-using StockPredictionService;
-using StockPredictionService.Context;
-using StockPredictionService.PipelineOrchestrator;
-using StockPredictionService.Services;
-using StockPredictionService.Services.Interfaces;
+using PolyMod.StockPredictionService.Context;
+using PolyMod.StockPredictionService;
+using PolyMod.StockPredictionService.PipelineOrchestrator;
+using PolyMod.StockPredictionService.Services;
+using PolyMod.StockPredictionService.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

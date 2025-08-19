@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using StockPredictionService.Shared.Repositories.Configuration;
+using PolyMod.StockPredictionService.Shared.Repositories.Configuration;
 
-namespace StockPredictionService.Shared.Repositories;
+namespace PolyMod.StockPredictionService.Shared.Repositories;
 
 public interface IGenericRepository<T> where T : class
 {

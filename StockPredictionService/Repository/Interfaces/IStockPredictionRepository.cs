@@ -1,8 +1,8 @@
 
 
-using StockPredictionService.Models.Stocks;
+using PolyMod.StockPredictionService.Models.Stocks;
 
-namespace StockPredictionService.Repository.Interfaces;
+namespace PolyMod.StockPredictionService.Repository.Interfaces;
 
 public interface IStockPredictionRepository
 {

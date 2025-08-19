@@ -1,4 +1,4 @@
-namespace StockPredictionService.Shared.GenericDBProperties;
+namespace PolyMod.StockPredictionService.Shared.GenericDBProperties;
 
 internal interface IWithId
 {

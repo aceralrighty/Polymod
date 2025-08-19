@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.Metrics;
-using StockPredictionService.Services.Interfaces;
+using PolyMod.StockPredictionService.Services.Interfaces;
 
-namespace StockPredictionService.OpenTelemetry.Services;
+namespace PolyMod.StockPredictionService.OpenTelemetry.Services;
 
 public class OpenTelemetryMetricsService : IMetricsService
 {

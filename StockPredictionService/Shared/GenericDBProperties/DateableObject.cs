@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace StockPredictionService.Shared.GenericDBProperties;
+namespace PolyMod.StockPredictionService.Shared.GenericDBProperties;
 
 public abstract class DateableObject
 {

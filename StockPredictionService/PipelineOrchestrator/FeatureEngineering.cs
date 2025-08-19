@@ -1,7 +1,7 @@
-using StockPredictionService.Models;
-using StockPredictionService.Models.Stocks;
+using PolyMod.StockPredictionService.Models;
+using PolyMod.StockPredictionService.Models.Stocks;
 
-namespace StockPredictionService.PipelineOrchestrator;
+namespace PolyMod.StockPredictionService.PipelineOrchestrator;
 
 /// <summary>
 /// Provides feature engineering utilities for processing and extracting features

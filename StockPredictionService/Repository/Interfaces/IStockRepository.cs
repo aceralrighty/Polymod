@@ -1,8 +1,8 @@
-using StockPredictionService.Models;
-using StockPredictionService.Models.Stocks;
-using StockPredictionService.Shared.Repositories;
+using PolyMod.StockPredictionService.Models;
+using PolyMod.StockPredictionService.Models.Stocks;
+using PolyMod.StockPredictionService.Shared.Repositories;
 
-namespace StockPredictionService.Repository.Interfaces;
+namespace PolyMod.StockPredictionService.Repository.Interfaces;
 
 public interface IStockRepository: IGenericRepository<RawData>
 {

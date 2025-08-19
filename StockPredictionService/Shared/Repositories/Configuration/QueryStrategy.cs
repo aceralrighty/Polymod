@@ -1,4 +1,4 @@
-namespace StockPredictionService.Shared.Repositories.Configuration;
+namespace PolyMod.StockPredictionService.Shared.Repositories.Configuration;
 
 public enum QueryStrategy
 {

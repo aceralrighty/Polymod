@@ -1,16 +1,16 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using StockPredictionService.EntityMapper;
-using StockPredictionService.Load;
-using StockPredictionService.ML.Interface;
-using StockPredictionService.Models;
-using StockPredictionService.Models.Stocks;
-using StockPredictionService.OpenTelemetry.Services;
-using StockPredictionService.PipelineOrchestrator.Interface;
-using StockPredictionService.Repository.Interfaces;
-using StockPredictionService.Services.Interfaces;
+using PolyMod.StockPredictionService.EntityMapper;
+using PolyMod.StockPredictionService.Load;
+using PolyMod.StockPredictionService.ML.Interface;
+using PolyMod.StockPredictionService.Models;
+using PolyMod.StockPredictionService.Models.Stocks;
+using PolyMod.StockPredictionService.OpenTelemetry.Services;
+using PolyMod.StockPredictionService.PipelineOrchestrator.Interface;
+using PolyMod.StockPredictionService.Repository.Interfaces;
+using PolyMod.StockPredictionService.Services.Interfaces;
 
-namespace StockPredictionService.PipelineOrchestrator;
+namespace PolyMod.StockPredictionService.PipelineOrchestrator;
 
 public class StockPredictionPipeline : IStockPredictionPipeline
 {

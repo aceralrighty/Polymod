@@ -1,4 +1,4 @@
-namespace StockPredictionService.Services.Interfaces;
+namespace PolyMod.StockPredictionService.Services.Interfaces;
 
 public interface IMetricsServiceFactory
 {

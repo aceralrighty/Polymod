@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace StockPredictionService.Services;
+namespace PolyMod.StockPredictionService.Services;
 
 public sealed class MetricsCollector
 {

@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.ML.Data;
-using StockPredictionService.Shared.GenericDBProperties;
+using PolyMod.StockPredictionService.Shared.GenericDBProperties;
 
-namespace StockPredictionService.Models.Stocks;
+namespace PolyMod.StockPredictionService.Models.Stocks;
 
 public class StockPrediction : BaseTableProperties
 {

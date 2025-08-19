@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using StockPredictionService.Context.Configuration;
-using StockPredictionService.Models;
-using StockPredictionService.Models.Stocks;
+using PolyMod.StockPredictionService.Context.Configuration;
+using PolyMod.StockPredictionService.Models;
+using PolyMod.StockPredictionService.Models.Stocks;
 
-namespace StockPredictionService.Context;
+namespace PolyMod.StockPredictionService.Context;
 
 public class StockDbContext : DbContext
 {

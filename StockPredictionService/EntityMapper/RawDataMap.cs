@@ -1,7 +1,7 @@
 using CsvHelper.Configuration;
-using StockPredictionService.Models;
+using PolyMod.StockPredictionService.Models;
 
-namespace StockPredictionService.EntityMapper;
+namespace PolyMod.StockPredictionService.EntityMapper;
 
 public sealed class RawDataMap: ClassMap<RawData>
 {
