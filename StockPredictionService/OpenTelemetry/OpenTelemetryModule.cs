@@ -1,9 +1,9 @@
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using PolyMod.StockPredictionService.OpenTelemetry.Services;
-using PolyMod.StockPredictionService.Services.Interfaces;
+using StockPredictionService.OpenTelemetry.Services;
+using StockPredictionService.Services.Interfaces;
 
-namespace PolyMod.StockPredictionService.OpenTelemetry;
+namespace StockPredictionService.OpenTelemetry;
 
 public static class OpenTelemetryModule
 {

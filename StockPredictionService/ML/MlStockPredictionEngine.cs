@@ -2,15 +2,15 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.ML;
 using Microsoft.ML.Transforms;
-using PolyMod.StockPredictionService.Load;
-using PolyMod.StockPredictionService.ML.Interface;
-using PolyMod.StockPredictionService.Models;
-using PolyMod.StockPredictionService.Models.Stocks;
-using PolyMod.StockPredictionService.OpenTelemetry.Services;
-using PolyMod.StockPredictionService.PipelineOrchestrator;
-using PolyMod.StockPredictionService.Services.Interfaces;
+using StockPredictionService.Load;
+using StockPredictionService.ML.Interface;
+using StockPredictionService.Models;
+using StockPredictionService.Models.Stocks;
+using StockPredictionService.OpenTelemetry.Services;
+using StockPredictionService.PipelineOrchestrator;
+using StockPredictionService.Services.Interfaces;
 
-namespace PolyMod.StockPredictionService.ML;
+namespace StockPredictionService.ML;
 
 /// <summary>
 /// Provides functionality for training machine learning models and generating stock predictions

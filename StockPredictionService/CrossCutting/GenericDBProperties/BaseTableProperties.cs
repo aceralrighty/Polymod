@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PolyMod.StockPredictionService.Shared.GenericDBProperties;
+namespace StockPredictionService.CrossCutting.GenericDBProperties;
 
 public abstract class BaseTableProperties : DateableObject, IWithId
 {

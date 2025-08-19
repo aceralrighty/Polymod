@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace PolyMod.StockPredictionService.Shared.CachingConfiguration;
+namespace StockPredictionService.CrossCutting.CachingConfiguration;
 
 public class ConcurrentHashSet<T> : IDisposable where T : notnull
 {

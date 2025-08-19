@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using PolyMod.StockPredictionService.Context;
-using PolyMod.StockPredictionService.Models;
-using PolyMod.StockPredictionService.PipelineOrchestrator.Interface;
+using StockPredictionService.Context;
+using StockPredictionService.Models;
+using StockPredictionService.PipelineOrchestrator.Interface;
 
 namespace StockPredictionService.MetricsModule;
 

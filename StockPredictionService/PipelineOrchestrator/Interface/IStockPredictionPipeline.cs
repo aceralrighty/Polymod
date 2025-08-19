@@ -1,7 +1,7 @@
-using PolyMod.StockPredictionService.Models;
-using PolyMod.StockPredictionService.Models.Stocks;
+using StockPredictionService.Models;
+using StockPredictionService.Models.Stocks;
 
-namespace PolyMod.StockPredictionService.PipelineOrchestrator.Interface;
+namespace StockPredictionService.PipelineOrchestrator.Interface;
 
 public interface IStockPredictionPipeline
 {

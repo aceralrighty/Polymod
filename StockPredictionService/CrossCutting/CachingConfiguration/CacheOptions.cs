@@ -1,4 +1,4 @@
-namespace PolyMod.StockPredictionService.Shared.CachingConfiguration;
+namespace StockPredictionService.CrossCutting.CachingConfiguration;
 
 public class CacheOptions
 {

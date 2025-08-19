@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PolyMod.StockPredictionService.Models.Stocks;
+using StockPredictionService.Models.Stocks;
 
-namespace PolyMod.StockPredictionService.Context.Configuration;
+namespace StockPredictionService.Context.Configuration;
 
 public class StockPredictionConfiguration : IEntityTypeConfiguration<StockPrediction>
 {

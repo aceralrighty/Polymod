@@ -6,9 +6,9 @@ using System.Reflection;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using PolyMod.StockPredictionService.Shared.Repositories.Configuration;
+using StockPredictionService.CrossCutting.Repositories.Configuration;
 
-namespace PolyMod.StockPredictionService.Shared.Repositories;
+namespace StockPredictionService.CrossCutting.Repositories;
 
 public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     where T : class

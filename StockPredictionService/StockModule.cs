@@ -1,21 +1,21 @@
 using Microsoft.EntityFrameworkCore;
-using PolyMod.StockPredictionService.Context;
-using PolyMod.StockPredictionService.EntityMapper;
-using PolyMod.StockPredictionService.Load;
-using PolyMod.StockPredictionService.ML;
-using PolyMod.StockPredictionService.ML.Interface;
-using PolyMod.StockPredictionService.Models;
-using PolyMod.StockPredictionService.Models.Stocks;
-using PolyMod.StockPredictionService.PipelineOrchestrator;
-using PolyMod.StockPredictionService.PipelineOrchestrator.Interface;
-using PolyMod.StockPredictionService.Repository;
-using PolyMod.StockPredictionService.Repository.Interfaces;
-using PolyMod.StockPredictionService.Services;
-using PolyMod.StockPredictionService.Services.Interfaces;
-using PolyMod.StockPredictionService.Shared.CachingConfiguration;
-using PolyMod.StockPredictionService.Shared.Repositories;
+using StockPredictionService.Context;
+using StockPredictionService.CrossCutting.CachingConfiguration;
+using StockPredictionService.CrossCutting.Repositories;
+using StockPredictionService.EntityMapper;
+using StockPredictionService.Load;
+using StockPredictionService.ML;
+using StockPredictionService.ML.Interface;
+using StockPredictionService.Models;
+using StockPredictionService.Models.Stocks;
+using StockPredictionService.PipelineOrchestrator;
+using StockPredictionService.PipelineOrchestrator.Interface;
+using StockPredictionService.Repository;
+using StockPredictionService.Repository.Interfaces;
+using StockPredictionService.Services;
+using StockPredictionService.Services.Interfaces;
 
-namespace PolyMod.StockPredictionService;
+namespace StockPredictionService;
 
 public static class StockModule
 {
