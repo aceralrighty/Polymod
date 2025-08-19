@@ -1,11 +1,11 @@
 using Microsoft.ML;
 using Microsoft.ML.Trainers;
+using PolyMod.Shared.Repositories.Configuration;
 using TBD.MetricsModule.Services.Interfaces;
 using TBD.RecommendationModule.ML.Interface;
 using TBD.RecommendationModule.Models;
 using TBD.RecommendationModule.Models.Recommendations;
 using TBD.RecommendationModule.Repositories.Interfaces;
-using TBD.Shared.Repositories.Configuration;
 
 namespace TBD.RecommendationModule.ML;
 

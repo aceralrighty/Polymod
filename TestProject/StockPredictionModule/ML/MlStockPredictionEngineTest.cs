@@ -7,9 +7,9 @@ using FluentAssertions;
 using Microsoft.DotNet.Scaffolding.Shared;
 using Moq;
 using NUnit.Framework;
+using PolyMod.StockPredictionModule.ML;
+using PolyMod.StockPredictionModule.Models;
 using TBD.MetricsModule.Services.Interfaces;
-using TBD.StockPredictionModule.ML;
-using TBD.StockPredictionModule.Models;
 
 namespace TestProject.StockPredictionModule.ML;
 

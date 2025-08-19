@@ -1,7 +1,7 @@
-using TBD.StockPredictionModule.Models;
-using TBD.StockPredictionModule.Models.Stocks;
+using PolyMod.StockPredictionModule.Models;
+using PolyMod.StockPredictionModule.Models.Stocks;
 
-namespace TBD.Shared.EntityMappers;
+namespace PolyMod.Shared.EntityMappers;
 
 public class StockEntityMapper
 {
@@ -26,7 +26,7 @@ public class StockEntityMapper
         }).ToList();
     }
 
-    private float HashGuid(Guid guid)
+    private static float HashGuid(Guid guid)
     {
         return Math.Abs(guid.GetHashCode()) % 100000;
     }

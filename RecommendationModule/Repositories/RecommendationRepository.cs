@@ -2,11 +2,11 @@ using System.Data;
 using System.Diagnostics;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.Repositories;
+using PolyMod.Shared.Repositories.Configuration;
 using TBD.RecommendationModule.Data;
 using TBD.RecommendationModule.Models.Recommendations;
 using TBD.RecommendationModule.Repositories.Interfaces;
-using TBD.Shared.Repositories;
-using TBD.Shared.Repositories.Configuration;
 
 namespace TBD.RecommendationModule.Repositories;
 

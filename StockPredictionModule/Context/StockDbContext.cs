@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using TBD.StockPredictionModule.Context.Configuration;
-using TBD.StockPredictionModule.Models;
-using TBD.StockPredictionModule.Models.Stocks;
+using PolyMod.StockPredictionModule.Context.Configuration;
+using PolyMod.StockPredictionModule.Models;
+using PolyMod.StockPredictionModule.Models.Stocks;
 
-namespace TBD.StockPredictionModule.Context;
+namespace PolyMod.StockPredictionModule.Context;
 
 public class StockDbContext : DbContext
 {

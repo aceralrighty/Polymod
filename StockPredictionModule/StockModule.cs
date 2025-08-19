@@ -1,20 +1,21 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.EntityMappers;
+using PolyMod.Shared.Repositories;
+using PolyMod.StockPredictionModule.Context;
+using PolyMod.StockPredictionModule.Load;
+using PolyMod.StockPredictionModule.ML;
+using PolyMod.StockPredictionModule.ML.Interface;
+using PolyMod.StockPredictionModule.Models;
+using PolyMod.StockPredictionModule.Models.Stocks;
+using PolyMod.StockPredictionModule.PipelineOrchestrator;
+using PolyMod.StockPredictionModule.PipelineOrchestrator.Interface;
+using PolyMod.StockPredictionModule.Repository;
+using PolyMod.StockPredictionModule.Repository.Interfaces;
 using TBD.MetricsModule.OpenTelemetry;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.EntityMappers;
-using TBD.Shared.Repositories;
-using TBD.StockPredictionModule.Context;
-using TBD.StockPredictionModule.Load;
-using TBD.StockPredictionModule.ML;
-using TBD.StockPredictionModule.ML.Interface;
-using TBD.StockPredictionModule.Models;
-using TBD.StockPredictionModule.Models.Stocks;
-using TBD.StockPredictionModule.PipelineOrchestrator;
-using TBD.StockPredictionModule.PipelineOrchestrator.Interface;
-using TBD.StockPredictionModule.Repository;
-using TBD.StockPredictionModule.Repository.Interfaces;
 
-namespace TBD.StockPredictionModule;
+namespace PolyMod.StockPredictionModule;
 
 /// <summary>
 /// Provides stock module-related services, configurations, and dependencies for the application.

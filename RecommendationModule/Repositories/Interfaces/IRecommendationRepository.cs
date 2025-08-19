@@ -1,6 +1,6 @@
+using PolyMod.Shared.Repositories;
+using PolyMod.Shared.Repositories.Configuration;
 using TBD.RecommendationModule.Models.Recommendations;
-using TBD.Shared.Repositories;
-using TBD.Shared.Repositories.Configuration;
 
 namespace TBD.RecommendationModule.Repositories.Interfaces;
 

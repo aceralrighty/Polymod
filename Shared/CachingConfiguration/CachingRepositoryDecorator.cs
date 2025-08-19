@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using TBD.Shared.Repositories;
-using TBD.Shared.Repositories.Configuration;
+using PolyMod.Shared.Repositories;
+using PolyMod.Shared.Repositories.Configuration;
 
 namespace TBD.Shared.CachingConfiguration;
 

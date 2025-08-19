@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TBD.Shared.GenericDBProperties;
+using PolyMod.Shared.GenericDBProperties;
 
 namespace TBD.ServiceModule.Models;
 

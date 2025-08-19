@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.Repositories;
 using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
@@ -7,7 +8,6 @@ using TBD.ScheduleModule.Models;
 using TBD.ScheduleModule.Repositories;
 using TBD.ScheduleModule.Services;
 using TBD.Shared.CachingConfiguration;
-using TBD.Shared.Repositories;
 
 namespace TBD.ScheduleModule;
 

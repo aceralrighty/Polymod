@@ -1,4 +1,4 @@
-# TBD Modular Monolith (.NET Learning Project)
+# PolyMod Modular Monolith (.NET Learning Project)
 
 This is a personal project aimed at deepening my understanding of the `.NET framework`, `Entity Framework Core`, and
 building real-world backend systems. I'm using a **modular monolithic architecture** to structure the application for

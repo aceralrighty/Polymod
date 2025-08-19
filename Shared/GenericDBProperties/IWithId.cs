@@ -1,4 +1,4 @@
-namespace TBD.Shared.GenericDBProperties;
+namespace PolyMod.Shared.GenericDBProperties;
 
 internal interface IWithId
 {

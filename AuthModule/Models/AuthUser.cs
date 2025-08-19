@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using TBD.Shared.GenericDBProperties;
+using PolyMod.Shared.GenericDBProperties;
 
 namespace TBD.AuthModule.Models;
 

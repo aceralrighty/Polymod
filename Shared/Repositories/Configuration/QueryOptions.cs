@@ -1,4 +1,4 @@
-namespace TBD.Shared.Repositories.Configuration;
+namespace PolyMod.Shared.Repositories.Configuration;
 
 public class QueryOptions
 {

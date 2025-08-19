@@ -1,3 +1,4 @@
+using PolyMod.MetricsModule.ModuleHealthCheck.ModuleChecks;
 using TBD.MetricsModule.ModuleHealthCheck.Interfaces;
 using TBD.MetricsModule.ModuleHealthCheck.ModuleChecks;
 

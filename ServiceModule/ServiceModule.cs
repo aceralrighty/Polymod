@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.Shared.Repositories;
 using TBD.MetricsModule.OpenTelemetry;
 using TBD.MetricsModule.Services;
 using TBD.MetricsModule.Services.Interfaces;
@@ -8,7 +9,6 @@ using TBD.ServiceModule.Repositories;
 using TBD.ServiceModule.Services;
 using TBD.Shared.CachingConfiguration;
 using TBD.Shared.EntityMappers;
-using TBD.Shared.Repositories;
 
 namespace TBD.ServiceModule;
 

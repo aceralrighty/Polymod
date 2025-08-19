@@ -6,9 +6,9 @@ using System.Reflection;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using TBD.Shared.Repositories.Configuration;
+using PolyMod.Shared.Repositories.Configuration;
 
-namespace TBD.Shared.Repositories;
+namespace PolyMod.Shared.Repositories;
 
 public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     where T : class
