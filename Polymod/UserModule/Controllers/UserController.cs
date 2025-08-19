@@ -1,11 +1,10 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using PolyMod.API.DTOs;
 using PolyMod.API.DTOs.Users;
-using PolyMod.UserModule.Services;
 using PolyMod.MetricsModule.OpenTelemetry.Services;
 using PolyMod.MetricsModule.Services.Interfaces;
-using IMetricsService = PolyMod.StockPredictionService.Services.Interfaces.IMetricsService;
-using IMetricsServiceFactory = PolyMod.StockPredictionService.Services.Interfaces.IMetricsServiceFactory;
-using OpenTelemetryMetricsService = PolyMod.StockPredictionService.OpenTelemetry.Services.OpenTelemetryMetricsService;
+using PolyMod.UserModule.Services;
 
 namespace PolyMod.UserModule.Controllers;
 
@@ -113,7 +112,7 @@ public class UserController(IUserService userService, IMetricsServiceFactory met
             return BadRequest("ID in URL doesn't match ID in request body");
         }
 
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             await userService.UpdateUserAsync(userDto);
@@ -144,7 +143,7 @@ public class UserController(IUserService userService, IMetricsServiceFactory met
     [HttpPost]
     public async Task<ActionResult<UserDto>> PostUser(UserDto? userDto)
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             await userService.CreateUserAsync(userDto);

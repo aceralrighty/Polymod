@@ -1,3 +1,4 @@
+using PolyMod.API.DTOs;
 using PolyMod.API.DTOs.Users;
 
 namespace PolyMod.UserModule.Services;

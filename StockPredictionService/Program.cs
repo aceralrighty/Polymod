@@ -1,5 +1,5 @@
-using PolyMod.StockPredictionService.Context;
 using PolyMod.StockPredictionService;
+using PolyMod.StockPredictionService.Context;
 using PolyMod.StockPredictionService.PipelineOrchestrator;
 using PolyMod.StockPredictionService.Services;
 using PolyMod.StockPredictionService.Services.Interfaces;
@@ -53,21 +53,21 @@ if (app.Environment.IsDevelopment())
     // Optional: Run your stock prediction pipeline on startup in dev
     try
     {
-        Console.WriteLine("🔮 Starting Stock Prediction Service...");
+        Console.WriteLine($"🔮 Starting Stock Prediction Service...");
 
         using var scope = app.Services.CreateScope();
         var scopedServices = scope.ServiceProvider;
 
         // Ensure database is created
         var context = scopedServices.GetRequiredService<StockDbContext>();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.EnsureCreatedAsync().ConfigureAwait(false);
 
         // Optionally run the prediction pipeline
         var prediction = scopedServices.GetRequiredService<StockPredictionPipeline>();
-        await prediction.ExecuteFullPipelineAsync("Dataset/all_stocks_5yr.csv");
+        await prediction.ExecuteFullPipelineAsync("Dataset/all_stocks_5yr.csv").ConfigureAwait(false);
         Console.WriteLine("✅ Stock Prediction Service ready!");
     }
-    catch (Exception ex)
+    catch (InvalidOperationException ex)
     {
         Console.WriteLine($"⚠️ Startup warning: {ex.Message}");
         // Don't throw here - let the service start even if prediction fails
@@ -80,4 +80,4 @@ app.UseAuthorization();
 app.MapControllers();
 
 Console.WriteLine("🚀 Stock Prediction Service started!");
-await app.RunAsync();
+await app.RunAsync().ConfigureAwait(false);

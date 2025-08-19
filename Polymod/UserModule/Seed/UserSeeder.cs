@@ -4,15 +4,11 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PolyMod.AddressModule.Data;
 using PolyMod.AddressModule.Models;
+using PolyMod.MetricsModule.Services.Interfaces;
 using PolyMod.Shared.Repositories;
+using PolyMod.Shared.Utils;
 using PolyMod.UserModule.Data;
 using PolyMod.UserModule.Models;
-using PolyMod.MetricsModule.Services.Interfaces;
-using PolyMod.Shared.Utils;
-using DomainUser = PolyMod.UserModule.Models.User;
-using Hasher = Isopoh.Cryptography.Blake2b.Hasher;
-using IMetricsService = PolyMod.StockPredictionService.Services.Interfaces.IMetricsService;
-using IMetricsServiceFactory = PolyMod.StockPredictionService.Services.Interfaces.IMetricsServiceFactory;
 
 namespace PolyMod.UserModule.Seed;
 
@@ -38,8 +34,8 @@ public static class UserSeeder
         // Resolve DbContexts for schema management and repositories for data operations
         var userContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
         var addressContext = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
-        var userRepository = scope.ServiceProvider.GetRequiredService<StockPredictionService.Shared.Repositories.IGenericRepository<User>>();
-        var addressRepository = scope.ServiceProvider.GetRequiredService<StockPredictionService.Shared.Repositories.IGenericRepository<UserAddress>>();
+        var userRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<User>>();
+        var addressRepository = scope.ServiceProvider.GetRequiredService<IGenericRepository<UserAddress>>();
 
         var factory = scope.ServiceProvider.GetRequiredService<IMetricsServiceFactory>();
         var metricsService = factory.CreateMetricsService("UserModule");
@@ -158,7 +154,8 @@ public static class UserSeeder
         }
     }
 
-    private static async Task<List<User>> SeedUsersAsync(StockPredictionService.Shared.Repositories.IGenericRepository<User> userRepository, IMetricsService metricsService, Activity? parentActivity, int count)
+    private static async Task<List<User>> SeedUsersAsync(IGenericRepository<User> userRepository,
+        IMetricsService metricsService, Activity? parentActivity, int count)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUsers", ActivityKind.Internal,
             parentActivity?.Context ?? default);
@@ -226,7 +223,8 @@ public static class UserSeeder
         }
     }
 
-    private static async Task SeedUserAddressesAsync(StockPredictionService.Shared.Repositories.IGenericRepository<User> userRepository, StockPredictionService.Shared.Repositories.IGenericRepository<UserAddress> addressRepository,
+    private static async Task SeedUserAddressesAsync(IGenericRepository<User> userRepository,
+        IGenericRepository<UserAddress> addressRepository,
         IMetricsService metricsService, Activity? parentActivity, int maxAddressesPerUser = 2)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUserAddressesStreaming",

@@ -1,11 +1,10 @@
 using AutoMapper;
+using PolyMod.API.DTOs;
 using PolyMod.API.DTOs.Users;
+using PolyMod.MetricsModule.Services.Interfaces;
 using PolyMod.Shared.Utils;
 using PolyMod.UserModule.Models;
 using PolyMod.UserModule.Repositories;
-using PolyMod.MetricsModule.Services.Interfaces;
-using IMetricsService = PolyMod.StockPredictionService.Services.Interfaces.IMetricsService;
-using IMetricsServiceFactory = PolyMod.StockPredictionService.Services.Interfaces.IMetricsServiceFactory;
 
 namespace PolyMod.UserModule.Services;
 

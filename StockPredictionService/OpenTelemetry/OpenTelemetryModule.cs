@@ -40,61 +40,42 @@ public static class OpenTelemetryModule
         }
 
         services.AddOpenTelemetry()
-            .WithMetrics(builder =>
+    .WithMetrics(builder =>
+    {
+        // Register your meters
+        foreach (var meterName in RegisteredModules)
+        {
+            builder.AddMeter(meterName);
+        }
+
+        builder
+            .AddRuntimeInstrumentation()
+            .AddProcessInstrumentation() // works after adding the package
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddPrometheusExporter(options =>
             {
-                Console.WriteLine("[METRICS] Building OpenTelemetry metrics...");
-
-                // Add all registered module meters
-                foreach (var meterName in RegisteredModules)
-                {
-                    Console.WriteLine($"[METRICS] Adding meter to OpenTelemetry: {meterName}");
-                    builder.AddMeter(meterName);
-                }
-
-                // Also add the static meters that are created directly in your code
-                builder.AddMeter("TBD.StockPrediction");
-                builder.AddMeter("TBD.StockPipeline");
-                builder.AddMeter("TBD.TestModule");
-                builder.AddMeter("TBD.UserModule"); // Add UserModule meter
-                Console.WriteLine(
-                    "[METRICS] Added static meters: TBD.StockPrediction, TBD.StockPipeline, TBD.TestModule, TBD.UserModule");
-
-                builder
-                    .AddRuntimeInstrumentation()
-                    .AddProcessInstrumentation()
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddPrometheusExporter(options =>
-                    {
-                        Console.WriteLine("[METRICS] Configuring Prometheus exporter");
-                        options.ScrapeEndpointPath = "/metrics";
-                        options.ScrapeResponseCacheDurationMilliseconds = 0; // Disable caching for real-time metrics
-                        Console.WriteLine("[METRICS] Prometheus exporter configured with endpoint: /metrics");
-                    });
-
-                Console.WriteLine("[METRICS] OpenTelemetry metrics configuration complete");
-            })
-            .WithTracing(builder =>
-            {
-                Console.WriteLine("[TRACING] Building OpenTelemetry tracing...");
-
-                builder
-                    .AddSource("TBD.UserModule.DataSeeder") // Add our DataSeeder activity source
-                    .AddSource("TBD.StockPrediction")
-                    .AddSource("TBD.StockPipeline")
-                    .AddSource("TBD.TestModule")
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation(options =>
-                    {
-                        options.SetDbStatementForText = true;
-                        options.SetDbStatementForStoredProcedure = true;
-                    })
-                    .AddConsoleExporter(); // For development - replace with a proper exporter for production
-
-
-                Console.WriteLine("[TRACING] OpenTelemetry tracing configuration complete");
+                options.ScrapeEndpointPath = "/metrics";
+                options.ScrapeResponseCacheDurationMilliseconds = 0;
             });
+    })
+    .WithTracing(builder =>
+    {
+        builder
+            .AddSource("TBD.UserModule.DataSeeder")
+            .AddSource("TBD.StockPrediction")
+            .AddSource("TBD.StockPipeline")
+            .AddSource("TBD.TestModule")
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
+            .AddEntityFrameworkCoreInstrumentation(options =>
+            {
+                options.SetDbStatementForText = true;
+                options.SetDbStatementForStoredProcedure = true;
+            })
+            .AddConsoleExporter();
+    });
+
 
         return services;
     }

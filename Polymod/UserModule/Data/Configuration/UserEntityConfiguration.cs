@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using PolyMod.UserModule.Models;
-using PolyMod.ScheduleModule.Models;
 
 namespace PolyMod.UserModule.Data.Configuration;
 

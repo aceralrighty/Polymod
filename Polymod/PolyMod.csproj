@@ -94,11 +94,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include=".github\dependabot.yml"/>
-    <Content Include=".github\workflows\ci.yaml"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <_ContentIncludedByDefault Remove="Views\Address\Create.cshtml"/>
     <_ContentIncludedByDefault Remove="Views\Address\Delete.cshtml"/>
     <_ContentIncludedByDefault Remove="Views\Address\Details.cshtml"/>

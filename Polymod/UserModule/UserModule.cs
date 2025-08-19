@@ -1,5 +1,16 @@
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using PolyMod.MetricsModule.OpenTelemetry;
+using PolyMod.Shared.CachingConfiguration;
+using PolyMod.Shared.EntityMappers;
+using PolyMod.Shared.Events.Interfaces;
+using PolyMod.Shared.Repositories;
+using PolyMod.Shared.Utils;
+using PolyMod.UserModule.Data;
+using PolyMod.UserModule.Models;
+using PolyMod.UserModule.PubEvents;
+using PolyMod.UserModule.Repositories;
+using PolyMod.UserModule.Services;
 
 namespace PolyMod.UserModule;
 
