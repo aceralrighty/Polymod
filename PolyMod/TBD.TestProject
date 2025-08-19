@@ -1,0 +1,5 @@
+HEADERnamespace TBD
+{
+  [NUnit.Framework.TestFixture]
+  public class UserAddressServiceTest {}
+}
