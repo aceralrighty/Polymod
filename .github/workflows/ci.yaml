@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: PolyMod CI Pipeline
 
 on:
   push:
@@ -7,8 +7,44 @@ on:
     branches: [ main ]
 
 jobs:
+
   build-and-test:
     runs-on: ubuntu-latest
+
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      monolith-changed: ${{ steps.changes.outputs.monolith }}
+      stock-service-changed: ${{ steps.changes.outputs.stock-service }}
+      tests-changed: ${{ steps.changes.outputs.tests }}
+      shared-changed: ${{ steps.changes.outputs.shared }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            monolith:
+              - 'PolyMod/**'
+            stock-service:
+              - 'StockPredictionService/**'
+            tests:
+              - 'TestProject/**'
+              - '**/*Test*/**'
+              - '**/*Tests*/**'
+            shared:
+              - '*.sln'
+              - '*.props'
+              - '*.targets'
+              - '.github/workflows/**'
+
+  build-monolith:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.monolith-changed == 'true' || needs.detect-changes.outputs.shared-changed == 'true'
 
     steps:
       - name: Checkout code
@@ -18,6 +54,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0'
+
 
       - name: Restore dependencies
         run: dotnet restore
@@ -40,8 +77,31 @@ jobs:
         if: steps.check-tests.outputs.tests-exist == 'true'
         run: dotnet test TestProject/TestProject.csproj --no-build --configuration Release --verbosity normal
 
-  code-quality:
+      - name: Restore PolyMod (Monolith)
+        working-directory: PolyMod
+        run: dotnet restore
+
+      - name: Build PolyMod (Monolith)
+        working-directory: PolyMod
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test PolyMod (if tests exist)
+        working-directory: PolyMod
+        run: |
+          if [ -f "../PolyMod.Tests/PolyMod.Tests.csproj" ]; then
+            cd ../PolyMod.Tests
+            dotnet test --configuration Release --verbosity normal
+          elif find . -name "*Test*.csproj" -o -name "*Tests*.csproj" | head -1; then
+            # Run tests if found in the PolyMod directory
+            dotnet test --configuration Release --verbosity normal
+          else
+            echo "⚠️ No specific tests found for PolyMod monolith"
+          fi
+
+  build-stock-service:
     runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.stock-service-changed == 'true' || needs.detect-changes.outputs.shared-changed == 'true'
 
     steps:
       - name: Checkout code
@@ -52,6 +112,43 @@ jobs:
         with:
           dotnet-version: '9.0'
 
+      - name: Restore Stock Prediction Service
+        working-directory: StockPredictionService
+        run: dotnet restore
+
+      - name: Build Stock Prediction Service
+        working-directory: StockPredictionService
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test Stock Prediction Service
+        working-directory: StockPredictionService
+        run: |
+          if [ -f "../StockPredictionService.Tests/StockPredictionService.Tests.csproj" ]; then
+            cd ../StockPredictionService.Tests
+            dotnet test --configuration Release --verbosity normal
+          elif find . -name "*Test*.csproj" -o -name "*Tests*.csproj" | head -1; then
+            # Run tests if found in the StockPredictionService directory
+            dotnet test --configuration Release --verbosity normal
+          else
+            echo "⚠️ No specific tests found for Stock Prediction Service"
+          fi
+
+
+  run-integration-tests:
+    runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: needs.detect-changes.outputs.tests-changed == 'true' || needs.detect-changes.outputs.shared-changed == 'true'
+
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
       - name: Restore dependencies
         run: dotnet restore
 
@@ -61,8 +158,30 @@ jobs:
       - name: Build for analysis
         run: dotnet build StockPredictionService/StockPredictionService.csproj --no-restore
 
-  security-scan:
+      - name: Check if TestProject exists
+        id: check-tests
+        run: |
+          if [ -f "TestProject/TestProject.csproj" ]; then
+            echo "tests-exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "tests-exist=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No TestProject found"
+          fi
+
+      - name: Run integration tests
+        if: steps.check-tests.outputs.tests-exist == 'true'
+        run: |
+          dotnet restore TestProject/TestProject.csproj
+          dotnet test TestProject/TestProject.csproj --configuration Release --verbosity normal
+
+  code-quality:
     runs-on: ubuntu-latest
+
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.monolith-changed == 'true' ||
+      needs.detect-changes.outputs.stock-service-changed == 'true' ||
+      needs.detect-changes.outputs.shared-changed == 'true'
 
     steps:
       - name: Checkout code
@@ -74,36 +193,137 @@ jobs:
           dotnet-version: '9.0'
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: |
+          if [ -f "PolyModSolution.sln" ]; then
+            dotnet restore PolyModSolution.sln
+          else
+            # Restore individual projects
+            dotnet restore PolyMod/PolyMod.csproj
+            dotnet restore StockPredictionService/StockPredictionService.csproj
+          fi
 
-      - name: Vulnerability scan
-        run: dotnet list package --vulnerable --include-transitive
+      - name: Format code
+        run: |
+          if [ -f "PolyModSolution.sln" ]; then
+            dotnet format PolyModSolution.sln --verbosity diagnostic
+          else
+            # Format individual projects
+            if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
+              dotnet format PolyMod/PolyMod.csproj --verbosity diagnostic
+            fi
+            if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
+              dotnet format StockPredictionService/StockPredictionService.csproj --verbosity diagnostic
+            fi
+          fi
+
+      - name: Build for analysis
+        run: |
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
+            dotnet build PolyMod/PolyMod.csproj --no-restore
+          fi
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
+            dotnet build StockPredictionService/StockPredictionService.csproj --no-restore
+          fi
+
+  # Simple success check
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.monolith-changed == 'true' ||
+      needs.detect-changes.outputs.stock-service-changed == 'true' ||
+      needs.detect-changes.outputs.shared-changed == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
 
       - name: Install dotnet-outdated
         run: dotnet tool install --global dotnet-outdated-tool
 
-      - name: Check for outdated packages
+      - name: Security scan - PolyMod (Monolith)
+        if: needs.detect-changes.outputs.monolith-changed == 'true'
         run: |
+          dotnet restore PolyMod/PolyMod.csproj
+          dotnet list PolyMod/PolyMod.csproj package --vulnerable --include-transitive
           export PATH="$PATH:$HOME/.dotnet/tools"
-          dotnet list package --outdated
+          dotnet outdated PolyMod/PolyMod.csproj
 
-  # Simple success check
+      - name: Security scan - Stock Prediction Service
+        if: needs.detect-changes.outputs.stock-service-changed == 'true'
+        run: |
+          dotnet restore StockPredictionService/StockPredictionService.csproj
+          dotnet list StockPredictionService/StockPredictionService.csproj package --vulnerable --include-transitive
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet outdated StockPredictionService/StockPredictionService.csproj
   ci-success:
     runs-on: ubuntu-latest
-    needs: [build-and-test, code-quality, security-scan]
+    needs: [detect-changes, build-monolith, build-stock-service, run-integration-tests, code-quality, security-scan]
     if: always()
 
     steps:
       - name: Check CI Results
         run: |
-          if [[ "${{ needs.build-and-test.result }}" == "success" &&
-                "${{ needs.code-quality.result }}" == "success" &&
-                "${{ needs.security-scan.result }}" == "success" ]]; then
-            echo "✅ All CI checks passed!"
+          echo "🔍 Checking CI results..."
+          echo "Changes detected:"
+          echo "  - Monolith: ${{ needs.detect-changes.outputs.monolith-changed }}"
+          echo "  - Stock Service: ${{ needs.detect-changes.outputs.stock-service-changed }}"
+          echo "  - Tests: ${{ needs.detect-changes.outputs.tests-changed }}"
+          echo "  - Shared: ${{ needs.detect-changes.outputs.shared-changed }}"
+          echo ""
+          echo "Job results:"
+          echo "  - Build Monolith: ${{ needs.build-monolith.result }}"
+          echo "  - Build Stock Service: ${{ needs.build-stock-service.result }}"
+          echo "  - Integration Tests: ${{ needs.run-integration-tests.result }}"
+          echo "  - Code Quality: ${{ needs.code-quality.result }}"
+          echo "  - Security Scan: ${{ needs.security-scan.result }}"
+
+          # Check if any changes were detected
+          CHANGES_DETECTED=false
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ||
+                "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ||
+                "${{ needs.detect-changes.outputs.tests-changed }}" == "true" ||
+                "${{ needs.detect-changes.outputs.shared-changed }}" == "true" ]]; then
+            CHANGES_DETECTED=true
+          fi
+
+          if [[ "$CHANGES_DETECTED" == "false" ]]; then
+            echo "✅ No changes detected - CI pipeline completed successfully!"
+            exit 0
+          fi
+
+          # Count skipped and success as OK
+          FAILED_JOBS=""
+
+          if [[ "${{ needs.build-monolith.result }}" == "failure" ]]; then
+            FAILED_JOBS="$FAILED_JOBS build-monolith"
+          fi
+
+          if [[ "${{ needs.build-stock-service.result }}" == "failure" ]]; then
+            FAILED_JOBS="$FAILED_JOBS build-stock-service"
+          fi
+
+          if [[ "${{ needs.run-integration-tests.result }}" == "failure" ]]; then
+            FAILED_JOBS="$FAILED_JOBS run-integration-tests"
+          fi
+
+          if [[ "${{ needs.code-quality.result }}" == "failure" ]]; then
+            FAILED_JOBS="$FAILED_JOBS code-quality"
+          fi
+
+          if [[ "${{ needs.security-scan.result }}" == "failure" ]]; then
+            FAILED_JOBS="$FAILED_JOBS security-scan"
+          fi
+
+          if [[ -z "$FAILED_JOBS" ]]; then
+            echo "✅ All CI checks passed or skipped appropriately!"
           else
-            echo "❌ Some CI checks failed"
-            echo "Build and Test: ${{ needs.build-and-test.result }}"
-            echo "Code Quality: ${{ needs.code-quality.result }}"
-            echo "Security Scan: ${{ needs.security-scan.result }}"
+            echo "❌ The following jobs failed: $FAILED_JOBS"
             exit 1
           fi
