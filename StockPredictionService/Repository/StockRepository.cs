@@ -1,12 +1,12 @@
 using EFCore.BulkExtensions;
 using Microsoft.EntityFrameworkCore;
-using PolyMod.StockPredictionService.Context;
-using PolyMod.StockPredictionService.Models;
-using PolyMod.StockPredictionService.Models.Stocks;
-using PolyMod.StockPredictionService.Repository.Interfaces;
-using PolyMod.StockPredictionService.Shared.Repositories;
+using StockPredictionService.Context;
+using StockPredictionService.CrossCutting.Repositories;
+using StockPredictionService.Models;
+using StockPredictionService.Models.Stocks;
+using StockPredictionService.Repository.Interfaces;
 
-namespace PolyMod.StockPredictionService.Repository;
+namespace StockPredictionService.Repository;
 
 public class StockRepository(StockDbContext context) : GenericRepository<RawData>(context), IStockRepository
 {

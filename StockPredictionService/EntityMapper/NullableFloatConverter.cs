@@ -3,7 +3,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
 
-namespace PolyMod.StockPredictionService.EntityMapper;
+namespace StockPredictionService.EntityMapper;
 
 internal class NullableFloatConverter : SingleConverter
 {

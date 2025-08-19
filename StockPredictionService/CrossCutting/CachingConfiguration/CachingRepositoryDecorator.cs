@@ -3,10 +3,10 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using PolyMod.StockPredictionService.Shared.Repositories;
-using PolyMod.StockPredictionService.Shared.Repositories.Configuration;
+using StockPredictionService.CrossCutting.Repositories;
+using StockPredictionService.CrossCutting.Repositories.Configuration;
 
-namespace PolyMod.StockPredictionService.Shared.CachingConfiguration;
+namespace StockPredictionService.CrossCutting.CachingConfiguration;
 
 public class CachingRepositoryDecorator<T>(
     IGenericRepository<T> inner,

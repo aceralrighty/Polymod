@@ -2,13 +2,13 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PolyMod.StockPredictionService.Context;
-using PolyMod.StockPredictionService.ML.Interface;
-using PolyMod.StockPredictionService.Models;
-using PolyMod.StockPredictionService.Models.Stocks;
-using PolyMod.StockPredictionService.Services.Interfaces;
+using StockPredictionService.Context;
+using StockPredictionService.ML.Interface;
+using StockPredictionService.Models;
+using StockPredictionService.Models.Stocks;
+using StockPredictionService.Services.Interfaces;
 
-namespace PolyMod.StockPredictionService.Controllers;
+namespace StockPredictionService.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]

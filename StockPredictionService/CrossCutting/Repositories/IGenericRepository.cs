@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
-using PolyMod.StockPredictionService.Shared.Repositories.Configuration;
+using StockPredictionService.CrossCutting.Repositories.Configuration;
 
-namespace PolyMod.StockPredictionService.Shared.Repositories;
+namespace StockPredictionService.CrossCutting.Repositories;
 
 public interface IGenericRepository<T> where T : class
 {

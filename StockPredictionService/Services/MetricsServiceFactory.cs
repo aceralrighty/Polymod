@@ -1,6 +1,6 @@
-using PolyMod.StockPredictionService.Services.Interfaces;
+using StockPredictionService.Services.Interfaces;
 
-namespace PolyMod.StockPredictionService.Services;
+namespace StockPredictionService.Services;
 
 public class MetricsServiceFactory : IMetricsServiceFactory
 {

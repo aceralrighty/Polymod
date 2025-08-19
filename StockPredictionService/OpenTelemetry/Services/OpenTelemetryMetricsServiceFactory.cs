@@ -1,6 +1,6 @@
-using PolyMod.StockPredictionService.Services.Interfaces;
+using StockPredictionService.Services.Interfaces;
 
-namespace PolyMod.StockPredictionService.OpenTelemetry.Services;
+namespace StockPredictionService.OpenTelemetry.Services;
 
 public class OpenTelemetryMetricsServiceFactory : IMetricsServiceFactory
 {

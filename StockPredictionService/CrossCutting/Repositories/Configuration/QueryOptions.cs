@@ -1,4 +1,4 @@
-namespace PolyMod.StockPredictionService.Shared.Repositories.Configuration;
+namespace StockPredictionService.CrossCutting.Repositories.Configuration;
 
 public class QueryOptions
 {

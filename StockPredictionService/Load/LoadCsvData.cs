@@ -2,10 +2,10 @@ using System.Globalization;
 using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
-using PolyMod.StockPredictionService.EntityMapper;
-using PolyMod.StockPredictionService.Models;
+using StockPredictionService.EntityMapper;
+using StockPredictionService.Models;
 
-namespace PolyMod.StockPredictionService.Load;
+namespace StockPredictionService.Load;
 
 public class LoadCsvData
 {
