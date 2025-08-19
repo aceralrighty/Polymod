@@ -24,11 +24,11 @@ jobs:
         with:
           filters: |
             monolith:
-              - 'PolyMod/**'
+              - 'PolyModSolution/PolyMod/**'
             stock-service:
-              - 'StockPredictionService/**'
-              - '!StockPredictionService/**/*Test*.cs'
-              - '!StockPredictionService/**/*Tests*.cs'
+              - 'PolyModSolution/StockPredictionService/**'
+              - '!PolyModSolution/StockPredictionService/**/*Test*.cs'
+              - '!PolyModSolution/StockPredictionService/**/*Tests*.cs'
             tests:
               - 'TestProject/**'
               - '**/*Test*/**'
@@ -36,7 +36,6 @@ jobs:
               - '**/*Test*.cs'
               - '**/*Tests*.cs'
             shared:
-              - '*.sln'
               - '*.props'
               - '*.targets'
               - '.github/workflows/**'
@@ -50,21 +49,35 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check if PolyMod directory exists
+        id: check-monolith
+        run: |
+          if [ -d "PolyModSolution/PolyMod" ]; then
+            echo "monolith-exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "monolith-exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ PolyModSolution/PolyMod directory not found - skipping monolith build"
+          fi
+
       - name: Setup .NET
+        if: steps.check-monolith.outputs.monolith-exists == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0'
 
       - name: Restore PolyMod (Monolith)
-        working-directory: PolyMod
+        if: steps.check-monolith.outputs.monolith-exists == 'true'
+        working-directory: PolyModSolution/PolyMod
         run: dotnet restore
 
       - name: Build PolyMod (Monolith)
-        working-directory: PolyMod
+        if: steps.check-monolith.outputs.monolith-exists == 'true'
+        working-directory: PolyModSolution/PolyMod
         run: dotnet build --no-restore --configuration Release
 
       - name: Test PolyMod (if tests exist)
-        working-directory: PolyMod
+        if: steps.check-monolith.outputs.monolith-exists == 'true'
+        working-directory: PolyModSolution/PolyMod
         run: |
           if [ -f "../PolyMod.Tests/PolyMod.Tests.csproj" ]; then
             cd ../PolyMod.Tests
@@ -92,19 +105,19 @@ jobs:
       - name: Clean test files from production code
         run: |
           # Remove any test files that might be in the production project
-          find StockPredictionService -name "*Test*.cs" -type f -delete
-          find StockPredictionService -name "*Tests*.cs" -type f -delete
+          find PolyModSolution/StockPredictionService -name "*Test*.cs" -type f -delete
+          find PolyModSolution/StockPredictionService -name "*Tests*.cs" -type f -delete
 
       - name: Restore Stock Prediction Service
-        working-directory: StockPredictionService
+        working-directory: PolyModSolution/StockPredictionService
         run: dotnet restore
 
       - name: Build Stock Prediction Service
-        working-directory: StockPredictionService
+        working-directory: PolyModSolution/StockPredictionService
         run: dotnet build --no-restore --configuration Release
 
       - name: Test Stock Prediction Service
-        working-directory: StockPredictionService
+        working-directory: PolyModSolution/StockPredictionService
         run: |
           if [ -f "../StockPredictionService.Tests/StockPredictionService.Tests.csproj" ]; then
             cd ../StockPredictionService.Tests
@@ -164,43 +177,36 @@ jobs:
 
       - name: Clean test files from production code
         run: |
-          find StockPredictionService -name "*Test*.cs" -type f -delete
-          find StockPredictionService -name "*Tests*.cs" -type f -delete
+          find PolyModSolution/StockPredictionService -name "*Test*.cs" -type f -delete
+          find PolyModSolution/StockPredictionService -name "*Tests*.cs" -type f -delete
 
       - name: Restore dependencies
         run: |
-          if [ -f "PolyModSolution.sln" ]; then
-            dotnet restore PolyModSolution.sln
-          else
-            # Only restore projects that exist
-            if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyMod/PolyMod.csproj" ]; then
-              dotnet restore PolyMod/PolyMod.csproj
-            fi
-            if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-              dotnet restore StockPredictionService/StockPredictionService.csproj
-            fi
+          # Restore individual projects since there's no solution file
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
+            dotnet restore PolyModSolution/PolyMod/PolyMod.csproj
+          fi
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
+            dotnet restore PolyModSolution/StockPredictionService/StockPredictionService.csproj
           fi
 
       - name: Format code
         run: |
-          if [ -f "PolyModSolution.sln" ]; then
-            dotnet format PolyModSolution.sln --verbosity diagnostic --exclude "*Test*.cs" --exclude "*Tests*.cs"
-          else
-            if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyMod/PolyMod.csproj" ]; then
-              dotnet format PolyMod/PolyMod.csproj --verbosity diagnostic
-            fi
-            if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-              dotnet format StockPredictionService/StockPredictionService.csproj --verbosity diagnostic
-            fi
+          # Format individual projects
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
+            dotnet format PolyModSolution/PolyMod/PolyMod.csproj --verbosity diagnostic
+          fi
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
+            dotnet format PolyModSolution/StockPredictionService/StockPredictionService.csproj --verbosity diagnostic
           fi
 
       - name: Build for analysis
         run: |
-          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyMod/PolyMod.csproj" ]; then
-            dotnet build PolyMod/PolyMod.csproj --no-restore
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
+            dotnet build PolyModSolution/PolyMod/PolyMod.csproj --no-restore
           fi
-          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-            dotnet build StockPredictionService/StockPredictionService.csproj --no-restore
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
+            dotnet build PolyModSolution/StockPredictionService/StockPredictionService.csproj --no-restore
           fi
 
   security-scan:
@@ -225,24 +231,24 @@ jobs:
 
       - name: Clean test files from production code
         run: |
-          find StockPredictionService -name "*Test*.cs" -type f -delete
-          find StockPredictionService -name "*Tests*.cs" -type f -delete
+          find PolyModSolution/StockPredictionService -name "*Test*.cs" -type f -delete
+          find PolyModSolution/StockPredictionService -name "*Tests*.cs" -type f -delete
 
       - name: Security scan - PolyMod (Monolith)
         if: needs.detect-changes.outputs.monolith-changed == 'true'
         run: |
-          dotnet restore PolyMod/PolyMod.csproj
-          dotnet list PolyMod/PolyMod.csproj package --vulnerable --include-transitive
+          dotnet restore PolyModSolution/PolyMod/PolyMod.csproj
+          dotnet list PolyModSolution/PolyMod/PolyMod.csproj package --vulnerable --include-transitive
           export PATH="$PATH:$HOME/.dotnet/tools"
-          dotnet outdated PolyMod/PolyMod.csproj
+          dotnet outdated PolyModSolution/PolyMod/PolyMod.csproj
 
       - name: Security scan - Stock Prediction Service
         if: needs.detect-changes.outputs.stock-service-changed == 'true'
         run: |
-          dotnet restore StockPredictionService/StockPredictionService.csproj
-          dotnet list StockPredictionService/StockPredictionService.csproj package --vulnerable --include-transitive
+          dotnet restore PolyModSolution/StockPredictionService/StockPredictionService.csproj
+          dotnet list PolyModSolution/StockPredictionService/StockPredictionService.csproj package --vulnerable --include-transitive
           export PATH="$PATH:$HOME/.dotnet/tools"
-          dotnet outdated StockPredictionService/StockPredictionService.csproj
+          dotnet outdated PolyModSolution/StockPredictionService/StockPredictionService.csproj
 
   ci-success:
     runs-on: ubuntu-latest
