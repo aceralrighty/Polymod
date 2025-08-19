@@ -7,115 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      stock-prediction-changed: ${{ steps.changes.outputs.stock-prediction }}
-      user-service-changed: ${{ steps.changes.outputs.user-service }}
-      api-gateway-changed: ${{ steps.changes.outputs.api-gateway }}
-      test-project-changed: ${{ steps.changes.outputs.test-project }}
-      shared-changed: ${{ steps.changes.outputs.shared }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Detect changes
-        uses: dorny/paths-filter@v2
-        id: changes
-        with:
-          filters: |
-            stock-prediction:
-              - 'StockPredictionService/**'
-            user-service:
-              - 'UserService/**'
-            api-gateway:
-              - 'ApiGateway/**'
-            test-project:
-              - 'TestProject/**'
-            shared:
-              - 'Shared/**'
-              - '*.sln'
-              - '*.props'
-              - '*.targets'
-
   build-and-test:
     runs-on: ubuntu-latest
-    needs: detect-changes
-    # Run if any service or shared code changed
-    if: |
-      needs.detect-changes.outputs.stock-prediction-changed == 'true' ||
-      needs.detect-changes.outputs.user-service-changed == 'true' ||
-      needs.detect-changes.outputs.api-gateway-changed == 'true' ||
-      needs.detect-changes.outputs.test-project-changed == 'true' ||
-      needs.detect-changes.outputs.shared-changed == 'true'
-
-    strategy:
-      matrix:
-        service:
-          - name: "StockPredictionService"
-            path: "StockPredictionService"
-            test-path: "TestProject"
-            changed: ${{ needs.detect-changes.outputs.stock-prediction-changed }}
-          # Add your other services here
-          # - name: "UserService"
-          #   path: "UserService"
-          #   test-path: "UserService.Tests"
-          #   changed: ${{ needs.detect-changes.outputs.user-service-changed }}
-        exclude:
-          - service:
-              changed: 'false'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0'
-
-      - name: Restore dependencies for ${{ matrix.service.name }}
-        run: dotnet restore ${{ matrix.service.path }}/${{ matrix.service.name }}.csproj
-
-      - name: Build ${{ matrix.service.name }}
-        run: dotnet build ${{ matrix.service.path }}/${{ matrix.service.name }}.csproj --no-restore --configuration Release
-
-      - name: Run tests for ${{ matrix.service.name }}
-        if: matrix.service.test-path != ''
-        run: dotnet test ${{ matrix.service.test-path }}/ --no-build --configuration Release --verbosity normal
-
-  # Alternative: Build all services at once (simpler approach)
-  build-all-services:
-    runs-on: ubuntu-latest
-    if: false  # Set to true if you prefer this approach over matrix
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0'
-
-      - name: Restore all dependencies
-        run: dotnet restore
-
-      - name: Build entire solution
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run all tests
-        run: dotnet test TestProject/TestProject.csproj --no-build --configuration Release --verbosity normal
-
-  code-quality:
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    # Run code quality checks if any code changed
-    if: |
-      needs.detect-changes.outputs.stock-prediction-changed == 'true' ||
-      needs.detect-changes.outputs.user-service-changed == 'true' ||
-      needs.detect-changes.outputs.api-gateway-changed == 'true' ||
-      needs.detect-changes.outputs.shared-changed == 'true'
 
     steps:
       - name: Checkout code
@@ -129,33 +22,47 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      # Check if solution file exists, fallback to individual projects
-      - name: Fix code formatting
+      # Build existing services
+      - name: Build Stock Prediction Service
+        run: dotnet build StockPredictionService/StockPredictionService.csproj --no-restore --configuration Release
+
+      # Run tests if they exist
+      - name: Check if tests exist
+        id: check-tests
         run: |
-          if [ -f "TBD.sln" ]; then
-            dotnet format TBD.sln --verbosity diagnostic
-          elif [ -f "*.sln" ]; then
-            dotnet format *.sln --verbosity diagnostic
+          if [ -d "TestProject" ]; then
+            echo "tests-exist=true" >> $GITHUB_OUTPUT
           else
-            # Format individual projects if no solution file
-            find . -name "*.csproj" -exec dirname {} \; | sort -u | while read dir; do
-              echo "Formatting project in $dir"
-              dotnet format "$dir" --verbosity diagnostic
-            done
+            echo "tests-exist=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Run tests
+        if: steps.check-tests.outputs.tests-exist == 'true'
+        run: dotnet test TestProject/TestProject.csproj --no-build --configuration Release --verbosity normal
+
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Fix code formatting
+        run: dotnet format StockPredictionService/ --verbosity diagnostic
+
       - name: Build for analysis
-        run: dotnet build --no-restore
+        run: dotnet build StockPredictionService/StockPredictionService.csproj --no-restore
 
   security-scan:
     runs-on: ubuntu-latest
-    needs: detect-changes
-    # Run security scan if any code changed
-    if: |
-      needs.detect-changes.outputs.stock-prediction-changed == 'true' ||
-      needs.detect-changes.outputs.user-service-changed == 'true' ||
-      needs.detect-changes.outputs.api-gateway-changed == 'true' ||
-      needs.detect-changes.outputs.shared-changed == 'true'
 
     steps:
       - name: Checkout code
@@ -180,32 +87,7 @@ jobs:
           export PATH="$PATH:$HOME/.dotnet/tools"
           dotnet list package --outdated
 
-  # Optional: Service-specific jobs
-  build-stock-prediction:
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.stock-prediction-changed == 'true'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0'
-
-      - name: Build Stock Prediction Service
-        run: |
-          dotnet restore StockPredictionService/StockPredictionService.csproj
-          dotnet build StockPredictionService/StockPredictionService.csproj --no-restore --configuration Release
-
-      - name: Run Stock Prediction specific tests
-        run: |
-          # Add any service-specific test commands here
-          echo "Running Stock Prediction Service specific tests..."
-
-  # Summary job to check if pipeline passed
+  # Simple success check
   ci-success:
     runs-on: ubuntu-latest
     needs: [build-and-test, code-quality, security-scan]
