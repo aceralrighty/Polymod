@@ -18,7 +18,7 @@ using StockPredictionService.Services.Interfaces;
 
 namespace StockPredictionService;
 
-public static class StockModule
+internal static class StockModule
 {
     public static IServiceCollection AddStockModule(this IServiceCollection services, IConfiguration configuration)
     {

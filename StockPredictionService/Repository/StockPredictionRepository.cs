@@ -12,7 +12,7 @@ public class StockPredictionRepository(StockDbContext context)
     public async Task<IEnumerable<StockPrediction>> GetLatestStockPredictionsAsync(Guid id, int count = 50)
     {
         return await context.StockPredictions.Where(sp => sp.Id == id).OrderByDescending(sp => sp.CreatedAt).Take(count)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<StockPrediction>> GetStocksByBatchAsync(Guid batchId)
@@ -110,7 +110,7 @@ public class StockPredictionRepository(StockDbContext context)
             .Where(joined => joined.Stock.Symbol == symbol)
             .Select(joined => joined.Prediction)
             .OrderByDescending(sp => sp.CreatedAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<Stock>> GetStockPredictionsBySymbolAsync(string symbol)
