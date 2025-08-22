@@ -10,7 +10,7 @@ public class StockPrediction : BaseTableProperties
 
     [ColumnName("Company Symbol")]
     [MaxLength(10)]
-    public string Symbol { get; set; }
+    public string Symbol { get; set; } = string.Empty;
 
     [NoColumn] public Guid BatchId { get; set; }
 
