@@ -18,7 +18,7 @@ public class StockPredictionRepository(StockDbContext context)
     public async Task<IEnumerable<StockPrediction>> GetStocksByBatchAsync(Guid batchId)
     {
         return await context.StockPredictions.Where(sp => sp.BatchId == batchId).OrderBy(sp => sp.CreatedAt)
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
     }
     public async Task<StockPrediction> SaveStockPredictionAsync(StockPrediction stockPrediction)
     {
@@ -28,17 +28,16 @@ public class StockPredictionRepository(StockDbContext context)
         {
             if (stockPrediction.CreatedAt == default)
                 stockPrediction.CreatedAt = DateTime.UtcNow;
-            if (stockPrediction.UpdatedAt == default)
-                stockPrediction.UpdatedAt = DateTime.UtcNow;
+            stockPrediction.UpdatedAt ??= DateTime.UtcNow;
 
-            await context.StockPredictions.AddAsync(stockPrediction);
+            await context.StockPredictions.AddAsync(stockPrediction).ConfigureAwait(false);
             Console.WriteLine($"Added stock prediction record for ${stockPrediction.PredictedPrice:F2}");
 
-            var savedCount = await context.SaveChangesAsync();
+            var savedCount = await context.SaveChangesAsync().ConfigureAwait(false);
             Console.WriteLine($"Successfully saved {savedCount} stock prediction record");
 
             var exists = await context.StockPredictions
-                .AnyAsync(sp => sp.Id == stockPrediction.Id);
+                .AnyAsync(sp => sp.Id == stockPrediction.Id).ConfigureAwait(false);
             Console.WriteLine($"Verification check - Stock prediction exists: {exists}");
 
             return stockPrediction;
@@ -71,19 +70,18 @@ public class StockPredictionRepository(StockDbContext context)
             {
                 if (stockPrediction.CreatedAt == default)
                     stockPrediction.CreatedAt = DateTime.UtcNow;
-                if (stockPrediction.UpdatedAt == default)
-                    stockPrediction.UpdatedAt = DateTime.UtcNow;
+                stockPrediction.UpdatedAt ??= DateTime.UtcNow;
             }
 
-            await context.StockPredictions.AddRangeAsync(stockPredictionList);
+            await context.StockPredictions.AddRangeAsync(stockPredictionList).ConfigureAwait(false);
             Console.WriteLine($"Added {stockPredictionList.Count} stock prediction records");
 
-            var savedCount = await context.SaveChangesAsync();
+            var savedCount = await context.SaveChangesAsync().ConfigureAwait(false);
             Console.WriteLine($"Successfully saved {savedCount} stock prediction records");
 
             var firstStock = stockPredictionList.First();
             var exists = await context.StockPredictions
-                .AnyAsync(sp => sp.Id == firstStock.Id);
+                .AnyAsync(sp => sp.Id == firstStock.Id).ConfigureAwait(false);
             Console.WriteLine($"Verification check - First stock prediction exists: {exists}");
         }
         catch (Exception ex)
@@ -115,6 +113,6 @@ public class StockPredictionRepository(StockDbContext context)
 
     public async Task<IEnumerable<Stock>> GetStockPredictionsBySymbolAsync(string symbol)
     {
-        return await context.Stocks.GroupBy(s => s.Symbol == symbol).Select(g => g.First()).ToListAsync();
+        return await context.Stocks.GroupBy(s => s.Symbol == symbol).Select(g => g.First()).ToListAsync().ConfigureAwait(false);
     }
 }
