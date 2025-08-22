@@ -1,424 +1,169 @@
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StockPredictionService.Context;
-using StockPredictionService.ML.Interface;
-using StockPredictionService.Models;
 using StockPredictionService.Models.Stocks;
-using StockPredictionService.Services.Interfaces;
 
 namespace StockPredictionService.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class StockController(
-    StockDbContext context,
-    IMlStockPredictionEngine predictionEngine,
-    IMetricsServiceFactory metricsServiceFactory)
-    : ControllerBase
+public class StockController(StockDbContext context) : ControllerBase
 {
-    private readonly IMetricsService _metricsService = metricsServiceFactory.CreateMetricsService("StockController");
-
-    // OpenTelemetry metrics
-    private static readonly Meter Meter = new("TBD.StockController", "1.0.0");
-
-    private static readonly Counter<int> ApiCallsCounter =
-        Meter.CreateCounter<int>("stock_api_calls_total", "Total number of API calls");
-
-    private static readonly Counter<int> ApiErrorsCounter =
-        Meter.CreateCounter<int>("stock_api_errors_total", "Total number of API errors");
-
-    private static readonly Histogram<double> ApiDurationHistogram =
-        Meter.CreateHistogram<double>("stock_api_duration_seconds", "Duration of API calls in seconds");
-
-    private static readonly Counter<int> PredictionRequestsCounter =
-        Meter.CreateCounter<int>("stock_prediction_requests_total", "Total number of prediction requests");
-
-    private static readonly Counter<int> ModelTrainingRequestsCounter =
-        Meter.CreateCounter<int>("stock_model_training_requests_total", "Total number of model training requests");
-
     // GET: api/Stock
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Stock>>> GetStocks()
+    public async Task<ActionResult<IEnumerable<Stock>>> GetStocks(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 100)
     {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "GetStocks"));
-            _metricsService.IncrementCounter("stock.controller.get_stocks");
+        // Limit pageSize to prevent abuse
+        pageSize = Math.Min(pageSize, 5000);
 
-            var stocks = await context.Stocks.ToListAsync();
-            return stocks;
-        }
-        catch (Exception)
-        {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "GetStocks"));
-            _metricsService.IncrementCounter("stock.controller.get_stocks.error");
-            throw;
-        }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "GetStocks"));
-        }
+        var stocks = await context.Stocks
+            .OrderBy(s => s.Id) // Always order for consistent pagination
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking() // Better performance for read-only operations
+            .ToListAsync().ConfigureAwait(false);
+
+        return stocks;
+    }
+
+    // GET: api/Stock/recent - Get most recent stocks
+    [HttpGet("recent")]
+    public async Task<ActionResult<IEnumerable<Stock>>> GetRecentStocks([FromQuery] int count = 1000)
+    {
+        count = Math.Min(count, 5000); // Limit to prevent memory issues
+
+        var stocks = await context.Stocks
+            .OrderByDescending(s => s.Id) // Assuming newer records have higher IDs
+            // Or use: .OrderByDescending(s => s.CreatedDate) if you have a date field
+            .Take(count)
+            .AsNoTracking()
+            .ToListAsync().ConfigureAwait(false);
+
+        return stocks;
+    }
+
+    // GET: api/Stock/sample - Get a random sample
+    [HttpGet("sample")]
+    public async Task<ActionResult<IEnumerable<Stock>>> GetSampleStocks([FromQuery] int count = 1000)
+    {
+        count = Math.Min(count, 5000);
+
+        // Simple random sampling - not perfectly random but fast
+        var totalCount = await context.Stocks.CountAsync().ConfigureAwait(false);
+        var skip = Random.Shared.Next(0, Math.Max(1, totalCount - count));
+
+        var stocks = await context.Stocks
+            .OrderBy(s => s.Id)
+            .Skip(skip)
+            .Take(count)
+            .AsNoTracking()
+            .ToListAsync().ConfigureAwait(false);
+
+        return stocks;
     }
 
     // GET: api/Stock/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Stock>> GetStock(Guid id)
     {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "GetStock"));
-            _metricsService.IncrementCounter("stock.controller.get_stock");
+        var stock = await context.Stocks
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == id).ConfigureAwait(false);
 
-            var stock = await context.Stocks.FindAsync(id);
-
-            if (stock == null)
-            {
-                _metricsService.IncrementCounter("stock.controller.get_stock.not_found");
-                return NotFound();
-            }
-
-            return stock;
-        }
-        catch (Exception)
+        if (stock == null)
         {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "GetStock"));
-            _metricsService.IncrementCounter("stock.controller.get_stock.error");
-            throw;
+            return NotFound();
         }
-        finally
+
+        return stock;
+    }
+
+    // GET: api/Stock/search - Search with filtering
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<Stock>>> SearchStocks(
+        [FromQuery] string? symbol = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 100)
+    {
+        pageSize = Math.Min(pageSize, 1000);
+
+        var query = context.Stocks.AsQueryable();
+
+        if (!string.IsNullOrEmpty(symbol))
         {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "GetStock"));
+            query = query.Where(s => s.Symbol.Contains(symbol));
         }
+
+        var stocks = await query
+            .OrderBy(s => s.Symbol)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync().ConfigureAwait(false);
+
+        return stocks;
     }
 
     // PUT: api/Stock/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutStock(Guid id, Stock stock)
     {
-        var stopwatch = Stopwatch.StartNew();
+        if (id != stock.Id)
+        {
+            return BadRequest();
+        }
+
+        context.Entry(stock).State = EntityState.Modified;
+
         try
         {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PutStock"));
-            _metricsService.IncrementCounter("stock.controller.put_stock");
-
-            if (id != stock.Id)
-            {
-                _metricsService.IncrementCounter("stock.controller.put_stock.bad_request");
-                return BadRequest();
-            }
-
-            context.Entry(stock).State = EntityState.Modified;
-
-            try
-            {
-                await context.SaveChangesAsync();
-                _metricsService.IncrementCounter("stock.controller.put_stock.success");
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!StockExists(id))
-                {
-                    _metricsService.IncrementCounter("stock.controller.put_stock.not_found");
-                    return NotFound();
-                }
-                else
-                {
-                    _metricsService.IncrementCounter("stock.controller.put_stock.concurrency_error");
-                    throw;
-                }
-            }
-
-            return NoContent();
+            await context.SaveChangesAsync();
         }
-        catch (Exception)
+        catch (DbUpdateConcurrencyException)
         {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PutStock"));
-            _metricsService.IncrementCounter("stock.controller.put_stock.error");
-            throw;
+            if (!StockExists(id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
         }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "PutStock"));
-        }
+
+        return NoContent();
     }
 
     // POST: api/Stock
     [HttpPost]
     public async Task<ActionResult<Stock>> PostStock(Stock stock)
     {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PostStock"));
-            _metricsService.IncrementCounter("stock.controller.post_stock");
+        context.Stocks.Add(stock);
+        await context.SaveChangesAsync();
 
-            context.Stocks.Add(stock);
-            await context.SaveChangesAsync();
-
-            _metricsService.IncrementCounter("stock.controller.post_stock.success");
-            return CreatedAtAction("GetStock", new { id = stock.Id }, stock);
-        }
-        catch (Exception)
-        {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PostStock"));
-            _metricsService.IncrementCounter("stock.controller.post_stock.error");
-            throw;
-        }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "PostStock"));
-        }
+        return CreatedAtAction("GetStock", new { id = stock.Id }, stock);
     }
 
     // DELETE: api/Stock/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteStock(Guid id)
     {
-        var stopwatch = Stopwatch.StartNew();
-        try
+        var stock = await context.Stocks.FindAsync(id);
+        if (stock == null)
         {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "DeleteStock"));
-            _metricsService.IncrementCounter("stock.controller.delete_stock");
-
-            var stock = await context.Stocks.FindAsync(id);
-            if (stock == null)
-            {
-                _metricsService.IncrementCounter("stock.controller.delete_stock.not_found");
-                return NotFound();
-            }
-
-            context.Stocks.Remove(stock);
-            await context.SaveChangesAsync();
-
-            _metricsService.IncrementCounter("stock.controller.delete_stock.success");
-            return NoContent();
+            return NotFound();
         }
-        catch (Exception)
-        {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "DeleteStock"));
-            _metricsService.IncrementCounter("stock.controller.delete_stock.error");
-            throw;
-        }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "DeleteStock"));
-        }
-    }
 
-    // GET: api/Stock/model/status
-    [HttpGet("model/status")]
-    public async Task<ActionResult<object>> GetModelStatus()
-    {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "GetModelStatus"));
-            _metricsService.IncrementCounter("stock.controller.model_status");
+        context.Stocks.Remove(stock);
+        await context.SaveChangesAsync();
 
-            var isModelTrained = await predictionEngine.IsModelTrainedAsync();
-
-            return Ok(new
-            {
-                isModelTrained,
-                message = isModelTrained
-                    ? "Model is trained and ready for predictions"
-                    : "Model needs to be trained",
-                timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception)
-        {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "GetModelStatus"));
-            _metricsService.IncrementCounter("stock.controller.model_status.error");
-            throw;
-        }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "GetModelStatus"));
-        }
-    }
-
-    // POST: api/Stock/model/train
-    [HttpPost("model/train")]
-    public async Task<ActionResult<object>> TrainModel([FromBody] List<RawData> rawData)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "TrainModel"));
-            ModelTrainingRequestsCounter.Add(1);
-            _metricsService.IncrementCounter("stock.controller.train_model");
-
-            if (rawData.Count == 0)
-            {
-                _metricsService.IncrementCounter("stock.controller.train_model.invalid_data");
-                return BadRequest(new { error = "Training data is required" });
-            }
-
-            await predictionEngine.TrainModelAsync(rawData);
-
-            _metricsService.IncrementCounter("stock.controller.train_model.success");
-            return Ok(new
-            {
-                message = "Model trained successfully",
-                recordsProcessed = rawData.Count,
-                timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "TrainModel"));
-            _metricsService.IncrementCounter("stock.controller.train_model.error");
-            return BadRequest(new { error = ex.Message });
-        }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "TrainModel"));
-        }
-    }
-
-    // POST: api/Stock/predict/{symbol}
-    [HttpPost("predict/{symbol}")]
-    public async Task<ActionResult<object>> PredictStock(string symbol, [FromBody] List<RawData> rawData)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PredictStock"));
-            PredictionRequestsCounter.Add(1, new KeyValuePair<string, object?>("symbol", symbol));
-            _metricsService.IncrementCounter("stock.controller.predict_stock");
-
-            if (string.IsNullOrWhiteSpace(symbol))
-            {
-                _metricsService.IncrementCounter("stock.controller.predict_stock.invalid_symbol");
-                return BadRequest(new { error = "Stock symbol is required" });
-            }
-
-            if (rawData.Count == 0)
-            {
-                _metricsService.IncrementCounter("stock.controller.predict_stock.invalid_data");
-                return BadRequest(new { error = "Historical data is required for prediction" });
-            }
-
-            var prediction = await predictionEngine.GeneratePredictAsync(rawData, symbol);
-
-            _metricsService.IncrementCounter("stock.controller.predict_stock.success");
-            return Ok(new
-            {
-                prediction,
-                symbol,
-                confidence = "Model confidence varies based on data quality",
-                timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PredictStock"));
-            _metricsService.IncrementCounter("stock.controller.predict_stock.error");
-            return BadRequest(new { error = ex.Message });
-        }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "PredictStock"));
-        }
-    }
-
-    // GET: api/Stock/predict/batch
-    [HttpPost("predict/batch")]
-    public async Task<ActionResult<object>> PredictMultipleStocks([FromBody] BatchPredictionRequest request)
-    {
-        var stopwatch = Stopwatch.StartNew();
-        try
-        {
-            ApiCallsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PredictMultipleStocks"));
-            _metricsService.IncrementCounter("stock.controller.predict_batch");
-
-            if (request.Symbols.Count == 0)
-            {
-                _metricsService.IncrementCounter("stock.controller.predict_batch.invalid_symbols");
-                return BadRequest(new { error = "At least one stock symbol is required" });
-            }
-
-            if (request.RawData.Count == 0)
-            {
-                _metricsService.IncrementCounter("stock.controller.predict_batch.invalid_data");
-                return BadRequest(new { error = "Historical data is required for predictions" });
-            }
-
-            var predictions = new List<object>();
-            var errors = new List<object>();
-
-            foreach (var symbol in request.Symbols)
-            {
-                try
-                {
-                    var prediction = await predictionEngine.GeneratePredictAsync(request.RawData, symbol);
-                    predictions.Add(new { symbol, prediction, status = "success" });
-
-                    PredictionRequestsCounter.Add(1, new KeyValuePair<string, object?>("symbol", symbol));
-                }
-                catch (Exception ex)
-                {
-                    errors.Add(new { symbol, error = ex.Message, status = "error" });
-
-                    _metricsService.IncrementCounter("stock.controller.predict_batch.symbol_error");
-                }
-            }
-
-            _metricsService.IncrementCounter("stock.controller.predict_batch.success");
-            return Ok(new
-            {
-                predictions,
-                errors,
-                totalRequested = request.Symbols.Count,
-                successCount = predictions.Count,
-                errorCount = errors.Count,
-                timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            ApiErrorsCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "PredictMultipleStocks"));
-            _metricsService.IncrementCounter("stock.controller.predict_batch.error");
-            return BadRequest(new { error = ex.Message });
-        }
-        finally
-        {
-            stopwatch.Stop();
-            ApiDurationHistogram.Record(stopwatch.Elapsed.TotalSeconds,
-                new KeyValuePair<string, object?>("endpoint", "PredictMultipleStocks"));
-        }
+        return NoContent();
     }
 
     private bool StockExists(Guid id)
     {
         return context.Stocks.Any(e => e.Id == id);
     }
-}
-
-// Helper class for batch predictions
-public class BatchPredictionRequest
-{
-    public List<string> Symbols { get; set; } = [];
-    public List<RawData> RawData { get; set; } = [];
 }

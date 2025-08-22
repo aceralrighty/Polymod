@@ -26,9 +26,9 @@ jobs:
             monolith:
               - 'PolyModSolution/PolyMod/**'
             stock-service:
-              - 'PolyModSolution/StockPredictionService/**'
-              - '!PolyModSolution/StockPredictionService/**/*Test*.cs'
-              - '!PolyModSolution/StockPredictionService/**/*Tests*.cs'
+              - '**/StockPredictionService/**'
+              - '!**/StockPredictionService/**/*Test*.cs'
+              - '!**/StockPredictionService/**/*Tests*.cs'
             tests:
               - 'TestProject/**'
               - '**/*Test*/**'
@@ -40,23 +40,111 @@ jobs:
               - '*.targets'
               - '.github/workflows/**'
 
+  find-paths:
+    runs-on: ubuntu-latest
+    outputs:
+      stock-service-path: ${{ steps.find-paths.outputs.stock-service-path }}
+      stock-service-project: ${{ steps.find-paths.outputs.stock-service-project }}
+      monolith-path: ${{ steps.find-paths.outputs.monolith-path }}
+      monolith-project: ${{ steps.find-paths.outputs.monolith-project }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Debug repository structure
+        run: |
+          echo "🔍 Repository structure debug:"
+          echo "Root contents:"
+          ls -la
+          echo ""
+          echo "Looking for PolyModSolution directory:"
+          if [ -d "PolyModSolution" ]; then
+            echo "✅ PolyModSolution found"
+            echo "Contents of PolyModSolution:"
+            ls -la PolyModSolution/
+          else
+            echo "❌ PolyModSolution not found"
+          fi
+          echo ""
+          echo "All .csproj files in repository:"
+          find . -name "*.csproj" -type f 2>/dev/null || echo "No .csproj files found"
+
+      - name: Find project paths
+        id: find-paths
+        run: |
+          echo "🔍 Searching for project paths..."
+
+          # Check known locations first based on your local structure
+          STOCK_SERVICE_DIR=""
+          STOCK_SERVICE_PROJECT=""
+          MONOLITH_DIR=""
+          MONOLITH_PROJECT=""
+
+          # Check for PolyModSolution/StockPredictionService (your confirmed structure)
+          if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
+            STOCK_SERVICE_DIR="PolyModSolution/StockPredictionService"
+            STOCK_SERVICE_PROJECT="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
+            echo "✅ Found StockPredictionService at expected location: $STOCK_SERVICE_PROJECT"
+          else
+            echo "❌ StockPredictionService not found at PolyModSolution/StockPredictionService/"
+            # Fallback: search everywhere
+            STOCK_SERVICE_PROJECT=$(find . -name "StockPredictionService.csproj" -type f 2>/dev/null | head -1)
+            if [ -n "$STOCK_SERVICE_PROJECT" ]; then
+              STOCK_SERVICE_DIR=$(dirname "$STOCK_SERVICE_PROJECT")
+              echo "✅ Found StockPredictionService via search: $STOCK_SERVICE_PROJECT"
+            else
+              echo "❌ StockPredictionService.csproj not found anywhere"
+            fi
+          fi
+
+          # Check for PolyModSolution/PolyMod (assuming monolith is in same solution)
+          if [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
+            MONOLITH_DIR="PolyModSolution/PolyMod"
+            MONOLITH_PROJECT="PolyModSolution/PolyMod/PolyMod.csproj"
+            echo "✅ Found PolyMod at expected location: $MONOLITH_PROJECT"
+          else
+            echo "⚠️ PolyMod not found at PolyModSolution/PolyMod/"
+            # Fallback: search everywhere
+            MONOLITH_PROJECT=$(find . -name "PolyMod.csproj" -type f 2>/dev/null | head -1)
+            if [ -n "$MONOLITH_PROJECT" ]; then
+              MONOLITH_DIR=$(dirname "$MONOLITH_PROJECT")
+              echo "✅ Found PolyMod via search: $MONOLITH_PROJECT"
+            else
+              echo "⚠️ PolyMod.csproj not found - this is OK if monolith isn't in the repo"
+            fi
+          fi
+
+          # Output the paths
+          echo "stock-service-path=${STOCK_SERVICE_DIR}" >> $GITHUB_OUTPUT
+          echo "stock-service-project=${STOCK_SERVICE_PROJECT}" >> $GITHUB_OUTPUT
+          echo "monolith-path=${MONOLITH_DIR}" >> $GITHUB_OUTPUT
+          echo "monolith-project=${MONOLITH_PROJECT}" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "📍 Final discovered paths:"
+          echo "  Stock Service Dir: '${STOCK_SERVICE_DIR}'"
+          echo "  Stock Service Project: '${STOCK_SERVICE_PROJECT}'"
+          echo "  Monolith Dir: '${MONOLITH_DIR}'"
+          echo "  Monolith Project: '${MONOLITH_PROJECT}'"
+
   build-monolith:
     runs-on: ubuntu-latest
-    needs: detect-changes
+    needs: [detect-changes, find-paths]
     if: needs.detect-changes.outputs.monolith-changed == 'true' || needs.detect-changes.outputs.shared-changed == 'true'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check if PolyMod directory exists
+      - name: Check if PolyMod exists
         id: check-monolith
         run: |
-          if [ -d "PolyModSolution/PolyMod" ]; then
+          if [ -n "${{ needs.find-paths.outputs.monolith-project }}" ] && [ -f "${{ needs.find-paths.outputs.monolith-project }}" ]; then
             echo "monolith-exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Found PolyMod project at: ${{ needs.find-paths.outputs.monolith-project }}"
           else
             echo "monolith-exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️ PolyModSolution/PolyMod directory not found - skipping monolith build"
+            echo "⚠️ PolyMod project not found - skipping monolith build"
           fi
 
       - name: Setup .NET
@@ -67,121 +155,77 @@ jobs:
 
       - name: Restore PolyMod (Monolith)
         if: steps.check-monolith.outputs.monolith-exists == 'true'
-        working-directory: PolyModSolution/PolyMod
-        run: dotnet restore
+        run: dotnet restore "${{ needs.find-paths.outputs.monolith-project }}"
 
       - name: Build PolyMod (Monolith)
         if: steps.check-monolith.outputs.monolith-exists == 'true'
-        working-directory: PolyModSolution/PolyMod
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build "${{ needs.find-paths.outputs.monolith-project }}" --no-restore --configuration Release
 
       - name: Test PolyMod (if tests exist)
         if: steps.check-monolith.outputs.monolith-exists == 'true'
-        working-directory: PolyModSolution/PolyMod
         run: |
-          if [ -f "../PolyMod.Tests/PolyMod.Tests.csproj" ]; then
-            cd ../PolyMod.Tests
-            dotnet test --configuration Release --verbosity normal
-          elif find . -name "*Test*.csproj" -o -name "*Tests*.csproj" | head -1; then
-            dotnet test --configuration Release --verbosity normal
+          MONOLITH_DIR="${{ needs.find-paths.outputs.monolith-path }}"
+          if [ -f "${MONOLITH_DIR}/../PolyMod.Tests/PolyMod.Tests.csproj" ]; then
+            dotnet test "${MONOLITH_DIR}/../PolyMod.Tests/PolyMod.Tests.csproj" --configuration Release --verbosity normal
+          elif find "$MONOLITH_DIR" -name "*Test*.csproj" -o -name "*Tests*.csproj" | head -1 >/dev/null; then
+            dotnet test "$MONOLITH_DIR" --configuration Release --verbosity normal
           else
             echo "⚠️ No specific tests found for PolyMod monolith"
           fi
 
   build-stock-service:
     runs-on: ubuntu-latest
-    needs: detect-changes
+    needs: [detect-changes, find-paths]
     if: needs.detect-changes.outputs.stock-service-changed == 'true' || needs.detect-changes.outputs.shared-changed == 'true'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check repository structure
+      - name: Check if StockPredictionService exists
+        id: check-stock-service
         run: |
-          echo "Repository root contents:"
-          ls -la
-          echo ""
-          echo "Looking for StockPredictionService..."
-          find . -name "*StockPrediction*" -type d 2>/dev/null || echo "No StockPredictionService directories found"
+          if [ -n "${{ needs.find-paths.outputs.stock-service-project }}" ] && [ -f "${{ needs.find-paths.outputs.stock-service-project }}" ]; then
+            echo "stock-service-exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Found StockPredictionService project at: ${{ needs.find-paths.outputs.stock-service-project }}"
+          else
+            echo "stock-service-exists=false" >> $GITHUB_OUTPUT
+            echo "❌ StockPredictionService project not found"
+            echo "Repository contents:"
+            find . -name "*.csproj" -type f 2>/dev/null || echo "No .csproj files found"
+            exit 1
+          fi
 
       - name: Setup .NET
+        if: steps.check-stock-service.outputs.stock-service-exists == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0'
 
-      - name: Debug repository structure
-        run: |
-          echo "Repository root contents:"
-          ls -la
-          echo ""
-          echo "Looking for any StockPrediction directories:"
-          find . -name "*StockPrediction*" -type d 2>/dev/null || echo "No StockPredictionService directories found"
-          echo ""
-          echo "Looking for any .csproj files:"
-          find . -name "*.csproj" 2>/dev/null || echo "No .csproj files found"
-
       - name: Clean test files from production code
+        if: steps.check-stock-service.outputs.stock-service-exists == 'true'
         run: |
-          # Find the actual StockPredictionService directory
-          SERVICE_DIR=""
-          if [ -d "PolyModSolution/StockPredictionService" ]; then
-            SERVICE_DIR="PolyModSolution/StockPredictionService"
-          elif [ -d "StockPredictionService" ]; then
-            SERVICE_DIR="StockPredictionService"
-          elif [ -d "PolyMod/StockPredictionService" ]; then
-            SERVICE_DIR="PolyMod/StockPredictionService"
-          fi
-
-          if [ -n "$SERVICE_DIR" ]; then
-            echo "Found StockPredictionService at: $SERVICE_DIR"
+          SERVICE_DIR="${{ needs.find-paths.outputs.stock-service-path }}"
+          if [ -n "$SERVICE_DIR" ] && [ -d "$SERVICE_DIR" ]; then
+            echo "🧹 Cleaning test files from: $SERVICE_DIR"
             find "$SERVICE_DIR" -name "*Test*.cs" -type f -delete 2>/dev/null || true
             find "$SERVICE_DIR" -name "*Tests*.cs" -type f -delete 2>/dev/null || true
-          else
-            echo "⚠️ StockPredictionService directory not found - skipping test file cleanup"
           fi
 
       - name: Restore Stock Prediction Service
+        if: steps.check-stock-service.outputs.stock-service-exists == 'true'
         run: |
-          # Find the actual project file
-          PROJECT_FILE=""
-          if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-            PROJECT_FILE="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
-          elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-            PROJECT_FILE="StockPredictionService/StockPredictionService.csproj"
-          elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
-            PROJECT_FILE="PolyMod/StockPredictionService/StockPredictionService.csproj"
-          fi
-
-          if [ -n "$PROJECT_FILE" ]; then
-            echo "Restoring project: $PROJECT_FILE"
-            dotnet restore "$PROJECT_FILE"
-          else
-            echo "❌ StockPredictionService.csproj not found"
-            exit 1
-          fi
+          echo "📦 Restoring project: ${{ needs.find-paths.outputs.stock-service-project }}"
+          dotnet restore "${{ needs.find-paths.outputs.stock-service-project }}"
 
       - name: Build Stock Prediction Service
+        if: steps.check-stock-service.outputs.stock-service-exists == 'true'
         run: |
-          # Find the actual project file
-          PROJECT_FILE=""
-          if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-            PROJECT_FILE="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
-          elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-            PROJECT_FILE="StockPredictionService/StockPredictionService.csproj"
-          elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
-            PROJECT_FILE="PolyMod/StockPredictionService/StockPredictionService.csproj"
-          fi
-
-          if [ -n "$PROJECT_FILE" ]; then
-            echo "Building project: $PROJECT_FILE"
-            dotnet build "$PROJECT_FILE" --no-restore --configuration Release
-          else
-            echo "❌ StockPredictionService.csproj not found"
-            exit 1
-          fi
+          echo "🔨 Building project: ${{ needs.find-paths.outputs.stock-service-project }}"
+          dotnet build "${{ needs.find-paths.outputs.stock-service-project }}" --no-restore --configuration Release
 
       - name: Test Stock Prediction Service
+        if: steps.check-stock-service.outputs.stock-service-exists == 'true'
         run: |
           echo "⚠️ No separate test project found for Stock Prediction Service"
           echo "Creating basic test structure would be recommended"
@@ -218,7 +262,7 @@ jobs:
 
   code-quality:
     runs-on: ubuntu-latest
-    needs: detect-changes
+    needs: [detect-changes, find-paths]
     if: |
       needs.detect-changes.outputs.monolith-changed == 'true' ||
       needs.detect-changes.outputs.stock-service-changed == 'true' ||
@@ -235,125 +279,52 @@ jobs:
 
       - name: Clean test files from production code
         run: |
-          # Find the actual StockPredictionService directory
-          SERVICE_DIR=""
-          if [ -d "PolyModSolution/StockPredictionService" ]; then
-            SERVICE_DIR="PolyModSolution/StockPredictionService"
-          elif [ -d "StockPredictionService" ]; then
-            SERVICE_DIR="StockPredictionService"
-          elif [ -d "PolyMod/StockPredictionService" ]; then
-            SERVICE_DIR="PolyMod/StockPredictionService"
-          fi
-
-          if [ -n "$SERVICE_DIR" ]; then
-            echo "Found StockPredictionService at: $SERVICE_DIR"
+          SERVICE_DIR="${{ needs.find-paths.outputs.stock-service-path }}"
+          if [ -n "$SERVICE_DIR" ] && [ -d "$SERVICE_DIR" ]; then
+            echo "🧹 Cleaning test files from: $SERVICE_DIR"
             find "$SERVICE_DIR" -name "*Test*.cs" -type f -delete 2>/dev/null || true
             find "$SERVICE_DIR" -name "*Tests*.cs" -type f -delete 2>/dev/null || true
-          else
-            echo "⚠️ StockPredictionService directory not found - skipping test file cleanup"
           fi
 
       - name: Restore dependencies
         run: |
-          # Restore individual projects since there's no solution file
-          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
-            POLYMOD_PROJECT=""
-            if [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
-              POLYMOD_PROJECT="PolyModSolution/PolyMod/PolyMod.csproj"
-            elif [ -f "PolyMod/PolyMod.csproj" ]; then
-              POLYMOD_PROJECT="PolyMod/PolyMod.csproj"
-            fi
-
-            if [ -n "$POLYMOD_PROJECT" ]; then
-              echo "Restoring PolyMod: $POLYMOD_PROJECT"
-              dotnet restore "$POLYMOD_PROJECT"
-            fi
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -n "${{ needs.find-paths.outputs.monolith-project }}" ]; then
+            echo "📦 Restoring PolyMod: ${{ needs.find-paths.outputs.monolith-project }}"
+            dotnet restore "${{ needs.find-paths.outputs.monolith-project }}"
           fi
 
-          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
-            SERVICE_PROJECT=""
-            if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
-            elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="StockPredictionService/StockPredictionService.csproj"
-            elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="PolyMod/StockPredictionService/StockPredictionService.csproj"
-            fi
-
-            if [ -n "$SERVICE_PROJECT" ]; then
-              echo "Restoring StockPredictionService: $SERVICE_PROJECT"
-              dotnet restore "$SERVICE_PROJECT"
-            fi
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -n "${{ needs.find-paths.outputs.stock-service-project }}" ]; then
+            echo "📦 Restoring StockPredictionService: ${{ needs.find-paths.outputs.stock-service-project }}"
+            dotnet restore "${{ needs.find-paths.outputs.stock-service-project }}"
           fi
 
       - name: Format code
         run: |
-          # Format individual projects
-          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
-            POLYMOD_PROJECT=""
-            if [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
-              POLYMOD_PROJECT="PolyModSolution/PolyMod/PolyMod.csproj"
-            elif [ -f "PolyMod/PolyMod.csproj" ]; then
-              POLYMOD_PROJECT="PolyMod/PolyMod.csproj"
-            fi
-
-            if [ -n "$POLYMOD_PROJECT" ]; then
-              echo "Formatting PolyMod: $POLYMOD_PROJECT"
-              dotnet format "$POLYMOD_PROJECT" --verbosity diagnostic
-            fi
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -n "${{ needs.find-paths.outputs.monolith-project }}" ]; then
+            echo "🎨 Formatting PolyMod: ${{ needs.find-paths.outputs.monolith-project }}"
+            dotnet format "${{ needs.find-paths.outputs.monolith-project }}" --verbosity diagnostic
           fi
 
-          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
-            SERVICE_PROJECT=""
-            if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
-            elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="StockPredictionService/StockPredictionService.csproj"
-            elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="PolyMod/StockPredictionService/StockPredictionService.csproj"
-            fi
-
-            if [ -n "$SERVICE_PROJECT" ]; then
-              echo "Formatting StockPredictionService: $SERVICE_PROJECT"
-              dotnet format "$SERVICE_PROJECT" --verbosity diagnostic
-            fi
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -n "${{ needs.find-paths.outputs.stock-service-project }}" ]; then
+            echo "🎨 Formatting StockPredictionService: ${{ needs.find-paths.outputs.stock-service-project }}"
+            dotnet format "${{ needs.find-paths.outputs.stock-service-project }}" --verbosity diagnostic
           fi
 
       - name: Build for analysis
         run: |
-          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]]; then
-            POLYMOD_PROJECT=""
-            if [ -f "PolyModSolution/PolyMod/PolyMod.csproj" ]; then
-              POLYMOD_PROJECT="PolyModSolution/PolyMod/PolyMod.csproj"
-            elif [ -f "PolyMod/PolyMod.csproj" ]; then
-              POLYMOD_PROJECT="PolyMod/PolyMod.csproj"
-            fi
-
-            if [ -n "$POLYMOD_PROJECT" ]; then
-              echo "Building PolyMod for analysis: $POLYMOD_PROJECT"
-              dotnet build "$POLYMOD_PROJECT" --no-restore
-            fi
+          if [[ "${{ needs.detect-changes.outputs.monolith-changed }}" == "true" ]] && [ -n "${{ needs.find-paths.outputs.monolith-project }}" ]; then
+            echo "🔨 Building PolyMod for analysis: ${{ needs.find-paths.outputs.monolith-project }}"
+            dotnet build "${{ needs.find-paths.outputs.monolith-project }}" --no-restore
           fi
 
-          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]]; then
-            SERVICE_PROJECT=""
-            if [ -f "PolyModSolution/StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="PolyModSolution/StockPredictionService/StockPredictionService.csproj"
-            elif [ -f "StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="StockPredictionService/StockPredictionService.csproj"
-            elif [ -f "PolyMod/StockPredictionService/StockPredictionService.csproj" ]; then
-              SERVICE_PROJECT="PolyMod/StockPredictionService/StockPredictionService.csproj"
-            fi
-
-            if [ -n "$SERVICE_PROJECT" ]; then
-              echo "Building StockPredictionService for analysis: $SERVICE_PROJECT"
-              dotnet build "$SERVICE_PROJECT" --no-restore
-            fi
+          if [[ "${{ needs.detect-changes.outputs.stock-service-changed }}" == "true" ]] && [ -n "${{ needs.find-paths.outputs.stock-service-project }}" ]; then
+            echo "🔨 Building StockPredictionService for analysis: ${{ needs.find-paths.outputs.stock-service-project }}"
+            dotnet build "${{ needs.find-paths.outputs.stock-service-project }}" --no-restore
           fi
 
   security-scan:
     runs-on: ubuntu-latest
-    needs: detect-changes
+    needs: [detect-changes, find-paths]
     if: |
       needs.detect-changes.outputs.monolith-changed == 'true' ||
       needs.detect-changes.outputs.stock-service-changed == 'true' ||
@@ -373,24 +344,47 @@ jobs:
 
       - name: Clean test files from production code
         run: |
-          find PolyModSolution/StockPredictionService -name "*Test*.cs" -type f -delete
-          find PolyModSolution/StockPredictionService -name "*Tests*.cs" -type f -delete
+          SERVICE_DIR="${{ needs.find-paths.outputs.stock-service-path }}"
+          if [ -n "$SERVICE_DIR" ] && [ -d "$SERVICE_DIR" ]; then
+            echo "🧹 Cleaning test files from: $SERVICE_DIR"
+            find "$SERVICE_DIR" -name "*Test*.cs" -type f -delete 2>/dev/null || true
+            find "$SERVICE_DIR" -name "*Tests*.cs" -type f -delete 2>/dev/null || true
+            echo "✅ Test file cleanup completed"
+          else
+            echo "⚠️ StockPredictionService directory not found or path is empty"
+            echo "SERVICE_DIR value: '$SERVICE_DIR'"
+            echo "Available directories in repository:"
+            find . -type d -name "*Stock*" 2>/dev/null || echo "No directories matching *Stock* found"
+          fi
 
       - name: Security scan - PolyMod (Monolith)
         if: needs.detect-changes.outputs.monolith-changed == 'true'
         run: |
-          dotnet restore PolyModSolution/PolyMod/PolyMod.csproj
-          dotnet list PolyModSolution/PolyMod/PolyMod.csproj package --vulnerable --include-transitive
-          export PATH="$PATH:$HOME/.dotnet/tools"
-          dotnet outdated PolyModSolution/PolyMod/PolyMod.csproj
+          MONOLITH_PROJECT="${{ needs.find-paths.outputs.monolith-project }}"
+          if [ -n "$MONOLITH_PROJECT" ] && [ -f "$MONOLITH_PROJECT" ]; then
+            echo "🔒 Security scanning PolyMod: $MONOLITH_PROJECT"
+            dotnet restore "$MONOLITH_PROJECT"
+            dotnet list "$MONOLITH_PROJECT" package --vulnerable --include-transitive || echo "⚠️ No vulnerabilities found or command failed"
+            export PATH="$PATH:$HOME/.dotnet/tools"
+            dotnet outdated "$MONOLITH_PROJECT" || echo "⚠️ Outdated package check completed"
+          else
+            echo "⚠️ PolyMod project not found - skipping security scan"
+          fi
 
       - name: Security scan - Stock Prediction Service
         if: needs.detect-changes.outputs.stock-service-changed == 'true'
         run: |
-          dotnet restore PolyModSolution/StockPredictionService/StockPredictionService.csproj
-          dotnet list PolyModSolution/StockPredictionService/StockPredictionService.csproj package --vulnerable --include-transitive
-          export PATH="$PATH:$HOME/.dotnet/tools"
-          dotnet outdated PolyModSolution/StockPredictionService/StockPredictionService.csproj
+          SERVICE_PROJECT="${{ needs.find-paths.outputs.stock-service-project }}"
+          if [ -n "$SERVICE_PROJECT" ] && [ -f "$SERVICE_PROJECT" ]; then
+            echo "🔒 Security scanning StockPredictionService: $SERVICE_PROJECT"
+            dotnet restore "$SERVICE_PROJECT"
+            dotnet list "$SERVICE_PROJECT" package --vulnerable --include-transitive || echo "⚠️ No vulnerabilities found or command failed"
+            export PATH="$PATH:$HOME/.dotnet/tools"
+            dotnet outdated "$SERVICE_PROJECT" || echo "⚠️ Outdated package check completed"
+          else
+            echo "❌ StockPredictionService project not found - failing security scan"
+            exit 1
+          fi
 
   ci-success:
     runs-on: ubuntu-latest

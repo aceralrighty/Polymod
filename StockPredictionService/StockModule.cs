@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using StockPredictionService.Context;
 using StockPredictionService.CrossCutting.CachingConfiguration;
 using StockPredictionService.CrossCutting.Repositories;
@@ -22,20 +23,18 @@ public static class StockModule
     public static IServiceCollection AddStockModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContextPool<StockDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("TradingDb"), b => b.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorNumbersToAdd: null
-            )));
-
-        services.Configure<CacheOptions>("Stock", options =>
-        {
-            options.DefaultCacheDuration = TimeSpan.FromMinutes(10);
-            options.GetByIdCacheDuration = TimeSpan.FromMinutes(15);
-            options.GetAllCacheDuration = TimeSpan.FromMinutes(5);
-            options.EnableCaching = true;
-            options.CacheKeyPrefix = "Stock";
-        });
+                options.UseSqlServer(configuration.GetConnectionString("TradingDb"), sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(10),
+                            errorNumbersToAdd: null);
+                        sqlOptions.CommandTimeout(60); // Shorter timeout
+                    })
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking) // Default to no-tracking
+                    .EnableServiceProviderCaching()
+                    .ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.RowLimitingOperationWithoutOrderByWarning)),
+            poolSize: 64);
 
         // Register only the factory - the IMetricsService will be registered in Program.cs using the factory
         services.AddSingleton<IMetricsServiceFactory, MetricsServiceFactory>();
