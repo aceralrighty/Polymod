@@ -31,28 +31,29 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         {
             _dbConnection = Context.Database.GetDbConnection();
         }
+
         return rel;
     }
 
     // Original method (kept for compatibility)
     public virtual async Task<IEnumerable<T>> GetAllAsync()
     {
-        return await DbSet.ToListAsync();
+        return await DbSet.ToListAsync().ConfigureAwait(false);
     }
 
     // High-performance method using raw SQL with Dapper
     public virtual async Task<List<T>> GetAllOptimizedAsync()
     {
         if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync();
+            return await DbSet.ToListAsync().ConfigureAwait(false);
 
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync();
+            await _dbConnection.OpenAsync().ConfigureAwait(false);
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} WITH (NOLOCK)";
 
-        var result = await _dbConnection.QueryAsync<T>(sql);
+        var result = await _dbConnection.QueryAsync<T>(sql).ConfigureAwait(false);
         return result.ToList();
     }
 
@@ -60,10 +61,10 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     public virtual async Task<List<T>> GetAllChunkedAsync(int chunkSize = 10000)
     {
         if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync();
+            return await DbSet.ToListAsync().ConfigureAwait(false);
 
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync();
+            await _dbConnection.OpenAsync().ConfigureAwait(false);
 
         var tableName = GetTableName();
         var allResults = new List<T>();
@@ -72,7 +73,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
         // Get the total count first
         var countSql = $"SELECT COUNT(*) FROM {tableName}";
-        var totalCount = await _dbConnection.QuerySingleAsync<int>(countSql);
+        var totalCount = await _dbConnection.QuerySingleAsync<int>(countSql).ConfigureAwait(false);
 
         Console.WriteLine($"📊 Total records to fetch: {totalCount:N0}");
 
@@ -84,7 +85,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
                 OFFSET @Offset ROWS
                 FETCH NEXT @ChunkSize ROWS ONLY";
 
-            var chunk = await _dbConnection.QueryAsync<T>(sql, new { Offset = offset, ChunkSize = chunkSize });
+            var chunk = await _dbConnection.QueryAsync<T>(sql, new { Offset = offset, ChunkSize = chunkSize }).ConfigureAwait(false);
             var chunkList = chunk.ToList();
 
             if (chunkList.Count == 0)
@@ -109,25 +110,25 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     {
         if (!EnsureRelational() || _dbConnection is null)
         {
-            var list = await DbSet.ToListAsync();
+            var list = await DbSet.ToListAsync().ConfigureAwait(false);
             foreach (var item in list)
                 yield return item;
             yield break;
         }
 
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync();
+            await _dbConnection.OpenAsync().ConfigureAwait(false);
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} ORDER BY Id";
 
         await using var command = new SqlCommand(sql, (SqlConnection)_dbConnection);
-        await using var reader = await command.ExecuteReaderAsync();
+        await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
 
         var properties = GetMappedProperties();
         var buffer = new List<T>(bufferSize);
 
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync().ConfigureAwait(false))
         {
             var entity = MapReaderToEntity(reader, properties);
             buffer.Add(entity);
@@ -152,16 +153,16 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     public virtual async Task<List<T>> GetAllParallelAsync(int partitionCount = 4)
     {
         if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync();
+            return await DbSet.ToListAsync().ConfigureAwait(false);
 
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync();
+            await _dbConnection.OpenAsync().ConfigureAwait(false);
 
         var tableName = GetTableName();
 
         // Get total count and ID range
         var countSql = $"SELECT COUNT(*), MIN(Id), MAX(Id) FROM {tableName}";
-        var (totalCount, _, _) = await _dbConnection.QuerySingleAsync<(int, Guid, Guid)>(countSql);
+        var (totalCount, _, _) = await _dbConnection.QuerySingleAsync<(int, Guid, Guid)>(countSql).ConfigureAwait(false);
 
         Console.WriteLine($"📊 Processing {totalCount:N0} records across {partitionCount} partitions");
 
@@ -175,7 +176,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             var task = Task.Run(async () =>
             {
                 await using var connection = new SqlConnection(((SqlConnection)_dbConnection).ConnectionString);
-                await connection.OpenAsync();
+                await connection.OpenAsync().ConfigureAwait(false);
 
                 var offset = partitionIndex * recordsPerPartition;
                 var fetchSize = partitionIndex == partitionCount - 1 ? totalCount - offset : recordsPerPartition;
@@ -186,7 +187,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
                     OFFSET @Offset ROWS
                     FETCH NEXT @FetchSize ROWS ONLY";
 
-                var result = await connection.QueryAsync<T>(sql, new { Offset = offset, FetchSize = fetchSize });
+                var result = await connection.QueryAsync<T>(sql, new { Offset = offset, FetchSize = fetchSize }).ConfigureAwait(false);
                 var partitionResults = result.ToList();
 
                 Console.WriteLine($"🔧 Partition {partitionIndex + 1} completed: {partitionResults.Count:N0} records");
@@ -196,7 +197,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             tasks.Add(task);
         }
 
-        var results = await Task.WhenAll(tasks);
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
         var allResults = results.SelectMany(r => r).ToList();
 
         Console.WriteLine($"✅ All partitions completed: {allResults.Count:N0} total records");
@@ -207,12 +208,12 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     public virtual async Task<List<T>> GetAllMemoryMappedAsync()
     {
         if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync();
+            return await DbSet.ToListAsync().ConfigureAwait(false);
 
         const int gcCleaner = 50_000;
         const int progressCheck = 10_000;
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync();
+            await _dbConnection.OpenAsync().ConfigureAwait(false);
 
         var tableName = GetTableName();
 
@@ -225,10 +226,10 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         await using var command = new SqlCommand(sql, (SqlConnection)_dbConnection);
         command.CommandTimeout = 300; // 5-minute timeout
 
-        await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
+        await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess).ConfigureAwait(false);
         var properties = GetMappedProperties();
 
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync().ConfigureAwait(false))
         {
             var entity = MapReaderToEntity(reader, properties);
             results.Add(entity);
@@ -298,14 +299,14 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         if (!EnsureRelational() || _dbConnection is null)
         {
             // Provider-agnostic fallbacks by strategy
-            if (options is null) return await DbSet.ToListAsync();
+            if (options is null) return await DbSet.ToListAsync().ConfigureAwait(false);
             return options.Strategy switch
             {
-                QueryStrategy.Standard => await DbSet.ToListAsync(),
-                QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
-                QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
-                QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
-                _ => await DbSet.ToListAsync()
+                QueryStrategy.Standard => await DbSet.ToListAsync().ConfigureAwait(false),
+                QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync().ConfigureAwait(false), // simple fallback
+                QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync().ConfigureAwait(false), // simple fallback
+                QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync().ConfigureAwait(false), // simple fallback
+                _ => await DbSet.ToListAsync().ConfigureAwait(false)
             };
         }
 
@@ -327,40 +328,40 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         if (EnsureRelational() && _dbConnection is not null)
         {
             if (_dbConnection.State != ConnectionState.Open)
-                await _dbConnection.OpenAsync();
+                await _dbConnection.OpenAsync().ConfigureAwait(false);
 
             var tableName = GetTableName();
             var sql = $"SELECT * FROM {tableName} WHERE Id = @Id";
-            return await _dbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }) ??
+            return await _dbConnection.QueryFirstOrDefaultAsync<T>(sql, new { Id = id }).ConfigureAwait(false) ??
                    throw new NullReferenceException();
         }
 
         // Provider-agnostic fallback
-        var entity = await DbSet.FindAsync(id);
+        var entity = await DbSet.FindAsync(id).ConfigureAwait(false);
         return entity ?? throw new NullReferenceException();
     }
 
     public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
     {
-        return await DbSet.Where(predicate).ToListAsync();
+        return await DbSet.Where(predicate).ToListAsync().ConfigureAwait(false);
     }
 
     public virtual async Task AddAsync(T entity)
     {
-        await DbSet.AddAsync(entity);
-        await Context.SaveChangesAsync();
+        await DbSet.AddAsync(entity).ConfigureAwait(false);
+        await Context.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public virtual async Task UpdateAsync(T entity)
     {
         DbSet.Update(entity);
-        await Context.SaveChangesAsync();
+        await Context.SaveChangesAsync().ConfigureAwait(false);
     }
 
     public virtual async Task DeleteAsync(T entity)
     {
         DbSet.Remove(entity);
-        await Context.SaveChangesAsync();
+        await Context.SaveChangesAsync().ConfigureAwait(false);
     }
 
     private string GetTableName()
@@ -385,13 +386,13 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
         if (!EnsureRelational() || _dbConnection is null)
         {
-            await DbSet.AddRangeAsync(enumerable);
-            await Context.SaveChangesAsync();
+            await DbSet.AddRangeAsync(enumerable).ConfigureAwait(false);
+            await Context.SaveChangesAsync().ConfigureAwait(false);
             return;
         }
 
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync();
+            await _dbConnection.OpenAsync().ConfigureAwait(false);
 
         using var sqlBulk = new SqlBulkCopy((SqlConnection)_dbConnection, SqlBulkCopyOptions.Default, null);
         sqlBulk.DestinationTableName = tableName;
@@ -404,7 +405,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             sqlBulk.ColumnMappings.Add(column.ColumnName, column.ColumnName);
         }
 
-        await sqlBulk.WriteToServerAsync(table);
+        await sqlBulk.WriteToServerAsync(table).ConfigureAwait(false);
     }
 
     private static DataTable ToDataTable(IEnumerable<T> data)
