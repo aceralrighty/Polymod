@@ -6,7 +6,6 @@ public abstract class BaseModuleHealthCheck(IServiceProvider serviceProvider, IL
     : IModuleHealthCheck
 {
     protected readonly IServiceProvider ServiceProvider = serviceProvider;
-    protected readonly ILogger<BaseModuleHealthCheck> _logger = logger;
 
     public abstract string ModuleName { get; }
 
@@ -16,17 +15,17 @@ public abstract class BaseModuleHealthCheck(IServiceProvider serviceProvider, IL
 
         try
         {
-            _logger.LogDebug("Starting health check for {ModuleName}", ModuleName);
+            logger.LogDebug("Starting health check for {ModuleName}", ModuleName);
 
             var result = await PerformHealthCheckAsync(cancellationToken);
             result.ResponseTime = stopwatch.Elapsed;
 
-            _logger.LogDebug("Health check completed for {ModuleName}: {Status}", ModuleName, result.Status);
+            logger.LogDebug("Health check completed for {ModuleName}: {Status}", ModuleName, result.Status);
             return result;
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Health check failed for {ModuleName}", ModuleName);
+            logger.LogError(ex, "Health check failed for {ModuleName}", ModuleName);
 
             return new ModuleHealthResult
             {

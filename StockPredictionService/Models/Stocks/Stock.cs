@@ -6,7 +6,7 @@ namespace StockPredictionService.Models.Stocks;
 
 public class Stock : BaseTableProperties
 {
-    [MaxLength(10)] public string Symbol { get; set; }
+    [MaxLength(10)] public string Symbol { get; set; } = string.Empty;
     public float Open { get; set; }
     public float High { get; set; }
     public float Low { get; set; }
