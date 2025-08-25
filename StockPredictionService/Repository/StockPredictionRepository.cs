@@ -18,7 +18,7 @@ public class StockPredictionRepository(StockDbContext context)
     public async Task<IEnumerable<StockPrediction>> GetStocksByBatchAsync(Guid batchId)
     {
         return await context.StockPredictions.Where(sp => sp.BatchId == batchId).OrderBy(sp => sp.CreatedAt)
-            .ToListAsync().ConfigureAwait(false);
+            .ToListAsync().ConfigureAwait(true);
     }
     public async Task<StockPrediction> SaveStockPredictionAsync(StockPrediction stockPrediction)
     {

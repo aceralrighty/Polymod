@@ -48,12 +48,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TBD.Api v1"));
 
     // Optional: Run your stock prediction pipeline on startup in dev
     try
     {
-        Console.WriteLine($"🔮 Starting Stock Prediction Service...");
+        Console.WriteLine("🔮 Starting Stock Prediction Service...");
 
         using var scope = app.Services.CreateScope();
         var scopedServices = scope.ServiceProvider;
@@ -74,6 +74,9 @@ if (app.Environment.IsDevelopment())
     }
 }
 
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 app.UseCors();
 app.UseRouting();
 app.UseAuthorization();
