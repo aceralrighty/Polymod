@@ -7,7 +7,7 @@ public class StockEntityMapper
 {
     public List<Stock> TransformRawDataToStocks(List<RawData> rawData)
     {
-        return rawData.Select(raw => new Stock
+        return [.. rawData.Select(raw => new Stock
         {
             Id = Guid.NewGuid(),
             Symbol = raw.Symbol,
@@ -23,7 +23,7 @@ public class StockEntityMapper
             UserId = HashGuid(Guid.NewGuid()),
             StockId = HashGuid(Guid.NewGuid()),
             Price = raw.Close,
-        }).ToList();
+        })];
     }
 
     private static float HashGuid(Guid guid)

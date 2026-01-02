@@ -6,9 +6,9 @@ using PolyMod.AddressModule.Data;
 using PolyMod.AddressModule.Models;
 using PolyMod.MetricsModule.Services.Interfaces;
 using PolyMod.Shared.Repositories;
-using PolyMod.Shared.Utils;
 using PolyMod.UserModule.Data;
 using PolyMod.UserModule.Models;
+using Hasher = PolyMod.Shared.Utils.Hasher;
 
 namespace PolyMod.UserModule.Seed;
 

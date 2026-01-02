@@ -156,33 +156,47 @@ public class CachingRepositoryDecorator<T>(
         return result;
     }
 
-    public async Task<List<T>> GetAllMemoryMappedAsync()
-    {
-        if (!_options.EnableCaching)
-            return await inner.GetAllMemoryMappedAsync();
 
+    public async IAsyncEnumerable<T> GetAllMemoryMappedAsync()
+    {
         var cacheKey = GenerateCacheKey("AllMemoryMapped");
 
-        if (cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
+        if (_options.EnableCaching && cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
         {
             logger?.LogDebug("Cache hit for {CacheKey}", cacheKey);
-            return cached;
+            foreach (var item in cached)
+            {
+                yield return item;
+            }
+
+            yield break; // Exit after yielding cached items
         }
 
         logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        var result = await inner.GetAllMemoryMappedAsync();
+
+        // We have to collect the stream into a list to cache it
+        var resultList = new List<T>();
+
+        await foreach (var item in inner.GetAllMemoryMappedAsync())
+        {
+            resultList.Add(item);
+            yield return item; // Pass the item through to the caller immediately
+        }
+
+        if (!_options.EnableCaching || resultList.Count <= 0)
+        {
+            yield break;
+        }
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = _options.GetAllCacheDuration,
-            Priority = CacheItemPriority.High, // Memory-mapped queries are for large datasets
-            Size = Math.Max(1, result.Count / 1000)
+            Priority = CacheItemPriority.High,
+            Size = Math.Max(1, resultList.Count / 1000)
         };
 
         cacheOptions.RegisterPostEvictionCallback(OnCacheItemEvicted);
-        SetCache(cacheKey, result, cacheOptions);
-
-        return result;
+        SetCache(cacheKey, resultList, cacheOptions);
     }
 
     public async Task<List<T>> GetAllConfigurableAsync(QueryOptions options)
@@ -191,7 +205,7 @@ public class CachingRepositoryDecorator<T>(
             return await inner.GetAllConfigurableAsync(options);
 
         // Create cache key based on strategy and relevant parameters
-        string strategyParams = options.Strategy switch
+        var strategyParams = options.Strategy switch
         {
             QueryStrategy.Chunked => options.ChunkSize.ToString(),
             QueryStrategy.Parallel => options.ParallelPartitions.ToString(),

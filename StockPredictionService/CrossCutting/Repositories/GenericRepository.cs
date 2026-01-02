@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -22,17 +23,16 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
     private bool EnsureRelational()
     {
-        if (_isRelational.HasValue)
-            return _isRelational.Value;
+        if (_isRelational == false) return false;
+        if (_dbConnection is not null) return true;
 
-        var rel = Context.Database.IsRelational();
-        _isRelational = rel;
-        if (rel)
+        _isRelational = Context.Database.IsRelational();
+        if (_isRelational.HasValue)
         {
             _dbConnection = Context.Database.GetDbConnection();
         }
 
-        return rel;
+        return _isRelational.Value;
     }
 
     // Original method (kept for compatibility)
@@ -42,19 +42,25 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // High-performance method using raw SQL with Dapper
-    public virtual async Task<List<T>> GetAllOptimizedAsync()
+    public virtual async Task<List<T>> GetAllOptimizedAsync(CancellationToken ct = default)
     {
-        if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync().ConfigureAwait(false);
+        if (!EnsureRelational() || (_dbConnection ??= Context.Database.GetDbConnection()) is null)
+            return await DbSet.ToListAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (_dbConnection.State != ConnectionState.Open)
+                await _dbConnection.OpenAsync(ct).ConfigureAwait(false);
+            var tableName = GetTableName();
+            var sql = $"SELECT * FROM {tableName} WITH (NOLOCK)";
 
-        if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync().ConfigureAwait(false);
-
-        var tableName = GetTableName();
-        var sql = $"SELECT * FROM {tableName} WITH (NOLOCK)";
-
-        var result = await _dbConnection.QueryAsync<T>(sql).ConfigureAwait(false);
-        return result.ToList();
+            var result = await _dbConnection.QueryAsync<T>(new CommandDefinition(sql, cancellationToken: ct))
+                .ConfigureAwait(false);
+            return [.. result];
+        }
+        catch (Exception)
+        {
+            return await DbSet.AsNoTracking().ToListAsync(ct).ConfigureAwait(false);
+        }
     }
 
     // Chunked/Batched approach for very large datasets
@@ -79,13 +85,16 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
 
         while (hasMoreData)
         {
-            var sql = $@"
-                SELECT * FROM {tableName}
-                ORDER BY Id
-                OFFSET @Offset ROWS
-                FETCH NEXT @ChunkSize ROWS ONLY";
+            var sql = $"""
 
-            var chunk = await _dbConnection.QueryAsync<T>(sql, new { Offset = offset, ChunkSize = chunkSize }).ConfigureAwait(false);
+                                       SELECT * FROM {tableName}
+                                       ORDER BY Id
+                                       OFFSET @Offset ROWS
+                                       FETCH NEXT @ChunkSize ROWS ONLY
+                       """;
+
+            var chunk = await _dbConnection.QueryAsync<T>(sql, new { Offset = offset, ChunkSize = chunkSize })
+                .ConfigureAwait(false);
             var chunkList = chunk.ToList();
 
             if (chunkList.Count == 0)
@@ -150,104 +159,84 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Parallel processing approach for very large datasets
-    public virtual async Task<List<T>> GetAllParallelAsync(int partitionCount = 4)
+    public virtual async Task<List<T>> GetAllParallelAsync(int partitionCount = 4, CancellationToken ct = default)
     {
-        if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync().ConfigureAwait(false);
+        if (!EnsureRelational())
+            return await DbSet.AsNoTracking().ToListAsync(ct);
 
-        if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync().ConfigureAwait(false);
-
-        var tableName = GetTableName();
-
-        // Get total count and ID range
-        var countSql = $"SELECT COUNT(*), MIN(Id), MAX(Id) FROM {tableName}";
-        var (totalCount, _, _) = await _dbConnection.QuerySingleAsync<(int, Guid, Guid)>(countSql).ConfigureAwait(false);
-
-        Console.WriteLine($"📊 Processing {totalCount:N0} records across {partitionCount} partitions");
-
-        // Create tasks for parallel processing
-        var tasks = new List<Task<List<T>>>();
-        var recordsPerPartition = totalCount / partitionCount;
-
-        for (var i = 0; i < partitionCount; i++)
+        try
         {
-            var partitionIndex = i;
-            var task = Task.Run(async () =>
+            var tableName = GetTableName();
+            var totalCount =
+                await _dbConnection!.ExecuteScalarAsync<int>(new CommandDefinition($"SELECT COUNT(*) FROM {tableName}",
+                    cancellationToken: ct));
+            var recordsPerPartition = (int)Math.Ceiling((double)totalCount / partitionCount);
+
+            var tasks = Enumerable.Range(0, partitionCount).Select(async i =>
             {
-                await using var connection = new SqlConnection(((SqlConnection)_dbConnection).ConnectionString);
-                await connection.OpenAsync().ConfigureAwait(false);
+                // Check if cancelled before starting a new connection
+                ct.ThrowIfCancellationRequested();
 
-                var offset = partitionIndex * recordsPerPartition;
-                var fetchSize = partitionIndex == partitionCount - 1 ? totalCount - offset : recordsPerPartition;
+                await using var conn = new SqlConnection(((SqlConnection)_dbConnection).ConnectionString);
 
-                var sql = $@"
-                    SELECT * FROM {tableName}
-                    ORDER BY Id
-                    OFFSET @Offset ROWS
-                    FETCH NEXT @FetchSize ROWS ONLY";
+                var offset = i * recordsPerPartition;
+                var sql = $"""
+                           SELECT * FROM {tableName}
+                           ORDER BY Id
+                           OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY
+                           """;
 
-                var result = await connection.QueryAsync<T>(sql, new { Offset = offset, FetchSize = fetchSize }).ConfigureAwait(false);
-                var partitionResults = result.ToList();
-
-                Console.WriteLine($"🔧 Partition {partitionIndex + 1} completed: {partitionResults.Count:N0} records");
-                return partitionResults;
+                var result = await conn.QueryAsync<T>(new CommandDefinition(sql,
+                    new { Offset = offset, Limit = recordsPerPartition }, cancellationToken: ct));
+                return result.ToList();
             });
 
-            tasks.Add(task);
+            var results = await Task.WhenAll(tasks);
+            return [.. results.SelectMany(r => r)];
         }
-
-        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
-        var allResults = results.SelectMany(r => r).ToList();
-
-        Console.WriteLine($"✅ All partitions completed: {allResults.Count:N0} total records");
-        return allResults;
+        catch (OperationCanceledException)
+        {
+            throw; // Re-throw so the caller knows it was cancelled
+        }
+        catch (Exception)
+        {
+            return await DbSet.AsNoTracking().ToListAsync(ct);
+        }
     }
 
     // Memory-mapped approach for extremely large datasets
-    public virtual async Task<List<T>> GetAllMemoryMappedAsync()
+    public virtual async IAsyncEnumerable<T> GetAllMemoryMappedAsync(
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
-        if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync().ConfigureAwait(false);
-
-        const int gcCleaner = 50_000;
-        const int progressCheck = 10_000;
-        if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync().ConfigureAwait(false);
-
-        var tableName = GetTableName();
-
-        // Use streaming with minimal memory allocation
-        var sql = $"SELECT * FROM {tableName} ORDER BY Id";
-
-        var results = new List<T>();
-        var processed = 0;
-
-        await using var command = new SqlCommand(sql, (SqlConnection)_dbConnection);
-        command.CommandTimeout = 300; // 5-minute timeout
-
-        await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess).ConfigureAwait(false);
-        var properties = GetMappedProperties();
-
-        while (await reader.ReadAsync().ConfigureAwait(false))
+        if (!EnsureRelational())
         {
-            var entity = MapReaderToEntity(reader, properties);
-            results.Add(entity);
-            processed++;
-
-            if (!IsMultipleOf(processed, progressCheck)) continue;
-
-            Console.WriteLine($"📈 Processed {processed:N0} records");
-
-            // Force garbage collection periodically to manage memory
-            if (!IsMultipleOf(processed, gcCleaner)) continue;
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            // Fallback: Use EF's built-in AsAsyncEnumerable
+            await foreach (var item in DbSet.AsNoTracking().AsAsyncEnumerable().WithCancellation(ct))
+                yield return item;
+            yield break;
         }
 
-        Console.WriteLine($"✅ Total processed: {processed:N0} records");
-        return results;
+        _dbConnection ??= Context.Database.GetDbConnection();
+        if (_dbConnection.State != ConnectionState.Open)
+            await _dbConnection.OpenAsync(ct).ConfigureAwait(false);
+
+        var tableName = GetTableName();
+        var sql = $"SELECT * FROM {tableName} ORDER BY Id";
+
+        // CommandBehavior.SequentialAccess is the real secret sauce for memory efficiency
+        await using var command = _dbConnection.CreateCommand();
+        command.CommandText = sql;
+        command.CommandTimeout = 300;
+
+        await using var reader =
+            await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess, ct).ConfigureAwait(false);
+        var properties = GetMappedProperties();
+
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
+        {
+            // Map and yield immediately so we don't hold a giant list in memory
+            yield return MapReaderToEntity(reader, properties);
+        }
     }
 
     // Helper method to check if a number is a multiple of another number
@@ -263,7 +252,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Helper method to map SqlDataReader to entity
-    private static T MapReaderToEntity(SqlDataReader reader, PropertyInfo[] properties)
+    private static T MapReaderToEntity(DbDataReader reader, PropertyInfo[] properties)
     {
         var entity = Activator.CreateInstance<T>();
 
@@ -296,30 +285,33 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Enhanced method with configurable options
     public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions? options = null)
     {
-        if (!EnsureRelational() || _dbConnection is null)
+        if (EnsureRelational() && _dbConnection is not null)
         {
-            // Provider-agnostic fallbacks by strategy
-            if (options is null) return await DbSet.ToListAsync().ConfigureAwait(false);
-            return options.Strategy switch
-            {
-                QueryStrategy.Standard => await DbSet.ToListAsync().ConfigureAwait(false),
-                QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync().ConfigureAwait(false), // simple fallback
-                QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync().ConfigureAwait(false), // simple fallback
-                QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync().ConfigureAwait(false), // simple fallback
-                _ => await DbSet.ToListAsync().ConfigureAwait(false)
-            };
+            return options is null
+                ? await GetAllOptimizedAsync()
+                : options.Strategy switch
+                {
+                    QueryStrategy.Standard => await GetAllOptimizedAsync(),
+                    QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize),
+                    QueryStrategy.Parallel => await GetAllParallelAsync(options.ParallelPartitions),
+                    QueryStrategy.MemoryMapped => await GetAllMemoryMappedAsync().ToListAsync(),
+                    _ => await GetAllOptimizedAsync()
+                };
         }
 
-        return options is null
-            ? await GetAllOptimizedAsync()
-            : options.Strategy switch
-            {
-                QueryStrategy.Standard => await GetAllOptimizedAsync(),
-                QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize),
-                QueryStrategy.Parallel => await GetAllParallelAsync(options.ParallelPartitions),
-                QueryStrategy.MemoryMapped => await GetAllMemoryMappedAsync(),
-                _ => await GetAllOptimizedAsync()
-            };
+        // Provider-agnostic fallbacks by strategy
+        if (options is null) return await DbSet.ToListAsync().ConfigureAwait(false);
+        return options.Strategy switch
+        {
+            QueryStrategy.Standard => await DbSet.ToListAsync().ConfigureAwait(false),
+            QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync()
+                .ConfigureAwait(false), // simple fallback
+            QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync()
+                .ConfigureAwait(false), // simple fallback
+            QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync()
+                .ConfigureAwait(false), // simple fallback
+            _ => await DbSet.ToListAsync().ConfigureAwait(false)
+        };
     }
 
     // Existing methods remain unchanged...

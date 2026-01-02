@@ -14,7 +14,7 @@ public static class FeatureEngineering
         var grouped = rawData.Where(r => r is { Close: > 0, Volume: > 0 }).GroupBy(r => r.Symbol);
 
         // Pre-calculate total size to avoid List reallocations
-        var enumerable = grouped as IGrouping<string, RawData>[] ?? grouped.ToArray();
+        var enumerable = grouped as IGrouping<string, RawData>[] ?? [.. grouped];
         var estimatedSize = enumerable.Sum(g => Math.Max(0, g.Count() - 11));
         var result = new List<StockFeatureVector>(estimatedSize);
 

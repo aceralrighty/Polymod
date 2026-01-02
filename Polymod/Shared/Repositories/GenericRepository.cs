@@ -295,30 +295,31 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     // Enhanced method with configurable options
     public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions? options = null)
     {
-        if (!EnsureRelational() || _dbConnection is null)
+        if (EnsureRelational() && _dbConnection is not null)
         {
-            // Provider-agnostic fallbacks by strategy
-            if (options is null) return await DbSet.ToListAsync();
-            return options.Strategy switch
-            {
-                QueryStrategy.Standard => await DbSet.ToListAsync(),
-                QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
-                QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
-                QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
-                _ => await DbSet.ToListAsync()
-            };
+            return options is null
+                ? await GetAllOptimizedAsync()
+                : options.Strategy switch
+                {
+                    QueryStrategy.Standard => await GetAllOptimizedAsync(),
+                    QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize),
+                    QueryStrategy.Parallel => await GetAllParallelAsync(options.ParallelPartitions),
+                    QueryStrategy.MemoryMapped => await GetAllMemoryMappedAsync(),
+                    _ => await GetAllOptimizedAsync()
+                };
         }
 
-        return options is null
-            ? await GetAllOptimizedAsync()
-            : options.Strategy switch
-            {
-                QueryStrategy.Standard => await GetAllOptimizedAsync(),
-                QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize),
-                QueryStrategy.Parallel => await GetAllParallelAsync(options.ParallelPartitions),
-                QueryStrategy.MemoryMapped => await GetAllMemoryMappedAsync(),
-                _ => await GetAllOptimizedAsync()
-            };
+        // Provider-agnostic fallbacks by strategy
+        if (options is null) return await DbSet.ToListAsync();
+        return options.Strategy switch
+        {
+            QueryStrategy.Standard => await DbSet.ToListAsync(),
+            QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
+            QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
+            QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync(), // simple fallback
+            _ => await DbSet.ToListAsync()
+        };
+
     }
 
     // Existing methods remain unchanged...

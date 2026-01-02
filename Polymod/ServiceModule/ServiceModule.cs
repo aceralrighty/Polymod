@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PolyMod.MetricsModule.OpenTelemetry;
 using PolyMod.ServiceModule.Data;
 using PolyMod.ServiceModule.Models;
 using PolyMod.ServiceModule.Repositories;
@@ -6,9 +7,6 @@ using PolyMod.ServiceModule.Services;
 using PolyMod.Shared.CachingConfiguration;
 using PolyMod.Shared.EntityMappers;
 using PolyMod.Shared.Repositories;
-using PolyMod.MetricsModule.OpenTelemetry;
-using PolyMod.MetricsModule.Services;
-using PolyMod.MetricsModule.Services.Interfaces;
 
 namespace PolyMod.ServiceModule;
 
