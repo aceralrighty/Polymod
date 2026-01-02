@@ -13,7 +13,7 @@ public interface IGenericRepository<T> where T : class
     Task<List<T>> GetAllOptimizedAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<T> GetAllStreamingAsync(int bufferSize);
     Task<List<T>> GetAllParallelAsync(int partitionCount = 4, CancellationToken ct = default);
-    IAsyncEnumerable<T> GetAllMemoryMappedAsync([EnumeratorCancellation] CancellationToken ct = default);
+    IAsyncEnumerable<T> GetAllMemoryMappedAsync(CancellationToken ct = default);
     Task<List<T>> GetAllConfigurableAsync(QueryOptions options);
     Task BulkInsertAsync(IEnumerable<T> entities);
 
