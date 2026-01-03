@@ -8,7 +8,7 @@ public interface IStockPredictionRepository
     Task<IEnumerable<StockPrediction>> GetStocksByBatchAsync(Guid batchId);
     Task SaveStockPredictionBatchAsync(IEnumerable<StockPrediction> stockPredictions);
     Task<StockPrediction> SaveStockPredictionAsync(StockPrediction stockPrediction);
-    Task<IEnumerable<Stock>> GetStockPredictionsBySymbolAsync(string symbol);
+    Task<IEnumerable<Stock>> GetStockPredictionsBySymbolAsync(string symbol, CancellationToken ct = default);
 
-    Task<IEnumerable<StockPrediction>> GetPredictionsBySymbolAsync(string symbol);
+    Task<IEnumerable<StockPrediction>> GetPredictionsBySymbolAsync(string symbol, CancellationToken ct = default);
 }

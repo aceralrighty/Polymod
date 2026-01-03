@@ -97,7 +97,7 @@ public class StockPredictionRepository(StockDbContext context)
         }
     }
 
-    public async Task<IEnumerable<StockPrediction>> GetPredictionsBySymbolAsync(string symbol)
+    public async Task<IEnumerable<StockPrediction>> GetPredictionsBySymbolAsync(string symbol, CancellationToken ct = default)
     {
         // Join with Stock data to filter by symbol
         return await context.StockPredictions
@@ -108,11 +108,11 @@ public class StockPredictionRepository(StockDbContext context)
             .Where(joined => joined.Stock.Symbol == symbol)
             .Select(joined => joined.Prediction)
             .OrderByDescending(sp => sp.CreatedAt)
-            .ToListAsync().ConfigureAwait(false);
+            .ToListAsync(ct).ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<Stock>> GetStockPredictionsBySymbolAsync(string symbol)
+    public async Task<IEnumerable<Stock>> GetStockPredictionsBySymbolAsync(string symbol, CancellationToken ct = default)
     {
-        return await context.Stocks.GroupBy(s => s.Symbol == symbol).Select(g => g.First()).ToListAsync().ConfigureAwait(false);
+        return await context.Stocks.GroupBy(s => s.Symbol == symbol).Select(g => g.First()).ToListAsync(ct).ConfigureAwait(false);
     }
 }

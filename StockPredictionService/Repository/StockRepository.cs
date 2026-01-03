@@ -10,18 +10,23 @@ namespace StockPredictionService.Repository;
 
 public class StockRepository(StockDbContext context) : GenericRepository<RawData>(context), IStockRepository
 {
+    public Task<IEnumerable<RawData>> GetAllAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<RawData?> GetByTableIdAsync(Guid id)
     {
         return await DbSet.FirstOrDefaultAsync(f => f.Id == id);
     }
 
-    public async Task SaveStockAsync(List<Stock> stocks)
+    public async Task SaveStockAsync(List<Stock> stocks, CancellationToken ct = default)
     {
         if (stocks.Count == 0)
             return;
 
         Console.WriteLine($"Attempting to save {stocks.Count} stocks using bulk operations...");
-
+        context.ChangeTracker.AutoDetectChangesEnabled = false;
         var now = DateTime.UtcNow;
         foreach (var stock in stocks)
         {
@@ -59,63 +64,38 @@ public class StockRepository(StockDbContext context) : GenericRepository<RawData
 
         await strategy.ExecuteAsync(async () =>
         {
-            const int chunkSize = 10000;
             var totalSaved = 0;
-
-            for (var i = 0; i < stocks.Count; i += chunkSize)
+            await context.BulkInsertAsync(stocks, bulkConfig, progress =>
             {
-                var chunk = stocks.Skip(i).Take(chunkSize).ToList();
-
-                await using var transaction = await context.Database.BeginTransactionAsync();
-
-                try
+                if (progress > 0)
                 {
-                    Console.WriteLine($"Processing chunk {i / chunkSize + 1} ({chunk.Count} records)...");
-
-                    await context.BulkInsertAsync(chunk, bulkConfig);
-
-                    await transaction.CommitAsync();
-
-                    totalSaved += chunk.Count;
-                    Console.WriteLine(
-                        $"✅ Saved chunk {i / chunkSize + 1}: {chunk.Count} records (Total: {totalSaved}/{stocks.Count})");
-
-                    if ((i / chunkSize + 1) % 10 == 0)
-                    {
-                        GC.Collect();
-                        GC.WaitForPendingFinalizers();
-                    }
+                    Console.WriteLine($"📈 Progress: {progress:P0}");
                 }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
-            }
+            }, null, ct);
         });
-
-        var actualCount = await context.Stocks.CountAsync();
+        context.ChangeTracker.Clear();
+        var actualCount = await context.Stocks.CountAsync(ct);
         Console.WriteLine($"🎯 Final verification: Database contains {actualCount} total stocks");
     }
 
 
-    public async Task<IEnumerable<RawData>> GetBySymbolAsync(string symbol)
+    public async Task<IEnumerable<RawData>> GetBySymbolAsync(string symbol, CancellationToken ct = default)
     {
-        return await DbSet.Where(f => f.Symbol == symbol).OrderByDescending(f => f.Date).ToListAsync();
+        return await DbSet.Where(f => f.Symbol == symbol).OrderByDescending(f => f.Date).ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<RawData>> GetByHighestVolumeAsync(float volume)
+    public async Task<IEnumerable<RawData>> GetByHighestVolumeAsync(float volume, CancellationToken ct = default)
     {
-        return await DbSet.Where(f => f.Volume > volume).OrderByDescending(f => f.Volume).ToListAsync();
+        return await DbSet.Where(f => f.Volume > volume).OrderByDescending(f => f.Volume).ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<RawData>> GetByLowestCloseAsync(float close)
+    public async Task<IEnumerable<RawData>> GetByLowestCloseAsync(float close, CancellationToken ct = default)
     {
-        return await DbSet.Where(f => f.Close < close).OrderBy(f => f.Close).ToListAsync();
+        return await DbSet.Where(f => f.Close < close).OrderBy(f => f.Close).ToListAsync(ct);
     }
 
-    public async Task<IEnumerable<RawData>> GetByLatestDateAsync(string date)
+    public async Task<IEnumerable<RawData>> GetByLatestDateAsync(string date, CancellationToken ct = default)
     {
-        return await DbSet.Where(f => f.Date == date).OrderByDescending(f => f.Date).ToListAsync();
+        return await DbSet.Where(f => f.Date == date).OrderByDescending(f => f.Date).ToListAsync(ct);
     }
 }

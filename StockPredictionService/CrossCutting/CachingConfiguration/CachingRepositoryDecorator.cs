@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using StockPredictionService.CrossCutting.Repositories;
@@ -27,10 +28,10 @@ public class CachingRepositoryDecorator<T>(
             .FirstOrDefault(p => p.Name.Equals("Id", StringComparison.OrdinalIgnoreCase) ||
                                  p.GetCustomAttribute<KeyAttribute>() != null));
 
-    public async Task<IEnumerable<T>> GetAllAsync()
+    public async Task<IEnumerable<T>> GetAllAsync(CancellationToken ct = default)
     {
         if (!_options.EnableCaching)
-            return await inner.GetAllAsync();
+            return await inner.GetAllAsync(ct);
 
         var cacheKey = GenerateCacheKey("All");
 
@@ -41,7 +42,7 @@ public class CachingRepositoryDecorator<T>(
         }
 
         logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        var result = await inner.GetAllAsync();
+        var result = await inner.GetAllAsync(ct);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
@@ -57,10 +58,10 @@ public class CachingRepositoryDecorator<T>(
         return allAsync;
     }
 
-    public async Task<List<T>> GetAllChunkedAsync(int chunkSize)
+    public async Task<List<T>> GetAllChunkedAsync(int chunkSize, CancellationToken ct = default)
     {
         if (!_options.EnableCaching)
-            return await inner.GetAllChunkedAsync(chunkSize);
+            return await inner.GetAllChunkedAsync(chunkSize, ct);
 
         var cacheKey = GenerateCacheKey("AllChunked", chunkSize.ToString());
 
@@ -71,7 +72,7 @@ public class CachingRepositoryDecorator<T>(
         }
 
         logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        var result = await inner.GetAllChunkedAsync(chunkSize);
+        var result = await inner.GetAllChunkedAsync(chunkSize, ct);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
@@ -86,10 +87,10 @@ public class CachingRepositoryDecorator<T>(
         return result;
     }
 
-    public async Task<List<T>> GetAllOptimizedAsync()
+    public async Task<List<T>> GetAllOptimizedAsync(CancellationToken ct = default)
     {
         if (!_options.EnableCaching)
-            return await inner.GetAllOptimizedAsync();
+            return await inner.GetAllOptimizedAsync(ct);
 
         var cacheKey = GenerateCacheKey("AllOptimized");
 
@@ -100,7 +101,7 @@ public class CachingRepositoryDecorator<T>(
         }
 
         logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        var result = await inner.GetAllOptimizedAsync();
+        var result = await inner.GetAllOptimizedAsync(ct);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
@@ -115,22 +116,22 @@ public class CachingRepositoryDecorator<T>(
         return result;
     }
 
-    public async IAsyncEnumerable<T> GetAllStreamingAsync(int bufferSize)
+    public async IAsyncEnumerable<T> GetAllStreamingAsync(int bufferSize, [EnumeratorCancellation] CancellationToken ct = default)
     {
         // Streaming methods are inherently designed for memory efficiency and real-time data
         // Caching defeats the purpose, so we bypass cache and delegate directly
         logger?.LogDebug("GetAllStreamingAsync called - bypassing cache for streaming operation");
 
-        await foreach (var item in inner.GetAllStreamingAsync(bufferSize))
+        await foreach (var item in inner.GetAllStreamingAsync(bufferSize, ct))
         {
             yield return item;
         }
     }
 
-    public async Task<List<T>> GetAllParallelAsync(int partitionCount)
+    public async Task<List<T>> GetAllParallelAsync(int partitionCount, CancellationToken ct = default)
     {
         if (!_options.EnableCaching)
-            return await inner.GetAllParallelAsync(partitionCount);
+            return await inner.GetAllParallelAsync(partitionCount, ct);
 
         var cacheKey = GenerateCacheKey("AllParallel", partitionCount.ToString());
 
@@ -141,7 +142,7 @@ public class CachingRepositoryDecorator<T>(
         }
 
         logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        var result = await inner.GetAllParallelAsync(partitionCount);
+        var result = await inner.GetAllParallelAsync(partitionCount, ct);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
@@ -157,7 +158,7 @@ public class CachingRepositoryDecorator<T>(
     }
 
 
-    public async IAsyncEnumerable<T> GetAllMemoryMappedAsync()
+    public async IAsyncEnumerable<T> GetAllMemoryMappedAsync([EnumeratorCancellation] CancellationToken ct = default)
     {
         var cacheKey = GenerateCacheKey("AllMemoryMapped");
 
@@ -177,7 +178,7 @@ public class CachingRepositoryDecorator<T>(
         // We have to collect the stream into a list to cache it
         var resultList = new List<T>();
 
-        await foreach (var item in inner.GetAllMemoryMappedAsync())
+        await foreach (var item in inner.GetAllMemoryMappedAsync(ct))
         {
             resultList.Add(item);
             yield return item; // Pass the item through to the caller immediately
@@ -199,10 +200,10 @@ public class CachingRepositoryDecorator<T>(
         SetCache(cacheKey, resultList, cacheOptions);
     }
 
-    public async Task<List<T>> GetAllConfigurableAsync(QueryOptions options)
+    public async Task<List<T>> GetAllConfigurableAsync(QueryOptions options, CancellationToken ct = default)
     {
         if (!_options.EnableCaching)
-            return await inner.GetAllConfigurableAsync(options);
+            return await inner.GetAllConfigurableAsync(options, ct);
 
         // Create cache key based on strategy and relevant parameters
         var strategyParams = options.Strategy switch
@@ -220,7 +221,7 @@ public class CachingRepositoryDecorator<T>(
         if (options.Strategy == QueryStrategy.Streaming)
         {
             logger?.LogDebug("GetAllConfigurableAsync with Streaming strategy - bypassing cache");
-            return await inner.GetAllConfigurableAsync(options);
+            return await inner.GetAllConfigurableAsync(options, ct);
         }
 
         if (cache.TryGetValue(cacheKey, out List<T>? cached) && cached != null)
@@ -230,7 +231,7 @@ public class CachingRepositoryDecorator<T>(
         }
 
         logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        var result = await inner.GetAllConfigurableAsync(options);
+        var result = await inner.GetAllConfigurableAsync(options, ct);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
@@ -252,10 +253,10 @@ public class CachingRepositoryDecorator<T>(
         await inner.BulkInsertAsync(entities);
     }
 
-    public async Task<T> GetByIdAsync(Guid id)
+    public async Task<T> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         if (!_options.EnableCaching)
-            return await inner.GetByIdAsync(id);
+            return await inner.GetByIdAsync(id, ct);
 
         var cacheKey = GenerateCacheKey("Id", id.ToString());
 
@@ -266,7 +267,7 @@ public class CachingRepositoryDecorator<T>(
         }
 
         logger?.LogDebug("Cache miss for {CacheKey}", cacheKey);
-        var result = await inner.GetByIdAsync(id);
+        var result = await inner.GetByIdAsync(id, ct);
 
         var cacheOptions = new MemoryCacheEntryOptions
         {
@@ -281,12 +282,12 @@ public class CachingRepositoryDecorator<T>(
         return result;
     }
 
-    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default)
     {
         // Complex queries with expressions are harder to cache effectively
         // Consider implementing caching for specific common predicates if needed
         logger?.LogDebug("FindAsync called - bypassing cache for expression: {Expression}", predicate);
-        return await inner.FindAsync(predicate);
+        return await inner.FindAsync(predicate, ct);
     }
 
     public async Task AddAsync(T entity)
@@ -338,11 +339,13 @@ public class CachingRepositoryDecorator<T>(
 
         foreach (var key in keysSnapshot)
         {
-            if (key.StartsWith(allKeysPrefix, StringComparison.OrdinalIgnoreCase))
+            if (!key.StartsWith(allKeysPrefix, StringComparison.OrdinalIgnoreCase))
             {
-                RemoveFromCache(key);
-                invalidatedKeys.Add(key);
+                continue;
             }
+
+            RemoveFromCache(key);
+            invalidatedKeys.Add(key);
         }
 
         // Invalidate specific entity cache if we can get its ID

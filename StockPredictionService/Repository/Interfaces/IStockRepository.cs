@@ -9,12 +9,12 @@ public interface IStockRepository: IGenericRepository<RawData>
     new Task AddAsync(RawData rawData);
     new Task<IEnumerable<RawData>> GetAllAsync();
     Task<RawData?> GetByTableIdAsync(Guid id);
-    Task SaveStockAsync(List<Stock> stock);
+    Task SaveStockAsync(List<Stock> stock, CancellationToken ct = default);
 
-    Task<IEnumerable<RawData>> GetBySymbolAsync(string symbol);
-    Task<IEnumerable<RawData>> GetByHighestVolumeAsync(float volume);
+    Task<IEnumerable<RawData>> GetBySymbolAsync(string symbol, CancellationToken ct = default);
+    Task<IEnumerable<RawData>> GetByHighestVolumeAsync(float volume, CancellationToken ct = default);
 
-    Task<IEnumerable<RawData>> GetByLowestCloseAsync(float close);
+    Task<IEnumerable<RawData>> GetByLowestCloseAsync(float close, CancellationToken ct = default);
 
-    Task<IEnumerable<RawData>> GetByLatestDateAsync(string date);
+    Task<IEnumerable<RawData>> GetByLatestDateAsync(string date, CancellationToken ct = default);
 }

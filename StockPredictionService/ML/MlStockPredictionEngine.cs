@@ -382,7 +382,7 @@ internal class MlStockPredictionEngine : IMlStockPredictionEngine
     }
 
 
-    public static List<RawData> CleanTrainingData(List<RawData> rawData)
+    private static List<RawData> CleanTrainingData(List<RawData> rawData)
     {
         var initialCount = rawData.Count;
 

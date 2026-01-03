@@ -36,9 +36,9 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Original method (kept for compatibility)
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
+    public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken ct = default)
     {
-        return await DbSet.ToListAsync().ConfigureAwait(false);
+        return await DbSet.ToListAsync(ct).ConfigureAwait(false);
     }
 
     // High-performance method using raw SQL with Dapper
@@ -64,13 +64,13 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Chunked/Batched approach for very large datasets
-    public virtual async Task<List<T>> GetAllChunkedAsync(int chunkSize = 10000)
+    public virtual async Task<List<T>> GetAllChunkedAsync(int chunkSize = 10000, CancellationToken ct = default)
     {
         if (!EnsureRelational() || _dbConnection is null)
-            return await DbSet.ToListAsync().ConfigureAwait(false);
+            return await DbSet.ToListAsync(ct).ConfigureAwait(false);
 
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync().ConfigureAwait(false);
+            await _dbConnection.OpenAsync(ct).ConfigureAwait(false);
 
         var tableName = GetTableName();
         var allResults = new List<T>();
@@ -115,29 +115,30 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     }
 
     // Streaming approach for memory-efficient processing
-    public virtual async IAsyncEnumerable<T> GetAllStreamingAsync(int bufferSize = 5000)
+    public virtual async IAsyncEnumerable<T> GetAllStreamingAsync(int bufferSize = 5000,
+        [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (!EnsureRelational() || _dbConnection is null)
         {
-            var list = await DbSet.ToListAsync().ConfigureAwait(false);
+            var list = await DbSet.ToListAsync(ct).ConfigureAwait(false);
             foreach (var item in list)
                 yield return item;
             yield break;
         }
 
         if (_dbConnection.State != ConnectionState.Open)
-            await _dbConnection.OpenAsync().ConfigureAwait(false);
+            await _dbConnection.OpenAsync(ct).ConfigureAwait(false);
 
         var tableName = GetTableName();
         var sql = $"SELECT * FROM {tableName} ORDER BY Id";
 
         await using var command = new SqlCommand(sql, (SqlConnection)_dbConnection);
-        await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
+        await using var reader = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
 
         var properties = GetMappedProperties();
         var buffer = new List<T>(bufferSize);
 
-        while (await reader.ReadAsync().ConfigureAwait(false))
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
             var entity = MapReaderToEntity(reader, properties);
             buffer.Add(entity);
@@ -196,7 +197,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         }
         catch (OperationCanceledException)
         {
-            throw; // Re-throw so the caller knows it was cancelled
+            throw;
         }
         catch (Exception)
         {
@@ -239,8 +240,58 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         }
     }
 
-    // Helper method to check if a number is a multiple of another number
-    private static bool IsMultipleOf(int processed, int factor) => factor != 0 && processed % factor == 0;
+    public virtual async Task<List<T>> GetAllConfigurableAsync(QueryOptions? options = null,
+        CancellationToken ct = default)
+    {
+        if (EnsureRelational() && _dbConnection is not null)
+        {
+            return options is null
+                ? await GetAllOptimizedAsync(ct)
+                : options.Strategy switch
+                {
+                    QueryStrategy.Standard => await GetAllOptimizedAsync(ct),
+                    QueryStrategy.Chunked => await GetAllChunkedAsync(options.ChunkSize, ct),
+                    QueryStrategy.Parallel => await GetAllParallelAsync(options.ParallelPartitions, ct),
+                    QueryStrategy.MemoryMapped => await GetAllMemoryMappedAsync(ct).ToListAsync(ct),
+                    _ => await GetAllOptimizedAsync(ct)
+                };
+        }
+
+        // Provider-agnostic fallbacks by strategy
+        if (options is null) return await DbSet.ToListAsync(ct).ConfigureAwait(false);
+        return options.Strategy switch
+        {
+            QueryStrategy.Standard => await DbSet.ToListAsync(ct).ConfigureAwait(false),
+            QueryStrategy.Chunked => await DbSet.AsNoTracking().ToListAsync(ct).ConfigureAwait(false),
+            QueryStrategy.Parallel => await DbSet.AsNoTracking().ToListAsync(ct).ConfigureAwait(false),
+            QueryStrategy.MemoryMapped => await DbSet.AsNoTracking().ToListAsync(ct).ConfigureAwait(false),
+            _ => await DbSet.ToListAsync(ct).ConfigureAwait(false)
+        };
+    }
+
+    public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        if (!EnsureRelational() || _dbConnection is null)
+        {
+            return await DbSet.FindAsync([id], ct).ConfigureAwait(false);
+        }
+
+        if (_dbConnection.State != ConnectionState.Open)
+            await _dbConnection.OpenAsync(ct).ConfigureAwait(false);
+
+        var tableName = GetTableName();
+        var sql = $"SELECT * FROM {tableName} WHERE Id = @Id";
+        return await _dbConnection
+            .QueryFirstOrDefaultAsync<T>(new CommandDefinition(sql, new { Id = id }, cancellationToken: ct))
+            .ConfigureAwait(false);
+    }
+
+    public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate,
+        CancellationToken ct = default)
+    {
+        return await DbSet.Where(predicate).ToListAsync(ct).ConfigureAwait(false);
+    }
+
 
     // Helper method to get mapped properties
     private static PropertyInfo[] GetMappedProperties()
@@ -251,7 +302,7 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
             .ToArray();
     }
 
-    // Helper method to map SqlDataReader to entity
+    // Helper method to map DbDataReader to entity
     private static T MapReaderToEntity(DbDataReader reader, PropertyInfo[] properties)
     {
         var entity = Activator.CreateInstance<T>();
