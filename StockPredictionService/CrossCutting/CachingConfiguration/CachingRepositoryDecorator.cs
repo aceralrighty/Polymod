@@ -9,7 +9,7 @@ using StockPredictionService.CrossCutting.Repositories.Configuration;
 
 namespace StockPredictionService.CrossCutting.CachingConfiguration;
 
-public class CachingRepositoryDecorator<T>(
+public abstract class CachingRepositoryDecorator<T>(
     IGenericRepository<T> inner,
     IMemoryCache cache,
     IOptions<CacheOptions>? options = null,
@@ -253,7 +253,7 @@ public class CachingRepositoryDecorator<T>(
         await inner.BulkInsertAsync(entities);
     }
 
-    public async Task<T> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         if (!_options.EnableCaching)
             return await inner.GetByIdAsync(id, ct);

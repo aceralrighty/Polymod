@@ -10,9 +10,9 @@ namespace StockPredictionService.Repository;
 
 public class StockRepository(StockDbContext context) : GenericRepository<RawData>(context), IStockRepository
 {
-    public Task<IEnumerable<RawData>> GetAllAsync()
+    public async Task<IEnumerable<RawData>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await DbSet.ToListAsync().ConfigureAwait(false);
     }
 
     public async Task<RawData?> GetByTableIdAsync(Guid id)
@@ -69,7 +69,7 @@ public class StockRepository(StockDbContext context) : GenericRepository<RawData
             {
                 if (progress > 0)
                 {
-                    Console.WriteLine($"📈 Progress: {progress:P0}");
+                    Console.WriteLine($"📈 Progress: {progress:P}");
                 }
             }, null, ct);
         });
