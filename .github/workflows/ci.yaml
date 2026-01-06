@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  DOTNET_VERSION: '10.0'
+
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
@@ -151,7 +154,7 @@ jobs:
         if: steps.check-monolith.outputs.monolith-exists == 'true'
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore PolyMod (Monolith)
         if: steps.check-monolith.outputs.monolith-exists == 'true'
@@ -200,7 +203,7 @@ jobs:
         if: steps.check-stock-service.outputs.stock-service-exists == 'true'
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Clean test files from production code
         if: steps.check-stock-service.outputs.stock-service-exists == 'true'
@@ -242,7 +245,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Check if TestProject exists
         id: check-tests
@@ -275,7 +278,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Clean test files from production code
         run: |
@@ -337,7 +340,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Install dotnet-outdated
         run: dotnet tool install --global dotnet-outdated-tool
