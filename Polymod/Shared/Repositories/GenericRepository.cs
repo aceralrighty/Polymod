@@ -364,6 +364,12 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
         await Context.SaveChangesAsync();
     }
 
+    public async Task AddRangeAsync(IEnumerable<T> entities)
+    {
+        await DbSet.AddRangeAsync(entities);
+        await Context.SaveChangesAsync();
+    }
+
     private string GetTableName()
     {
         var entityType = Context.Model.FindEntityType(typeof(T));

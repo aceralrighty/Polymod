@@ -238,7 +238,7 @@ public class CachingRepositoryDecorator<T>(
         await inner.BulkInsertAsync(entities);
     }
 
-    public async Task<T> GetByIdAsync(Guid id)
+    public async Task<T?> GetByIdAsync(Guid id)
     {
         if (!_options.EnableCaching)
             return await inner.GetByIdAsync(id);
@@ -291,6 +291,13 @@ public class CachingRepositoryDecorator<T>(
     {
         await inner.DeleteAsync(entity);
         await InvalidateCacheAsync(entity, "Delete");
+    }
+
+    public async Task AddRangeAsync(IEnumerable<T> entities)
+    {
+        var enumerable = entities as T[] ?? entities.ToArray();
+        await inner.AddRangeAsync(enumerable);
+        await InvalidateCacheAsync(enumerable.First(), "AddRange");
     }
 
     private void SetCache<TValue>(string key, TValue value, MemoryCacheEntryOptions? options = null)

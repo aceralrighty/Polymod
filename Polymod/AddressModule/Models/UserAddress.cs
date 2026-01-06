@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using PolyMod.Shared.GenericDBProperties;
 using PolyMod.UserModule.Models;
 
@@ -8,21 +7,17 @@ namespace PolyMod.AddressModule.Models;
 public class UserAddress
     : BaseTableProperties
 {
-    [Required] public Guid UserId { get; set; }
+    public Guid UserId { get; set; }
 
-    [Required]
-    [ForeignKey(nameof(UserId))]
-    [NotMapped]
+
     public User? User { get; set; }
 
-    [Required] [MaxLength(255)] public string? Address1 { get; set; }
-    [MaxLength(255)] public string? Address2 { get; set; }
-    [Required] [MaxLength(255)] public string? City { get; set; }
-    [Required] [MaxLength(255)] public string? State { get; set; }
+    public string? Address1 { get; set; }
+    public string? Address2 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
 
-    [Required]
     [RegularExpression(@"^[0-9]{5}(?:-[0-9]{4})?$", ErrorMessage = "Invalid ZIP code format. Use 12345 or 12345-6789.")]
-    [MaxLength(10)]
     public string? ZipCode { get; set; }
 
     public UserAddress(Guid userId, User? user, string? address1, string? address2, string city,

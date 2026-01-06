@@ -1,7 +1,5 @@
 using System.Linq.Expressions;
 using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using PolyMod.AddressModule.Data;
 using PolyMod.AddressModule.Exceptions;
 using PolyMod.AddressModule.Models;
 using PolyMod.AddressModule.Repositories;
@@ -11,47 +9,36 @@ using PolyMod.UserModule.Services;
 namespace PolyMod.AddressModule.Services;
 
 public class UserAddressService(
-    AddressDbContext context,
     IMapper mapper,
     IUserService userService,
     IUserAddressRepository repository)
     : IUserAddressService
 {
-    private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
+    // private readonly DbSet<UserAddress> _dbSet = context.Set<UserAddress>();
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync()
     {
-        var addresses = await _dbSet.ToListAsync();
-        var groupedAddress = addresses.GroupBy(ua => ua.State).ToList();
-        if (groupedAddress.Count == 0)
-        {
-            throw new UserStateGroupException("There are no states to group in the database");
-        }
-
-        return groupedAddress;
+        var addresses = await repository.GroupByUserStateAsync();
+        return addresses.Count == 0
+            ? throw new UserStateGroupException("There are no states to group in the database")
+            : addresses;
     }
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByZipCodeAsync()
     {
-        var allAddresses = await _dbSet.ToListAsync();
-        var grouped = allAddresses.GroupBy(ua => ua.ZipCode).ToList();
-        return grouped;
+        return await repository.GroupByZipCodeAsync();
     }
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync()
     {
-        var addresses = await _dbSet.ToListAsync();
         try
         {
-            var groupedCities = addresses.GroupBy(ua => ua.City).ToList();
-            if (groupedCities.Count == 0)
-            {
-                throw new CityGroupingNotAvailableException("There are no cities to group in the database");
-            }
-
-            return groupedCities;
+            var groupedCities = await repository.GroupByCityAsync();
+            return groupedCities.Count == 0
+                ? throw new CityGroupingNotAvailableException("There are no cities to group in the database")
+                : groupedCities;
         }
-        catch (Exception e)
+        catch (Exception e) when (e is not CityGroupingNotAvailableException)
         {
             throw new CityGroupingNotAvailableException("There are no cities to group in the database", e);
         }
@@ -59,13 +46,13 @@ public class UserAddressService(
 
     public async Task<IEnumerable<UserAddress>> GetAllAsync(Guid userId)
     {
-        return await _dbSet.Where(ua => ua.UserId == userId).ToListAsync();
+        return await repository.GetByUserIdAsync(userId);
     }
 
     public async Task<IEnumerable<UserAddress>> FindAsync(
         Expression<Func<UserAddress, bool>> expression)
     {
-        return await _dbSet.Where(expression).ToListAsync();
+        return await repository.FindAsync(expression);
     }
 
     public async Task AddAsync(UserAddress entity)
@@ -73,8 +60,7 @@ public class UserAddressService(
         if (entity == null)
             throw new ArgumentNullException(nameof(entity), "The address entity cannot be null.");
 
-        await _dbSet.AddAsync(entity);
-        await context.SaveChangesAsync();
+        await repository.CreateAsync(entity);
     }
 
     public async Task AddRangeAsync(IEnumerable<UserAddress> entities)
@@ -84,22 +70,19 @@ public class UserAddressService(
             throw new ArgumentNullException(nameof(entities), "The address collection cannot be null.");
         }
 
-        await _dbSet.AddRangeAsync(entities);
-        await context.SaveChangesAsync();
+        await repository.AddRangeAsync(entities);
     }
 
     public async Task UpdateAsync(UserAddress entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        _dbSet.Update(entity);
-        await context.SaveChangesAsync();
+        await repository.UpdateAsync(entity);
     }
 
     public async Task RemoveAsync(UserAddress entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        _dbSet.Remove(entity);
-        await context.SaveChangesAsync();
+        await repository.DeleteAsync(entity.Id);
     }
 
     public async Task<UserAddress> UpdateUserAddress(UserAddressRequest userAddressDto)

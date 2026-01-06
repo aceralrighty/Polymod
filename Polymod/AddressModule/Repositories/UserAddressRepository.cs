@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using PolyMod.AddressModule.Data;
 using PolyMod.AddressModule.Models;
@@ -20,10 +21,13 @@ internal class UserAddressRepository(AddressDbContext context)
     {
         if (userAddress == null)
             throw new ArgumentNullException(nameof(userAddress), "The address entity cannot be null.");
+        await AddAsync(userAddress);
+        return userAddress;
+    }
+    public new async Task<IEnumerable<UserAddress>> FindAsync(Expression<Func<UserAddress, bool>> expression)
+    {
 
-        var result = await _dbSet.AddAsync(userAddress);
-        await context.SaveChangesAsync();
-        return result.Entity;
+        return await _dbSet.Where(expression).ToListAsync();
     }
 
     public override async Task<UserAddress> UpdateAsync(UserAddress userAddress)
@@ -39,8 +43,7 @@ internal class UserAddressRepository(AddressDbContext context)
         var entity = await GetByIdAsync(id);
         if (entity == null) return false;
 
-        _dbSet.Remove(entity);
-        await context.SaveChangesAsync();
+        await base.DeleteAsync(entity);
         return true;
     }
 
@@ -59,16 +62,19 @@ internal class UserAddressRepository(AddressDbContext context)
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByUserStateAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.State).ToListAsync();
+        var data = await _dbSet.ToListAsync();
+        return data.GroupBy(ua => ua.State).ToList();
     }
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByZipCodeAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.ZipCode).ToListAsync();
+        var data = await _dbSet.ToListAsync();
+        return data.GroupBy(ua => ua.ZipCode).ToList();
     }
 
     public async Task<List<IGrouping<string?, UserAddress>>> GroupByCityAsync()
     {
-        return await _dbSet.GroupBy(ua => ua.City).ToListAsync();
+        var data = await _dbSet.ToListAsync();
+        return data.GroupBy(ua => ua.City).ToList();
     }
 }

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using PolyMod.AddressModule.Models;
+using PolyMod.Shared.GenericDBProperties;
 
 namespace PolyMod.AddressModule.Data;
 
@@ -26,19 +26,17 @@ public class AddressDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<UserAddress>().HasIndex(u => u.Id).IsUnique();
-        modelBuilder.Entity<UserAddress>().Property(u => u.CreatedAt)
-            .ValueGeneratedOnAdd().Metadata
-            .SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
+        modelBuilder.ApplyConfiguration(new UserAddressConfig());
     }
 
     public override int SaveChanges()
     {
         var entries = ChangeTracker.Entries().Where(u =>
-            u is { Entity: Models.UserAddress, State: EntityState.Added or EntityState.Modified });
+            u is { Entity: BaseTableProperties, State: EntityState.Added or EntityState.Modified });
+
         foreach (var entityEntry in entries)
         {
-            var entity = (UserAddress)entityEntry.Entity;
+            var entity = (BaseTableProperties)entityEntry.Entity;
             entity.UpdatedAt = DateTime.UtcNow;
             if (entityEntry.State == EntityState.Added)
             {
