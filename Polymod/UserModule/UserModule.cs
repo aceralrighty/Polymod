@@ -50,7 +50,7 @@ public static class UserModule
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IUserReadService, UserReadService>();
         services.AddScoped<IHasher, Hasher>();
-        services.AddAutoMapper(typeof(UserMapping).Assembly);
+        services.AddAutoMapper(_ => { }, typeof(UserModule).Assembly);
 
         // Register this module for metrics
         services.RegisterModuleForMetrics("UserModule");

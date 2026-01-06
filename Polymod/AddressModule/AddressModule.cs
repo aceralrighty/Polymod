@@ -32,7 +32,9 @@ public static class AddressModule
         services.AddScoped<IGenericRepository<UserAddress>>(serviceProvider =>
             new GenericRepository<UserAddress>(serviceProvider.GetRequiredService<AddressDbContext>()));
         services.Decorate<IGenericRepository<UserAddress>, CachingRepositoryDecorator<UserAddress>>();
-        services.AddAutoMapper(typeof(AddressModule).Assembly);
+        services.AddAutoMapper(_ =>
+        {
+        }, typeof(AddressModule).Assembly);
         return services;
     }
 }

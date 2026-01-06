@@ -34,7 +34,10 @@ public static class ServiceModule
         services.AddScoped<IGenericRepository<Service>>(sp =>
             new GenericRepository<Service>(sp.GetRequiredService<ServiceDbContext>()));
         services.Decorate<IGenericRepository<Service>, CachingRepositoryDecorator<Service>>();
-        services.AddAutoMapper(typeof(ServiceMapping).Assembly);
+        services.AddAutoMapper(_ =>
+            {
+            }, typeof(ServiceMapping).Assembly
+        );
         return services;
     }
 }

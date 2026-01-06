@@ -43,7 +43,7 @@ public static class AuthModule
         services.Decorate<IGenericRepository<AuthUser>, CachingRepositoryDecorator<AuthUser>>();
 
         // AutoMapper
-        services.AddAutoMapper(typeof(AuthModule).Assembly);
+        services.AddAutoMapper(_ => { }, typeof(AuthModule).Assembly);
 
         services.RegisterModuleForMetrics("AuthModule");
 
