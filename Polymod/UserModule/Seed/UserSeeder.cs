@@ -225,7 +225,7 @@ public static class UserSeeder
 
     private static async Task SeedUserAddressesAsync(IGenericRepository<User> userRepository,
         IGenericRepository<UserAddress> addressRepository,
-        IMetricsService metricsService, Activity? parentActivity, int maxAddressesPerUser = 2)
+        IMetricsService metricsService, Activity? parentActivity, int maxAddressesPerUser = 1)
     {
         using var activity = ActivitySource.StartActivity("DataSeeder.SeedUserAddressesStreaming",
             ActivityKind.Internal, parentActivity?.Context ?? default);
@@ -303,7 +303,7 @@ public static class UserSeeder
                 var addressesPerSecond = addressBatch.Count / batchProcessingTime;
                 throughputMeasurements.Add(addressesPerSecond);
 
-                // Record comprehensive metrics with tags using your OpenTelemetry service
+                // Record comprehensive metrics with tags using OpenTelemetry service
                 var batchTags = new KeyValuePair<string, object?>[]
                 {
                     new("batch_number", batchNumber), new("batch_size", addressBatch.Count),

@@ -328,8 +328,10 @@ internal class MlRecommendationEngine(
         return recommendations.Select(r => r.ServiceId).Distinct();
     }
 
-    private float HashGuid(Guid guid)
+    private static float HashGuid(Guid guid)
     {
-        return Math.Abs(guid.GetHashCode()) % 100000;
+        var bytes = guid.ToByteArray();
+        var stableHash = BitConverter.ToInt32(bytes, 0);
+        return Math.Abs(stableHash) % 100000;
     }
 }

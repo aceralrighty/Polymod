@@ -46,10 +46,12 @@ internal class RecommendationRepository(RecommendationDbContext context)
             await dbConnection.OpenAsync();
 
         var tableName = GetTableName();
-        var sql = $@"
-            SELECT * FROM {tableName} WITH (NOLOCK)
-            WHERE Rating > 0
-            ORDER BY RecommendedAt DESC";
+        var sql = $"""
+
+                               SELECT * FROM {tableName} WITH (NOLOCK)
+                               WHERE Rating > 0
+                               ORDER BY RecommendedAt DESC
+                   """;
 
         Console.WriteLine("📊 Executing optimized GetAllWithRatingsAsync query...");
         var stopwatch = Stopwatch.StartNew();
@@ -84,12 +86,14 @@ internal class RecommendationRepository(RecommendationDbContext context)
 
         while (hasMoreData)
         {
-            var sql = $@"
-                SELECT * FROM {tableName} WITH (NOLOCK)
-                WHERE Rating > 0
-                ORDER BY RecommendedAt DESC
-                OFFSET @Offset ROWS
-                FETCH NEXT @ChunkSize ROWS ONLY";
+            var sql = $"""
+
+                                       SELECT * FROM {tableName} WITH (NOLOCK)
+                                       WHERE Rating > 0
+                                       ORDER BY RecommendedAt DESC
+                                       OFFSET @Offset ROWS
+                                       FETCH NEXT @ChunkSize ROWS ONLY
+                       """;
 
             var chunk = await dbConnection.QueryAsync<UserRecommendation>(sql,
                 new { Offset = offset, ChunkSize = chunkSize });
@@ -120,10 +124,12 @@ internal class RecommendationRepository(RecommendationDbContext context)
             await dbConnection.OpenAsync();
 
         var tableName = GetTableName();
-        var sql = $@"
-            SELECT * FROM {tableName} WITH (NOLOCK)
-            WHERE Rating > 0
-            ORDER BY RecommendedAt DESC";
+        var sql = $"""
+
+                               SELECT * FROM {tableName} WITH (NOLOCK)
+                               WHERE Rating > 0
+                               ORDER BY RecommendedAt DESC
+                   """;
 
         var processed = 0;
         await foreach (var recommendation in dbConnection.QueryUnbufferedAsync<UserRecommendation>(sql))
@@ -160,48 +166,44 @@ internal class RecommendationRepository(RecommendationDbContext context)
         {
             QueryStrategy.Standard => await GetAllWithRatingsAsync(),
             QueryStrategy.Chunked => await GetAllWithRatingsChunkedAsync(options.ChunkSize),
-            QueryStrategy.MemoryMapped => await GetAllWithRatingsMemoryMappedAsync(),
+            QueryStrategy.MemoryMapped => await GetAllWithRatingsMemoryMappedAsync().ToListAsync(),
             _ => await GetAllWithRatingsAsync()
         };
     }
 
     // OPTIMIZED: Memory-mapped approach for extremely large datasets
-    private async Task<IEnumerable<UserRecommendation>> GetAllWithRatingsMemoryMappedAsync()
+    private async IAsyncEnumerable<UserRecommendation> GetAllWithRatingsMemoryMappedAsync()
     {
         var dbConnection = Context.Database.GetDbConnection();
         if (dbConnection.State != ConnectionState.Open)
             await dbConnection.OpenAsync();
 
         var tableName = GetTableName();
-        var sql = $@"
-            SELECT * FROM {tableName} WITH (NOLOCK)
-            WHERE Rating > 0
-            ORDER BY RecommendedAt DESC";
 
-        var results = new List<UserRecommendation>();
+        // We select specific columns to keep the memory footprint per-row as small as possible
+        var sql = $"""
+                   SELECT UserId, ServiceId, Rating, RecommendedAt
+                                            FROM {tableName} WITH (NOLOCK)
+                                            WHERE Rating > 0
+                                            ORDER BY RecommendedAt DESC
+                   """;
+
         var processed = 0;
 
-        // Use Dapper's buffered query with custom buffer management
+        // QueryUnbufferedAsync returns an IAsyncEnumerable, which we can yield directly
         await foreach (var recommendation in dbConnection.QueryUnbufferedAsync<UserRecommendation>(sql))
         {
-            results.Add(recommendation);
             processed++;
 
             if (processed % 10000 == 0)
             {
-                Console.WriteLine($"📈 Processed {processed:N0} recommendations with ratings");
-
-                // Force garbage collection periodically to manage memory
-                if (processed % 50000 == 0)
-                {
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
-                }
+                Console.WriteLine($"📈 Streamed {processed:N0} recommendations from database...");
             }
+
+            yield return recommendation;
         }
 
-        Console.WriteLine($"✅ Total processed: {processed:N0} recommendations with ratings");
-        return results;
+        Console.WriteLine($"✅ Streaming complete. Total: {processed:N0} recommendations.");
     }
 
     public async Task<IEnumerable<Guid>> GetMostPopularServicesAsync(int count)

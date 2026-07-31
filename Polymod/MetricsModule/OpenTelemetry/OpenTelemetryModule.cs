@@ -80,11 +80,10 @@ public static class OpenTelemetryModule
                     .AddSource("TBD.TestModule")
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation(options =>
-                    {
-                        options.SetDbStatementForText = true;
-                        options.SetDbStatementForStoredProcedure = true;
-                    })
+                    // Statement capture for text/stored procedures is always enabled as of
+                    // OpenTelemetry.Instrumentation.EntityFrameworkCore 1.13.0-beta.1, which
+                    // removed the SetDbStatementFor* options.
+                    .AddEntityFrameworkCoreInstrumentation()
                     .AddConsoleExporter(); // For development - replace with a proper exporter for production
 
 

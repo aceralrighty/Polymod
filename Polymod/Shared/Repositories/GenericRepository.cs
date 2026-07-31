@@ -180,11 +180,13 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
                 var offset = partitionIndex * recordsPerPartition;
                 var fetchSize = partitionIndex == partitionCount - 1 ? totalCount - offset : recordsPerPartition;
 
-                var sql = $@"
-                    SELECT * FROM {tableName}
-                    ORDER BY Id
-                    OFFSET @Offset ROWS
-                    FETCH NEXT @FetchSize ROWS ONLY";
+                var sql = $"""
+
+                                               SELECT * FROM {tableName}
+                                               ORDER BY Id
+                                               OFFSET @Offset ROWS
+                                               FETCH NEXT @FetchSize ROWS ONLY
+                           """;
 
                 var result = await connection.QueryAsync<T>(sql, new { Offset = offset, FetchSize = fetchSize });
                 var partitionResults = result.ToList();
@@ -418,7 +420,9 @@ public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     {
         var table = new DataTable();
         var props = typeof(T).GetProperties()
-            .Where(p => p.CanRead && p.GetCustomAttributes(typeof(NotMappedAttribute), true).Length == 0)
+            .Where(p => p.CanRead &&
+                        p.GetCustomAttributes(typeof(NotMappedAttribute), true).Length == 0 &&
+                        (p.PropertyType.IsValueType || p.PropertyType == typeof(string))) // Filter for DB-compatible types
             .ToArray();
 
         foreach (var prop in props)
